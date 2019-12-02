@@ -1,0 +1,31 @@
+{
+  "define" : {
+    "ODM_CACHE": "/root/makeflow/cache",
+    "ODM_OUTPUT_DIR": "/root/makeflow/odm"
+    "ODM_IMAGE": "agpipeline/opendronemap:" + ODM_IMAGE_VERSION
+  },
+  "rules": [
+    {
+      "command" : "mkdir -p ${ODM_OUTPUT_DIR}",
+      "inputs": [],
+      "outputs: [
+        ODM_OUTPUT_DIR
+      ]
+    },
+    {
+      "command": "sudo docker run -u root --rm -v $(pwd):/mnt ${ODM_IMAGE} --metadata ${METADATA} --working_space ${ODM_OUTPUT_DIR} ${}",
+      "environment": {
+        "ODM_IMAGE": ODM_IMAGE,
+        "METADATA": /mnt/ + "",
+        "ODM_OUTPUT_DIR": ODM_OUTPUT_DIR,
+        "": 
+    },
+    {
+      "command" : "mkdir -p ${ODM_CACHE}"
+      "inputs": [],
+      "outputs: [
+        ODM_CACHE
+      ]
+    },
+  ]
+}
