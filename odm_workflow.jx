@@ -18,7 +18,7 @@
       "command": "docker run --rm $(pwd):${IMAGE_MOUNT_POINT} ${DOCKER_IMAGE} --metadata ${METADATA} --working_space ${WORKSPACE_DIR} ${DOCKER_INPUT_PARAMS}",
       "environment": {
         "IMAGE_MOUNT_POINT": IMAGE_MOUNT_POINT,
-        "DOCKER_IMAGE": ODM_IMAGE,
+        "DOCKER_IMAGE": ODM_DOCKER_IMAGE,
         "METADATA": ODM_METADATA,
         "WORKSPACE_DIR": ODM_OUTPUT_DIR,
         "DOCKER_INPUT_PARAMS": ODM_SOURCE_IMAGE_DIR
