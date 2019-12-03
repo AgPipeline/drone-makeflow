@@ -75,6 +75,8 @@ def _get_path_maps(maps_param: str) -> dict:
     for one_map in maps_list:
         if ':' in one_map:
             map_src, map_dst = one_map.split(':')
+            map_src = map_src.rstrip('/\\')
+            map_dst = map_dst.rstrip('/\\')
             path_maps[map_src] = map_dst
             logging.debug("Path map found: '%s' to '%s'", map_src, map_dst)
         else:
@@ -210,8 +212,8 @@ def cache_files(result_files: dict, cache_dir: str, path_maps: dict = None) -> N
     for one_file in result_files:
         if 'path' in one_file:
             total_count += 1
-            if os.path.exists(one_file['path']):
-                source_path = _map_path(one_file['path'], path_maps)
+            source_path = _map_path(one_file['path'], path_maps)
+            if os.path.exists(source_path):
                 dest_path = os.path.join(cache_dir, os.path.basename(one_file['path']))
                 copy_list.append({'src': source_path, 'dst': dest_path})
             else:
@@ -224,7 +226,7 @@ def cache_files(result_files: dict, cache_dir: str, path_maps: dict = None) -> N
 
     # Don't copy anything if we've found a problem
     if problem_count:
-        msg = "Found %s missing files out of %s; stopping processing", str(problem_count), str(total_count)
+        msg = "Found %s missing files out of %s; stopping processing" % (str(problem_count), str(total_count))
         logging.error(msg)
         raise RuntimeError(msg)
 
