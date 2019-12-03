@@ -6,7 +6,7 @@
     "ODM_METADATA": BASE_DIR + EXPERIMENT_METADATA,
     "ODM_SOURCE_IMAGES_DIR": BASE_DIR + IMAGES_FOLDER,
     "ODM_WORKSPACE_DIR_NAME": "workspace/odm",
-    "ODM_WORKSPACE": BASE_DIR + ODM_WORKSPACE_DIR_NAME
+    "ODM_WORKSPACE": BASE_DIR + ODM_WORKSPACE_DIR_NAME,
     "ODM_RUN_RESULTS": ODM_WORKSPACE + "/result.json"
   },
   "rules": [
@@ -45,7 +45,8 @@
         ODM_SOURCE_IMAGES_DIR
       ],
       "output": [
-        ODM_OUTPUT_DIR
+        ODM_OUTPUT_DIR,
+        ODM_RUN_RESULTS
       ]
     },
     {
