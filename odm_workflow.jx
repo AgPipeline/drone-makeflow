@@ -7,6 +7,7 @@
     "ODM_SOURCE_IMAGES_DIR": BASE_DIR + IMAGES_FOLDER,
     "ODM_WORKSPACE_DIR_NAME": "workspace/odm",
     "ODM_WORKSPACE": BASE_DIR + ODM_WORKSPACE_DIR_NAME
+    "ODM_RUN_RESULTS": ODM_WORKSPACE + "/result.json"
   },
   "rules": [
     {
@@ -30,13 +31,13 @@
       ]
     },
     {
-      "command": "docker run --rm -v $(pwd):${IMAGE_MOUNT_POINT} -w ${IMAGE_MOUNT_POINT} ${DOCKER_IMAGE} -d --metadata ${METADATA} --working_space ${WORKSPACE_DIR} ${DOCKER_INPUT_PARAMS}",
+      "command": "docker run --rm -v $(pwd):${IMAGE_MOUNT_POINT} ${DOCKER_IMAGE} --metadata ${METADATA} --working_space ${WORKSPACE_DIR} ${DOCKER_RUN_PARAMS}",
       "environment": {
         "IMAGE_MOUNT_POINT": IMAGE_MOUNT_POINT,
         "DOCKER_IMAGE": ODM_DOCKER_IMAGE,
         "METADATA": IMAGE_MOUNT_POINT + EXPERIMENT_METADATA,
         "WORKSPACE_DIR": IMAGE_MOUNT_POINT + ODM_WORKSPACE_DIR_NAME,
-        "DOCKER_INPUT_PARAMS": IMAGE_MOUNT_POINT + IMAGES_FOLDER
+        "DOCKER_RUN_PARAMS": IMAGE_MOUNT_POINT + IMAGES_FOLDER
       },
       "inputs": [
         ODM_METADATA,
@@ -56,6 +57,17 @@
       "outputs": [
         ODM_CACHE
       ]
+    },
+      "command": "cache_results.py ${ODM_RESULTS} ${ODM_CACHE}",
+      "environment": {
+        "ODM_CACHE": ODM_CACHE,
+        "ODM_RESULTS": ODM_RUN_RESULTS
+      },
+      "inputs": [
+        ODM_CACHE,
+        ODM_RUN_RESULTS
+      ],
+      "outputs": []
     }
   ]
 }
