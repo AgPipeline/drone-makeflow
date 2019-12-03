@@ -154,7 +154,7 @@ def _check_get_parameters(params: list) -> dict:
         logging.info("No files specified in results. Nothing copied")
 
     # Add in other fields
-    return_dict['maps'] = path_maps
+    return_dict['path_maps'] = path_maps
 
     return return_dict
 
