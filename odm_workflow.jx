@@ -60,11 +60,12 @@
       ]
     },
     {
-      "command": "${ODM_CACHE_APP} ${ODM_RESULTS} ${ODM_CACHE}",
+      "command": "${ODM_CACHE_APP} --maps ${PATH_MAPS} ${ODM_RESULTS} ${ODM_CACHE}",
       "environment": {
-        "ODM_CACHE_APP": CACHE_RESULTS_SCRIPT,
+        "ODM_CACHE_APP": "python3 " + CACHE_RESULTS_SCRIPT,
         "ODM_CACHE": ODM_CACHE,
-        "ODM_RESULTS": ODM_RUN_RESULTS
+        "ODM_RESULTS": ODM_RUN_RESULTS,
+        "PATH_MAPS": IMAGE_MOUNT_POINT + ":" + BASE_DIR
       },
       "inputs": [
         CACHE_RESULTS_SCRIPT,

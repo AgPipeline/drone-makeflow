@@ -16,9 +16,14 @@ def _print_help(app_name: str = None) -> None:
     """
     if not app_name:
         app_name = os.path.basename(__file__)
-    print('Usage: %s <results file> <cache folder>' % str(app_name))
+    print('Usage: %s [--maps <folder mappings>] <results file> <cache folder>' % str(app_name))
+    print('  --maps <folder mappings> specifies one or more folder mappings')
     print('  <results file> the file containing the results to interpret')
     print('  <cache folder> is the destination for the copied results')
+    print('')
+    print('Folder mappings are a comma separated list of source:dest mapping strings.')
+    print('For example: /root/foo:/home/user/bar will map folders from "/root/foo" to "/home/user/bar"')
+    print('All spaces are maintained when mapping paths')
 
 
 def _check_print_help(params: list) -> bool:
@@ -50,10 +55,56 @@ def _check_print_help(params: list) -> bool:
     return help_found
 
 
+def _get_path_maps(maps_param: str) -> dict:
+    """Parses the map parameter and returns a dictionary of mappings
+    Arguments:
+        maps_param: the parameter to parse into a mapping dictionary
+    Return:
+        A dict of mappings of they're found and valid, or None
+    """
+    if not maps_param:
+        return None
+
+    if ',' in maps_param:
+        maps_list = maps_param.split(',')
+    else:
+        maps_list = [maps_param]
+
+    # Build up the dict
+    path_maps = {}
+    for one_map in maps_list:
+        if ':' in one_map:
+            map_src, map_dst = one_map.split(':')
+            path_maps[map_src] = map_dst
+            logging.debug("Path map found: '%s' to '%s'", map_src, map_dst)
+        else:
+            logging.warning("Invalid mapping found and ignored: %s", one_map)
+
+    if not path_maps:
+        logging.info("Path mappings specified but none were found")
+    return path_maps if path_maps else None
+
+
+def _check_paths_errors(file_path: str, dir_path: str) -> str:
+    """Performs checks on the file path and directory
+    Arguments:
+        file_path: path to the file to check
+        dir_path: path to the directory to check
+    Return:
+        Returns an error string if a problem is found and None if everything checks out
+    """
+    error_msg = ""
+    if not os.path.exists(file_path) or not os.path.isfile(file_path):
+        error_msg += ("\n" if error_msg else "") + "Result file is invalid: '%s'" % str(file_path)
+    if not os.path.exists(dir_path) or not os.path.isdir(dir_path):
+        error_msg += ("\n" if error_msg else "") + "Cache folder is invalid: '%s'" % str(dir_path)
+    return error_msg if error_msg else None
+
+
 def _check_get_parameters(params: list) -> dict:
     """Checks that the parameters were specified and available
     Arguments:
-        params: the list of parameters to use; only index 1 and 2 are used
+        params: the list of parameters to use (only the first two unflagged parameters are used)
     Return:
         Returns a dict that contains the named parameters
     Exception:
@@ -62,15 +113,30 @@ def _check_get_parameters(params: list) -> dict:
     num_params = len(params)
     if num_params < 3:
         raise RuntimeError("Parameters are missing, use the '--help' parameter for usage information")
-    results_file = params[1]
-    cache_dir = params[2]
+
+    results_file = None
+    cache_dir = None
+    path_maps = None
+    idx = 0
+    while idx < num_params:
+        if params[idx] and params[idx][0] == '-':
+            if params[idx] == "--maps":
+                idx += 1
+                if idx >= num_params:
+                    raise RuntimeError("--maps flag specified without a value")
+                path_maps = _get_path_maps(params[idx])
+            else:
+                logging.warning("Unknown flag specified: %s", str(params[idx]))
+        else:
+            # Only get the first two non-flag parameters & ignore the rest
+            if results_file is None:
+                results_file = params[idx]
+            elif cache_dir is None:
+                cache_dir = params[idx]
+        idx += 1
 
     # Check that we have a valid file and folder
-    error_msg = ""
-    if not os.path.exists(results_file) or not os.path.isfile(results_file):
-        error_msg += ("\n" if error_msg else "") + "Result file is invalid: '%s'" % str(results_file)
-    if not os.path.exists(cache_dir) or not os.path.isdir(cache_dir):
-        error_msg += ("\n" if error_msg else "") + "Cache folder is invalid: '%s'" % str(cache_dir)
+    error_msg = _check_paths_errors(results_file, cache_dir)
     if error_msg:
         logging.error(error_msg)
         raise RuntimeError(error_msg)
@@ -87,14 +153,54 @@ def _check_get_parameters(params: list) -> dict:
     else:
         logging.info("No files specified in results. Nothing copied")
 
+    # Add in other fields
+    return_dict['maps'] = path_maps
+
     return return_dict
 
 
-def cache_files(result_files: dict, cache_dir: str) -> None:
+def _map_path(file_path: str, path_maps: dict = None) -> str:
+    """Looks up the path in the dictionary and maps that portion of the path to its replacement
+    Arguments:
+        file_path: the path to look into modifying
+        path_maps: the dictionary of path mappings
+    Return:
+        The path to use. This is the original path if the starting path particle is not found in the mappings.
+        Otherwise, the start of the path will be replaced as specified by the associated path_map value.
+    Notes:
+        No checks for best (maximal) fit is made; the first found match is the one that's used.
+        White space is maintained; for example, '/usr/bin:/usr/local/bin ' will change '/usr/bin/x.sh' to
+        '/usr/local/bin /x.sh'.
+        Partial folder name mappings are not supported; for example, the path
+        '/home/foo' will not match '/home/foobar' but will match '/home/foo' and '/home/foo/my_file.txt'
+    """
+    if not path_maps:
+        return file_path
+
+    # Loop through looking for a good match
+    file_path_len = len(file_path)
+    for one_path in path_maps:
+        if file_path.startswith(one_path):
+            path_len = len(one_path)
+            if path_len == file_path_len:
+                return file_path
+            if path_len < file_path_len:
+                sep_char = file_path[path_len]
+                if sep_char in ['/', '\\']:
+                    new_path = os.path.join(path_maps[one_path], file_path[path_len + 1:])
+                    logging.info("Mapping file '%s' to '%s'", file_path, new_path)
+                    return new_path
+
+    logging.debug("No mapping found for: '%s", file_path)
+    return file_path
+
+
+def cache_files(result_files: dict, cache_dir: str, path_maps: dict = None) -> None:
     """Copies any files found in the results to the cache location
     Arguments:
         result_files: the dictionary of files to copy
         cache_dir: the location to copy the files to
+        path_maps: path mappings to use on file paths
     """
     # Loop through and build up a list of files to copy
     copy_list = []
@@ -105,8 +211,9 @@ def cache_files(result_files: dict, cache_dir: str) -> None:
         if 'path' in one_file:
             total_count += 1
             if os.path.exists(one_file['path']):
+                source_path = _map_path(one_file['path'], path_maps)
                 dest_path = os.path.join(cache_dir, os.path.basename(one_file['path']))
-                copy_list.append({'src': one_file['path'], 'dst': dest_path})
+                copy_list.append({'src': source_path, 'dst': dest_path})
             else:
                 logging.warning("File is missing and will not be copied: '%s'", one_file['path'])
                 problem_count += 1
