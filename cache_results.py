@@ -117,7 +117,7 @@ def _check_get_parameters(params: list) -> dict:
     results_file = None
     cache_dir = None
     path_maps = None
-    idx = 0
+    idx = 1
     while idx < num_params:
         if params[idx] and params[idx][0] == '-':
             if params[idx] == "--maps":
