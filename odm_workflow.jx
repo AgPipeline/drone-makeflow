@@ -58,6 +58,7 @@
         ODM_CACHE
       ]
     },
+    {
       "command": "cache_results.py ${ODM_RESULTS} ${ODM_CACHE}",
       "environment": {
         "ODM_CACHE": ODM_CACHE,
