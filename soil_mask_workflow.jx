@@ -2,7 +2,7 @@
   "define": {
     "SOURCE_IMAGE": BASE_DIR + "cache/odm_orthophoto.tif",
     "SOIL_MASK_CACHE": BASE_DIR + "cache",
-    "SOIL_MASK_DOCKER_IMAGE": "agpipeline/soilmask:" + SOIL_MASK_DOCKER_IMAGE_VERSION,
+    "SOIL_MASK_DOCKER_IMAGE": "agdrone/transformer-soilmask:" + SOIL_MASK_DOCKER_IMAGE_VERSION,
     "SOIL_MASK_WORKSPACE_DIR_NAME": "workspace/soil_mask",
     "SOIL_MASK_WORKSPACE": BASE_DIR + SOIL_MASK_WORKSPACE_DIR_NAME,
     "SOIL_MASK_RUN_RESULTS": SOIL_MASK_WORKSPACE + "/result.json",
