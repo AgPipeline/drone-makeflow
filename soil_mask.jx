@@ -1,0 +1,65 @@
+{
+  "define": {
+    "SOURCE_IMAGE": BASE_DIR + "cache/odm_orthophoto.tif",
+    "SOIL_MASK_CACHE": BASE_DIR + "cache",
+    "SOIL_MASK_DOCKER_IMAGE": "agpipeline/soilmask:" + SOIL_MASK_DOCKER_IMAGE_VERSION,
+    "SOIL_MASK_WORKSPACE_DIR_NAME": "workspace/soil_mask",
+    "SOIL_MASK_WORKSPACE": BASE_DIR + SOIL_MASK_WORKSPACE_DIR_NAME,
+    "SOIL_MASK_RUN_RESULTS": SOIL_MASK_WORKSPACE + "/result.json",
+    "CACHE_RESULTS_SCRIPT": BASE_DIR + "cache_results.py"
+  },
+  "rules": [
+    {
+      "command" : "mkdir -p ${SOIL_MASK_WORKSPACE} && chmod a+w ${SOIL_MASK_WORKSPACE}",
+      "environment": {
+        "SOIL_MASK_WORKSPACE": SOIL_MASK_WORKSPACE
+      },
+      "inputs": [],
+      "outputs": [
+        SOIL_MASK_WORKSPACE
+      ]
+    },
+    {
+      "command" : "mkdir -p ${SOIL_MASK_CACHE}",
+      "environment": {
+        "SOIL_MASK_CACHE": SOIL_MASK_CACHE
+      },
+      "inputs": [],
+      "outputs": [
+        SOIL_MASK_CACHE
+      ]
+    },
+    {
+      "command": "docker run --rm -v $(pwd):${IMAGE_MOUNT_POINT} ${DOCKER_IMAGE} --metadata ${METADATA} --working_space ${WORKSPACE_DIR} ${DOCKER_RUN_PARAMS}",
+      "environment": {
+        "IMAGE_MOUNT_POINT": IMAGE_MOUNT_POINT,
+        "DOCKER_IMAGE": SOIL_MASK_DOCKER_IMAGE,
+        "METADATA": IMAGE_MOUNT_POINT + EXPERIMENT_METADATA,
+        "WORKSPACE_DIR": IMAGE_MOUNT_POINT + SOIL_MASK_WORKSPACE_DIR_NAME,
+        "DOCKER_RUN_PARAMS": "SOURCE_IMAGE"
+      },
+      "inputs": [
+        SOIL_MASK_METADATA,
+        SOURCE_IMAGE
+      ],
+      "outputs": [
+        SOIL_MASK_RUN_RESULTS
+      ]
+    },
+    {
+      "command": "${SOIL_MASK_CACHE_APP} --maps ${PATH_MAPS} ${SOIL_MASK_RESULTS} ${SOIL_MASK_CACHE}",
+      "environment": {
+        "SOIL_MASK_CACHE_APP": "python3 " + CACHE_RESULTS_SCRIPT,
+        "SOIL_MASK_CACHE": SOIL_MASK_CACHE,
+        "SOIL_MASK_RESULTS": SOIL_MASK_RUN_RESULTS,
+        "PATH_MAPS": IMAGE_MOUNT_POINT + ":" + BASE_DIR
+      },
+      "inputs": [
+        CACHE_RESULTS_SCRIPT,
+        SOIL_MASK_CACHE,
+        SOIL_MASK_RUN_RESULTS
+      ],
+      "outputs": []
+    }
+  ]
+}
