@@ -1,7 +1,6 @@
 {
   "define" : {
     "ODM_CACHE": BASE_DIR + "cache",
-    "ODM_OUTPUT_DIR": BASE_DIR + "odm",
     "ODM_DOCKER_IMAGE": "agpipeline/opendronemap:" + ODM_DOCKER_IMAGE_VERSION,
     "ODM_METADATA": BASE_DIR + EXPERIMENT_METADATA,
     "ODM_SOURCE_IMAGES_DIR": BASE_DIR + IMAGES_FOLDER,
@@ -19,16 +18,6 @@
       "inputs": [],
       "outputs": [
         ODM_WORKSPACE
-      ]
-    },
-    {
-      "command" : "mkdir -p ${ODM_OUTPUT_DIR}",
-      "environment": {
-        "ODM_OUTPUT_DIR": ODM_OUTPUT_DIR
-      },
-      "inputs": [],
-      "outputs": [
-        ODM_OUTPUT_DIR
       ]
     },
     {
@@ -52,7 +41,6 @@
       },
       "inputs": [
         ODM_METADATA,
-        ODM_OUTPUT_DIR,
         ODM_SOURCE_IMAGES_DIR
       ],
       "outputs": [
