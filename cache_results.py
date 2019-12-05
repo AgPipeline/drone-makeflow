@@ -149,10 +149,12 @@ def _check_get_parameters(params: list) -> dict:
 
     # Loop through and copy any files (without sub-paths)
     return_dict = {'result_files': None, 'cache_dir': None}
-    if 'files' in results:
-        return_dict['result_files'] = results['files']
-        return_dict['cache_dir'] = cache_dir
-    else:
+    for key in ['file', 'files']:
+        if key in results:
+            return_dict['result_files'] = results[key]
+            return_dict['cache_dir'] = cache_dir
+            break
+    if return_dict['result_files'] is None:
         logging.info("No files specified in results. Nothing copied")
 
     # Add in other fields
