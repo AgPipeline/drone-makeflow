@@ -1,0 +1,71 @@
+{
+  "define": {
+    "SOURCE_IMAGE_NAME": "cache/odm_orthophoto_mask.tif",
+    "SOURCE_IMAGE": BASE_DIR + SOURCE_IMAGE_NAME,
+    "PLOT_CLIP_CACHE": BASE_DIR + "cache",
+    "PLOT_CLIP_DOCKER_IMAGE": "agdrone/transformer-plotclip:" + PLOT_CLIP_DOCKER_IMAGE_VERSION,
+    "PLOT_CLIP_METADATA": BASE_DIR + EXPERIMENT_METADATA,
+    "PLOT_CLIP_WORKSPACE_DIR_NAME": "workspace/plot_clip",
+    "PLOT_CLIP_WORKSPACE": BASE_DIR + PLOT_CLIP_WORKSPACE_DIR_NAME,
+    "PLOT_CLIP_RUN_RESULTS": PLOT_CLIP_WORKSPACE + "/result.json",
+    "BETYDB_URL_PARAM": "BETYDB_URL=" + MF_BETYDB_URL,
+    "BETYDB_KEY_PARAM": "BETYDB_KEY=" + MF_BETYDB_KEY,
+    "BETYDB_DOCKER_PARAMS": " -e " + BETYDB_URL_PARAM + " -e " + BETYDB_KEY_PARAM,
+    "CACHE_RESULTS_SCRIPT": BASE_DIR + "cache_results.py"
+  },
+  "rules": [
+    {
+      "command" : "mkdir -p ${PLOT_CLIP_WORKSPACE} && chmod a+w ${PLOT_CLIP_WORKSPACE}",
+      "environment": {
+        "PLOT_CLIP_WORKSPACE": PLOT_CLIP_WORKSPACE
+      },
+      "inputs": [],
+      "outputs": [
+        PLOT_CLIP_WORKSPACE
+      ]
+    },
+    {
+      "command" : "mkdir -p ${PLOT_CLIP_CACHE}",
+      "environment": {
+        "PLOT_CLIP_CACHE": PLOT_CLIP_CACHE
+      },
+      "inputs": [],
+      "outputs": [
+        PLOT_CLIP_CACHE
+      ]
+    },
+    {
+      "command": "docker run --rm -v $(pwd):${IMAGE_MOUNT_POINT} ${DOCKER_PARAMS} ${DOCKER_IMAGE} --metadata ${METADATA} --working_space ${WORKSPACE_DIR} ${DOCKER_RUN_PARAMS}",
+      "environment": {
+        "IMAGE_MOUNT_POINT": IMAGE_MOUNT_POINT,
+        "DOCKER_IMAGE": PLOT_CLIP_DOCKER_IMAGE,
+        "DOCKER_PARAMS": BETYDB_DOCKER_PARAMS,
+        "METADATA": IMAGE_MOUNT_POINT + EXPERIMENT_METADATA,
+        "WORKSPACE_DIR": IMAGE_MOUNT_POINT + PLOT_CLIP_WORKSPACE_DIR_NAME,
+        "DOCKER_RUN_PARAMS": IMAGE_MOUNT_POINT + SOURCE_IMAGE_NAME
+      },
+      "inputs": [
+        PLOT_CLIP_METADATA,
+        SOURCE_IMAGE
+      ],
+      "outputs": [
+        PLOT_CLIP_RUN_RESULTS
+      ]
+    },
+    {
+      "command": "${PLOT_CLIP_CACHE_APP} --maps ${PATH_MAPS} ${PLOT_CLIP_RESULTS} ${PLOT_CLIP_CACHE}",
+      "environment": {
+        "PLOT_CLIP_CACHE_APP": "python3 " + CACHE_RESULTS_SCRIPT,
+        "PLOT_CLIP_CACHE": PLOT_CLIP_CACHE,
+        "PLOT_CLIP_RESULTS": PLOT_CLIP_RUN_RESULTS,
+        "PATH_MAPS": IMAGE_MOUNT_POINT + ":" + BASE_DIR
+      },
+      "inputs": [
+        CACHE_RESULTS_SCRIPT,
+        PLOT_CLIP_CACHE,
+        PLOT_CLIP_RUN_RESULTS
+      ],
+      "outputs": []
+    }
+  ]
+}
