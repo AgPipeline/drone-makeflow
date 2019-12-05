@@ -148,14 +148,24 @@ def _check_get_parameters(params: list) -> dict:
         results = json.load(in_file)
 
     # Loop through and copy any files (without sub-paths)
-    return_dict = {'result_files': None, 'cache_dir': None}
+    return_dict = {'result_containers': None, 'result_files': None, 'cache_dir': None}
+
+    # Look for containers first
+    for key in ['container', 'containers']:
+        if key in results:
+            return_dict['result_containers'] = results[key]
+            return_dict['cache_dir'] = cache_dir
+            break
+    if return_dict['result_containers'] is None:
+        logging.info("No containers found in results")
+
     for key in ['file', 'files']:
         if key in results:
             return_dict['result_files'] = results[key]
             return_dict['cache_dir'] = cache_dir
             break
     if return_dict['result_files'] is None:
-        logging.info("No files specified in results. Nothing copied")
+        logging.info("No top-level files found in results")
 
     # Add in other fields
     return_dict['path_maps'] = path_maps
@@ -242,6 +252,34 @@ def cache_files(result_files: dict, cache_dir: str, path_maps: dict = None) -> N
         shutil.copyfile(one_file['src'], one_file['dst'])
 
 
+def cache_results(result_containers: dict, result_files: dict, cache_dir: str, path_maps: dict = None) -> None:
+    """Handles caching the containers and files found in the results
+    Arguments:
+        result_containers: the dictionary of containers with files to copy
+        result_files: the dictionary of files to copy
+        cache_dir: the location to copy the files to
+        path_maps: path mappings to use on file paths
+    """
+    # Handle containers first
+    if result_containers:
+        for container in result_containers:
+            if 'name' in container:
+                working_dir = os.path.join(cache_dir, container['name'])
+                try:
+                    os.makedirs(working_dir, exist_ok=True)
+                except FileExistsError:
+                    # Directory already exists
+                    pass
+                for key in ['file', 'files']:
+                    if key in container:
+                        cache_files(container[key], working_dir, path_maps)
+                        break
+
+    # Handle any top-level files
+    if result_files:
+        cache_files(result_files, cache_dir, path_maps)
+
+
 if __name__ == "__main__":
     # Get the command line arguments and check if help was specified
     ARGS = sys.argv
@@ -250,4 +288,4 @@ if __name__ == "__main__":
 
     # Process the results
     PARAMS = _check_get_parameters(ARGS)
-    cache_files(**PARAMS)
+    cache_results(**PARAMS)
