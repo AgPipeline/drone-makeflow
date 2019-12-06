@@ -240,6 +240,34 @@ def _strip_mapped_path(file_path: str, path_maps: dict = None) -> str:
     return file_path
 
 
+def _save_result_metadata(metadata_file: str, metadata: dict) -> None:
+    """Saves the container's metadata to the specified file path.
+    Arguments:
+        metadata_file: the path to save the metadata to
+        metadata: the metadata to save
+    Notes:
+        Looks for a 'replace' key to determine if the metadata is appended to existing metadata or not (as
+        specified by the file name passed in). If 'replace' is missing, or evaluates to False, any existing metadata
+        is replaced. Otherwise the metadata is appended to the end of the file - the current file contents are not
+        loaded first.
+        A 'data' key is looked for as an indication of what metadata to save. If a 'data' key isn't specified, the
+        entire metadata parameter is written to the file.
+    """
+    append = False
+
+    write_metadata = metadata if 'data' not in metadata else metadata['data']
+
+    # If the metadata file already exists, check what the caller wants to have happen (see Notes in docstring)
+    if os.path.exists(metadata_file):
+        if 'replace' in metadata:
+            append = True
+
+    with open(metadata_file, "a" if append else "w") as out_file:
+        if append:
+            out_file.write(',')
+        json.dump(write_metadata, out_file, indent=2)
+
+
 def cache_files(result_files: dict, cache_dir: str, path_maps: dict = None) -> list:
     """Copies any files found in the results to the cache location
     Arguments:
@@ -261,7 +289,10 @@ def cache_files(result_files: dict, cache_dir: str, path_maps: dict = None) -> l
             source_path = _map_path(one_file['path'], path_maps)
             if os.path.exists(source_path):
                 dest_path = os.path.join(cache_dir, os.path.basename(one_file['path']))
-                copy_list.append({'src': source_path, 'dst': dest_path})
+                copy_info = {'src': source_path, 'dst': dest_path}
+                if 'metadata' in one_file:
+                    copy_info['metadata'] = one_file['metadata']
+                copy_list.append(copy_info)
             else:
                 logging.warning("File is missing and will not be copied: '%s'", one_file['path'])
                 problem_count += 1
@@ -284,6 +315,8 @@ def cache_files(result_files: dict, cache_dir: str, path_maps: dict = None) -> l
     for one_file in copy_list:
         logging.debug("Copy file: '%s' to '%s'", str(one_file['src']), str(one_file['dst']))
         shutil.copyfile(one_file['src'], one_file['dst'])
+        if 'metadata' in one_file:
+            _save_result_metadata(os.path.splitext(one_file['dst'])[0] + '.json', one_file['metadata'])
         copied_files.append(one_file['dst'])
 
     return copied_files
@@ -309,6 +342,12 @@ def cache_containers(container_list: list, cache_dir: str, path_maps: dict = Non
             except FileExistsError:
                 # Directory already exists
                 pass
+
+            # Save metadata
+            if 'metadata' in container:
+                _save_result_metadata(os.path.join(working_dir, container['name'] + '.json'), container['metadata'])
+
+            # Copy files
             for key in ['file', 'files']:
                 if key in container:
                     copied_files = cache_files(container[key], working_dir, path_maps)
