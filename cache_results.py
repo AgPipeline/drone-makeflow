@@ -316,7 +316,8 @@ def cache_files(result_files: dict, cache_dir: str, path_maps: dict = None) -> l
         logging.debug("Copy file: '%s' to '%s'", str(one_file['src']), str(one_file['dst']))
         shutil.copyfile(one_file['src'], one_file['dst'])
         if 'metadata' in one_file:
-            _save_result_metadata(os.path.splitext(one_file['dst'])[0] + '.json', one_file['metadata'])
+            metadata_file_name = os.path.splitext(one_file['dst'])[0] + '.json'
+            _save_result_metadata(metadata_file_name, one_file['metadata'])
         copied_files.append(one_file['dst'])
 
     return copied_files
@@ -344,15 +345,17 @@ def cache_containers(container_list: list, cache_dir: str, path_maps: dict = Non
                 pass
 
             # Save metadata
+            container_metadata_name = None
             if 'metadata' in container:
-                _save_result_metadata(os.path.join(working_dir, container['name'] + '.json'), container['metadata'])
+                container_metadata_name = os.path.join(cache_dir, container['name'] + '.json')
+                _save_result_metadata(container_metadata_name, container['metadata'])
 
             # Copy files
             for key in ['file', 'files']:
                 if key in container:
                     copied_files = cache_files(container[key], working_dir, path_maps)
                     if copied_files:
-                        file_list.extend(copied_files)
+                        file_list.extend({'files': copied_files, 'metadata': container_metadata_name})
                     break
 
     return file_list
@@ -378,18 +381,23 @@ def cache_results(result_containers: list, result_files: dict, cache_dir: str, p
     if result_files:
         copied_files = cache_files(result_files, cache_dir, path_maps)
         if copied_files:
-            file_list.extend(copied_files)
+            file_list.extend({'files': copied_files})
 
     # Save the list of copied files for makeflow use
     makeflow_list_file = os.path.join(cache_dir, "cached_files_makeflow_list.jx")
     with open(makeflow_list_file, "w") as out_file:
         out_file.write('{\n  "FILE_LIST": [')
         separator = ""
-        for one_file in file_list:
-            out_file.write('%s\n  {\n    \"PATH\": \"%s\",\n    \"NAME\": \"%s\"\n  }' % \
-                           (separator, one_file, _strip_mapped_path(one_file, path_maps)))
-            separator = ','
-        out_file.write('\n  ]\n}')
+        for one_set in file_list:
+            metadata_line = ""
+            if 'metadata' in one_set:
+                metadata_line = '\n    \"METADATA\": \"%s\",\n' % one_set['metadata']
+
+            for one_file in one_set['files']:
+                out_file.write('%s\n  {\n%s    \"PATH\": \"%s\",\n    \"NAME\": \"%s\"\n  }' % \
+                               (separator, metadata_line, one_file, _strip_mapped_path(one_file, path_maps)))
+                separator = ','
+            out_file.write('\n  ]\n}')
 
 
 if __name__ == "__main__":
