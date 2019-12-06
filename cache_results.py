@@ -381,7 +381,7 @@ def cache_results(result_containers: list, result_files: dict, cache_dir: str, p
     if result_files:
         copied_files = cache_files(result_files, cache_dir, path_maps)
         if copied_files:
-            file_list.extend({'files': copied_files})
+            file_list.append({'files': copied_files})
 
     # Save the list of copied files for makeflow use
     makeflow_list_file = os.path.join(cache_dir, "cached_files_makeflow_list.jx")
