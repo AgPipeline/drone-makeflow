@@ -1,0 +1,16 @@
+{
+    {
+      "command": "docker run --rm -v $(pwd):${DOCKER_IMAGE_MOUNT_POINT} ${DOCKER_PARAMS} ${DOCKER_IMAGE} --metadata ${METADATA} --working_space ${WORKSPACE_DIR} ${DOCKER_RUN_PARAMS}",
+      "environment": {
+        "DOCKER_IMAGE_MOUNT_POINT": DOCKER_IMAGE_MOUNT_POINT,
+        "DOCKER_IMAGE": CANOPY_COVER_DOCKER_IMAGE,
+        "DOCKER_PARAMS": "",
+        "METADATA": DOCKER_IMAGE_MOUNT_POINT + EXPERIMENT_METADATA,
+        "WORKSPACE_DIR": DOCKER_IMAGE_MOUNT_POINT + CANOPY_COVER_WORKSPACE_DIR_NAME,
+        "DOCKER_RUN_PARAMS": DOCKER_IMAGE_MOUNT_POINT + IMAGE_FILE_NAME
+      },
+      "inputs": [],
+      "outputs": []
+    },
+
+}

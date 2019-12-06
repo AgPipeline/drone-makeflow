@@ -1,0 +1,53 @@
+{
+  "define": {
+    "PLOT_CLIP_CACHE": BASE_DIR + "cache",
+    "CANOPY_COVER_CACHE": BASE_DIR + "cache",
+    "CANOPY_COVER_DOCKER_IMAGE": "agdrone/transformer-canopycover:" + CANOPY_COVER_DOCKER_IMAGE_VERSION,
+    "CANOPY_COVER_METADATA": BASE_DIR + EXPERIMENT_METADATA,
+    "CANOPY_COVER_WORKSPACE_DIR_NAME": "workspace/canopycover",
+    "CANOPY_COVER_WORKSPACE": BASE_DIR + PLOT_CLIP_WORKSPACE_DIR_NAME,
+    "CACHE_RESULTS_SCRIPT": BASE_DIR + "cache_results.py"
+  },
+  "rules": [
+    {
+      "command" : "mkdir -p ${CANOPY_COVER_WORKSPACE} && chmod a+w ${CANOPY_COVER_WORKSPACE}",
+      "environment": {
+        "CANOPY_COVER_WORKSPACE": CANOPY_COVER_WORKSPACE
+      },
+      "inputs": [],
+      "outputs": [
+        CANOPY_COVER_WORKSPACE
+      ]
+    },
+    {
+      "command" : "mkdir -p ${CANOPY_COVER_CACHE}",
+      "environment": {
+        "CANOPY_COVER_CACHE": CANOPY_COVER_CACHE
+      },
+      "inputs": [],
+      "outputs": [
+        CANOPY_COVER_CACHE
+      ]
+    },
+    {
+      "workflow": "canopy_cover_sub_workflow.jx",
+      "args": {
+        "IMAGE_FILE_NAME": ONE_FILE["NAME"],
+        "DOCKER_IMAGE_MOUNT_POINT": IMAGE_MOUNT_POINT,
+        "CANOPY_COVER_CACHE": CANOPY_COVER_CACHE,
+        "CANOPY_COVER_DOCKER_IMAGE": CANOPY_COVER_DOCKER_IMAGE,
+        "EXPERIMENT_METADATA": EXPERIMENT_METADATA,
+        "CANOPY_COVER_WORKSPACE_DIR_NAME": CANOPY_COVER_WORKSPACE_DIR_NAME,
+        "CACHE_RESULTS_SCRIPT": CACHE_RESULTS_SCRIPT
+      },
+      "inputs": [
+        ONE_FILE["PATH"],
+        CANOPY_COVER_CACHE,
+        CANOPY_COVER_METADATA,
+        CANOPY_COVER_WORKSPACE,
+        CACHE_RESULTS_SCRIPT
+      ],
+      "outputs": []
+    } for ONE_FILE in FILE_LIST
+  ]
+}

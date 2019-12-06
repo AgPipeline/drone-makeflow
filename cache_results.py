@@ -209,14 +209,17 @@ def _map_path(file_path: str, path_maps: dict = None) -> str:
     return file_path
 
 
-def cache_files(result_files: dict, cache_dir: str, path_maps: dict = None) -> None:
+def cache_files(result_files: dict, cache_dir: str, path_maps: dict = None) -> list:
     """Copies any files found in the results to the cache location
     Arguments:
         result_files: the dictionary of files to copy
         cache_dir: the location to copy the files to
         path_maps: path mappings to use on file paths
+    Return:
+        Returns a list of copied files
     """
     # Loop through and build up a list of files to copy
+    copied_files = []
     copy_list = []
     total_count = 0
     problem_count = 0
@@ -250,6 +253,9 @@ def cache_files(result_files: dict, cache_dir: str, path_maps: dict = None) -> N
     for one_file in copy_list:
         logging.debug("Copy file: '%s' to '%s'", str(one_file['src']), str(one_file['dst']))
         shutil.copyfile(one_file['src'], one_file['dst'])
+        copied_files.append(one_file['dst'])
+
+    return copied_files
 
 
 def cache_results(result_containers: dict, result_files: dict, cache_dir: str, path_maps: dict = None) -> None:
@@ -260,6 +266,8 @@ def cache_results(result_containers: dict, result_files: dict, cache_dir: str, p
         cache_dir: the location to copy the files to
         path_maps: path mappings to use on file paths
     """
+    file_list = []
+
     # Handle containers first
     if result_containers:
         for container in result_containers:
@@ -272,12 +280,27 @@ def cache_results(result_containers: dict, result_files: dict, cache_dir: str, p
                     pass
                 for key in ['file', 'files']:
                     if key in container:
-                        cache_files(container[key], working_dir, path_maps)
+                        copied_files = cache_files(container[key], working_dir, path_maps)
+                        if copied_files:
+                            file_list.extend(copied_files)
                         break
 
     # Handle any top-level files
     if result_files:
-        cache_files(result_files, cache_dir, path_maps)
+        copied_files = cache_files(result_files, cache_dir, path_maps)
+        if copied_files:
+            file_list.extend(copied_files)
+
+    # Save the list of copied files for makeflow use
+    makeflow_list_file = os.path.join(cache_dir, "cached_files_makeflow_list.jx")
+    with open(makeflow_list_file, "w") as out_file:
+        out_file.write('{\n"FILE_LIST": [')
+        separator = ""
+        for one_file in file_list:
+            out_file.write('%s\n  {\n    \"PATH\": \"%s\"\n,    \"NAME\": \"%s\"\n  }' % \
+                           (separator, one_file, _strip_mapped_path(one_file, path_maps)))
+            separator = ',\n'
+        out_file.write('\n]\n}')
 
 
 if __name__ == "__main__":
