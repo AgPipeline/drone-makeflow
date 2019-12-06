@@ -344,13 +344,13 @@ def cache_results(result_containers: list, result_files: dict, cache_dir: str, p
     # Save the list of copied files for makeflow use
     makeflow_list_file = os.path.join(cache_dir, "cached_files_makeflow_list.jx")
     with open(makeflow_list_file, "w") as out_file:
-        out_file.write('{\n"FILE_LIST": [')
+        out_file.write('{\n  "FILE_LIST": [')
         separator = ""
         for one_file in file_list:
-            out_file.write('%s\n  {\n    \"PATH\": \"%s\"\n,    \"NAME\": \"%s\"\n  }' % \
+            out_file.write('%s\n  {\n    \"PATH\": \"%s\",\n    \"NAME\": \"%s\"\n  }' % \
                            (separator, one_file, _strip_mapped_path(one_file, path_maps)))
-            separator = ',\n'
-        out_file.write('\n]\n}')
+            separator = ','
+        out_file.write('\n  ]\n}')
 
 
 if __name__ == "__main__":
