@@ -260,7 +260,7 @@ def _save_result_metadata(metadata_file: str, metadata: dict) -> None:
     # If the metadata file already exists, check what the caller wants to have happen (see Notes in docstring)
     if os.path.exists(metadata_file):
         if 'replace' in metadata:
-            append = True
+            append = False if metadata['replace'] else True
 
     with open(metadata_file, "a" if append else "w") as out_file:
         if append:
