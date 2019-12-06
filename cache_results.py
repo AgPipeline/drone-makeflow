@@ -209,6 +209,37 @@ def _map_path(file_path: str, path_maps: dict = None) -> str:
     return file_path
 
 
+def _strip_mapped_path(file_path: str, path_maps: dict = None) -> str:
+    """Searches the path maps for a previously mapped path and strips it from the source path.
+       The values in the path maps are used for comparison, not the keys.
+    Arguments:
+        file_path: the path to look into modifying
+        path_maps: the dictionary of path mappings
+    Return:
+        The path with the starting matched part stripped when a match is found, otherwise the original file_path
+    """
+    if not path_maps:
+        return file_path
+
+    # Loop through looking for a matching path
+    file_path_len = len(file_path)
+    for _, one_path in path_maps.items():
+        if file_path.startswith(one_path):
+            path_len = len(one_path)
+            if path_len == file_path_len:
+                logging.debug("Full path match for stripping folder mapping, returning empty string")
+                return ""
+            if path_len < file_path_len:
+                sep_char = file_path[path_len]
+                if sep_char in ['/', '\\']:
+                    new_path = file_path[path_len + 1:]
+                    logging.info("Stripping mapped file '%s' to '%s'", file_path, new_path)
+                    return new_path
+
+    logging.debug("No mapped path found for: '%s", file_path)
+    return file_path
+
+
 def cache_files(result_files: dict, cache_dir: str, path_maps: dict = None) -> list:
     """Copies any files found in the results to the cache location
     Arguments:
@@ -258,7 +289,37 @@ def cache_files(result_files: dict, cache_dir: str, path_maps: dict = None) -> l
     return copied_files
 
 
-def cache_results(result_containers: dict, result_files: dict, cache_dir: str, path_maps: dict = None) -> None:
+def cache_containers(container_list: list, cache_dir: str, path_maps: dict = None) -> list:
+    """Searches the list of containers for files to copy and copies them to a folder in the cache_dir.
+       The folders are named after the container name.
+    Arguments:
+        container_list: the list of containers to search
+        cache_dir: the location to copy the files to
+        path_maps: path mappings to use on file paths
+    Return:
+        Returns a list of copied files
+    """
+    file_list = []
+
+    for container in container_list:
+        if 'name' in container:
+            working_dir = os.path.join(cache_dir, container['name'])
+            try:
+                os.makedirs(working_dir, exist_ok=True)
+            except FileExistsError:
+                # Directory already exists
+                pass
+            for key in ['file', 'files']:
+                if key in container:
+                    copied_files = cache_files(container[key], working_dir, path_maps)
+                    if copied_files:
+                        file_list.extend(copied_files)
+                    break
+
+    return file_list
+
+
+def cache_results(result_containers: list, result_files: dict, cache_dir: str, path_maps: dict = None) -> None:
     """Handles caching the containers and files found in the results
     Arguments:
         result_containers: the dictionary of containers with files to copy
@@ -270,20 +331,9 @@ def cache_results(result_containers: dict, result_files: dict, cache_dir: str, p
 
     # Handle containers first
     if result_containers:
-        for container in result_containers:
-            if 'name' in container:
-                working_dir = os.path.join(cache_dir, container['name'])
-                try:
-                    os.makedirs(working_dir, exist_ok=True)
-                except FileExistsError:
-                    # Directory already exists
-                    pass
-                for key in ['file', 'files']:
-                    if key in container:
-                        copied_files = cache_files(container[key], working_dir, path_maps)
-                        if copied_files:
-                            file_list.extend(copied_files)
-                        break
+        copied_files = cache_containers(result_containers, cache_dir, path_maps)
+        if copied_files:
+            file_list.extend(copied_files)
 
     # Handle any top-level files
     if result_files:
