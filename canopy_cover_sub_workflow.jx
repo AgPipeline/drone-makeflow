@@ -1,4 +1,5 @@
 {
+  "rules": [
     {
       "command": "docker run --rm -v $(pwd):${DOCKER_IMAGE_MOUNT_POINT} ${DOCKER_PARAMS} ${DOCKER_IMAGE} --metadata ${METADATA} --working_space ${WORKSPACE_DIR} ${DOCKER_RUN_PARAMS}",
       "environment": {
@@ -11,6 +12,6 @@
       },
       "inputs": [],
       "outputs": []
-    },
-
+    }
+  ]
 }
