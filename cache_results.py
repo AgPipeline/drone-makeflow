@@ -355,7 +355,7 @@ def cache_containers(container_list: list, cache_dir: str, path_maps: dict = Non
                 if key in container:
                     copied_files = cache_files(container[key], working_dir, path_maps)
                     if copied_files:
-                        file_list.extend({'files': copied_files, 'metadata': container_metadata_name})
+                        file_list.append({'files': copied_files, 'metadata': container_metadata_name})
                     break
 
     return file_list
@@ -397,7 +397,7 @@ def cache_results(result_containers: list, result_files: dict, cache_dir: str, p
                 out_file.write('%s\n  {\n%s    \"PATH\": \"%s\",\n    \"NAME\": \"%s\"\n  }' % \
                                (separator, metadata_line, one_file, _strip_mapped_path(one_file, path_maps)))
                 separator = ','
-            out_file.write('\n  ]\n}')
+        out_file.write('\n  ]\n}')
 
 
 if __name__ == "__main__":
