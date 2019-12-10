@@ -317,6 +317,7 @@ def cache_files(result_files: dict, cache_dir: str, path_maps: dict = None) -> l
         shutil.copyfile(one_file['src'], one_file['dst'])
         if 'metadata' in one_file:
             metadata_file_name = os.path.splitext(one_file['dst'])[0] + '.json'
+            logging.debug("Saving metadata to file: %s", metadata_file_name)
             _save_result_metadata(metadata_file_name, one_file['metadata'])
         copied_files.append(one_file['dst'])
 
@@ -346,16 +347,19 @@ def cache_containers(container_list: list, cache_dir: str, path_maps: dict = Non
 
             # Save metadata
             container_metadata_name = None
+            container_metadata_path = None
             if 'metadata' in container:
-                container_metadata_name = os.path.join(cache_dir, container['name'] + '.json')
-                _save_result_metadata(container_metadata_name, container['metadata'])
+                container_metadata_name = container['name'] + '.json'
+                container_metadata_path = os.path.join(cache_dir, container_metadata_name)
+                _save_result_metadata(container_metadata_path, container['metadata'])
 
             # Copy files
             for key in ['file', 'files']:
                 if key in container:
                     copied_files = cache_files(container[key], working_dir, path_maps)
                     if copied_files:
-                        file_list.append({'files': copied_files, 'metadata': container_metadata_name})
+                        file_list.append({'files': copied_files, 'metadata_name': container_metadata_name,
+                                          'metadata_path': container_metadata_path})
                     break
 
     return file_list
@@ -390,8 +394,10 @@ def cache_results(result_containers: list, result_files: dict, cache_dir: str, p
         separator = ""
         for one_set in file_list:
             metadata_line = ""
-            if 'metadata' in one_set:
-                metadata_line = '\n    \"METADATA\": \"%s\",\n' % one_set['metadata']
+            if 'metadata_path' in one_set:
+                metadata_line += '\n    \"METADATA\": \"%s\",' % one_set['metadata_path']
+            if 'metadata_name' in one_set:
+                metadata_line += '\n    \"METADATA_NAME\": \"%s\",' % one_set['metadata_name']
 
             for one_file in one_set['files']:
                 out_file.write('%s\n  {\n%s    \"PATH\": \"%s\",\n    \"NAME\": \"%s\"\n  }' % \
