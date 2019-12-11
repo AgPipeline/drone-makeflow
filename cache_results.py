@@ -260,7 +260,7 @@ def _save_result_metadata(metadata_file: str, metadata: dict) -> None:
     # If the metadata file already exists, check what the caller wants to have happen (see Notes in docstring)
     if os.path.exists(metadata_file):
         if 'replace' in metadata:
-            append = False if metadata['replace'] else True
+            append = not metadata['replace']
 
     with open(metadata_file, "a" if append else "w") as out_file:
         if append:
@@ -346,11 +346,9 @@ def cache_containers(container_list: list, cache_dir: str, path_maps: dict = Non
                 pass
 
             # Save metadata
-            container_metadata_name = None
             container_metadata_path = None
             if 'metadata' in container:
-                container_metadata_name = container['name'] + '.json'
-                container_metadata_path = os.path.join(cache_dir, container_metadata_name)
+                container_metadata_path = os.path.join(cache_dir, container['name'] + '.json')
                 _save_result_metadata(container_metadata_path, container['metadata'])
 
             # Copy files
@@ -358,8 +356,7 @@ def cache_containers(container_list: list, cache_dir: str, path_maps: dict = Non
                 if key in container:
                     copied_files = cache_files(container[key], working_dir, path_maps)
                     if copied_files:
-                        file_list.append({'files': copied_files, 'metadata_name': container_metadata_name,
-                                          'metadata_path': container_metadata_path})
+                        file_list.append({'files': copied_files, 'metadata_path': container_metadata_path})
                     break
 
     return file_list
@@ -393,16 +390,18 @@ def cache_results(result_containers: list, result_files: dict, cache_dir: str, p
         out_file.write('{\n  "FILE_LIST": [')
         separator = ""
         for one_set in file_list:
-            metadata_line = ""
+            definition_lines = []
             if 'metadata_path' in one_set:
-                metadata_line += '\n    \"METADATA\": \"%s\",' % one_set['metadata_path']
-            if 'metadata_name' in one_set:
-                metadata_line += '\n    \"METADATA_NAME\": \"%s\",' % one_set['metadata_name']
+                definition_lines.append('\"METADATA\": \"%s\"' % one_set['metadata_path'])
+                definition_lines.append('\"METADATA_NAME\": \"%s\"' % _strip_mapped_path(one_set['metadata_path'], path_maps))
 
             for one_file in one_set['files']:
-                out_file.write('%s\n  {\n%s    \"PATH\": \"%s\",\n    \"NAME\": \"%s\"\n  }' % \
-                               (separator, metadata_line, one_file, _strip_mapped_path(one_file, path_maps)))
-                separator = ','
+                definition_lines.append('\"PATH\": \"%s\"' % one_file)
+                definition_lines.append('\"NAME\": \"%s\"' % _strip_mapped_path(one_file, path_maps))
+
+            out_file.write('%s\n  {\n%s\n  }' % (separator, ',\n    '.join(definition_lines)))
+            separator = ','
+
         out_file.write('\n  ]\n}')
 
 
