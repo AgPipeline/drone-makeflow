@@ -399,7 +399,7 @@ def cache_results(result_containers: list, result_files: dict, cache_dir: str, p
                 definition_lines.append('\"PATH\": \"%s\"' % one_file)
                 definition_lines.append('\"NAME\": \"%s\"' % _strip_mapped_path(one_file, path_maps))
 
-            out_file.write('%s\n  {\n%s\n  }' % (separator, ',\n    '.join(definition_lines)))
+            out_file.write('%s\n  {\n    %s\n  }' % (separator, ',\n    '.join(definition_lines)))
             separator = ','
 
         out_file.write('\n  ]\n}')
