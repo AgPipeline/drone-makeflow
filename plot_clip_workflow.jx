@@ -2,7 +2,6 @@
   "define": {
     "SOURCE_IMAGE_NAME": "cache/rgb_mask_L2_ua-mac_2019-05-31__14-20-40_mask.tif",
     "SOURCE_IMAGE": BASE_DIR + SOURCE_IMAGE_NAME,
-    "PLOT_CLIP_CACHE": BASE_DIR + "cache",
     "PLOT_CLIP_DOCKER_IMAGE": "agdrone/transformer-plotclip:" + PLOT_CLIP_DOCKER_IMAGE_VERSION,
     "PLOT_CLIP_METADATA": BASE_DIR + EXPERIMENT_METADATA,
     "PLOT_CLIP_WORKSPACE_DIR_NAME": "workspace/plot_clip",
@@ -11,6 +10,7 @@
     "BETYDB_URL_PARAM": "BETYDB_URL=" + MF_BETYDB_URL,
     "BETYDB_KEY_PARAM": "BETYDB_KEY=" + MF_BETYDB_KEY,
     "BETYDB_DOCKER_PARAMS": " -e " + BETYDB_URL_PARAM + " -e " + BETYDB_KEY_PARAM,
+    "PLOT_CLIP_CACHE": BASE_DIR + "cache",
     "CACHE_RESULTS_SCRIPT": BASE_DIR + "cache_results.py"
   },
   "rules": [
