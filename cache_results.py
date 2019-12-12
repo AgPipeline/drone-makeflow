@@ -394,11 +394,12 @@ def cache_results(result_containers: list, result_files: dict, cache_dir: str, p
             if 'metadata_path' in one_set:
                 definition_lines.append('\"METADATA\": \"%s\"' % one_set['metadata_path'])
                 definition_lines.append('\"METADATA_NAME\": \"%s\"' % _strip_mapped_path(one_set['metadata_path'], path_maps))
+                definition_lines.append('\"BASE_METADATA_NAME\": \"%s\"' % os.path.splitext(os.path.basename(one_set['metadata_path']))[0])
 
             for one_file in one_set['files']:
                 definition_lines.append('\"PATH\": \"%s\"' % one_file)
                 definition_lines.append('\"NAME\": \"%s\"' % _strip_mapped_path(one_file, path_maps))
-                definition_lines.append('\"BASE_NAME\": \"%s\"' % os.path.splitext(os.path.basename(one_file))[0])
+                definition_lines.append('\"BASE_IMAGE_NAME\": \"%s\"' % os.path.splitext(os.path.basename(one_file))[0])
 
             out_file.write('%s\n  {\n    %s\n  }' % (separator, ',\n    '.join(definition_lines)))
             separator = ','
