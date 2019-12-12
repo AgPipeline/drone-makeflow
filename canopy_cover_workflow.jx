@@ -29,7 +29,7 @@
       ]
     },
     {
-        "command": "mkdir -p ${CANOPY_COVER_IMAGE_WORKSPACE}",
+        "command": "mkdir -p \"${CANOPY_COVER_IMAGE_WORKSPACE}\" && chmod a+w \"${CANOPY_COVER_IMAGE_WORKSPACE}\"",
         "environment": {
             "CANOPY_COVER_IMAGE_WORKSPACE": CANOPY_COVER_WORKSPACE + "/" + ONE_FILE["BASE_METADATA_NAME"]
         },
@@ -57,7 +57,7 @@
         CANOPY_COVER_CACHE,
         CANOPY_COVER_METADATA,
         CANOPY_COVER_WORKSPACE,
-        CANOPY_COVER_WORKSPACE + "/" + ONE_FILE["BASE_NAME"]
+        CANOPY_COVER_WORKSPACE + "/" + ONE_FILE["BASE_METADATA_NAME"]
       ],
       "outputs": []
     } for ONE_FILE in FILE_LIST
