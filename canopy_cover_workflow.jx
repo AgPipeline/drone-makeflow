@@ -37,7 +37,7 @@
             CANOPY_COVER_WORKSPACE
         ],
         "outputs": [
-            CANOPY_COVER_WORKSPACE + "/" + ONE_FILE["BASE_NAME"]
+            CANOPY_COVER_WORKSPACE + "/" + ONE_FILE["BASE_METADATA_NAME"]
         ]
     } for ONE_FILE in FILE_LIST,
     {
