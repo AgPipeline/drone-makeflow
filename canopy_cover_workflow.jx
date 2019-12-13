@@ -41,7 +41,7 @@
         ]
     } for ONE_FILE in FILE_LIST,
     {
-      "command": "docker run --rm -v $(pwd):${DOCKER_IMAGE_MOUNT_POINT} ${DOCKER_PARAMS} ${DOCKER_IMAGE} --metadata \"${METADATA}\"  --metadata \"${EXPERIMENT_METADATA}\" --working_space \"${WORKSPACE_DIR}\" \"${DOCKER_RUN_SOURCE_FILE}\"",
+      "command": "docker run --rm -v $(pwd):${DOCKER_IMAGE_MOUNT_POINT} ${DOCKER_PARAMS} ${DOCKER_IMAGE} --metadata \"${METADATA}\"  --metadata \"${EXPERIMENT_METADATA}\" --working_space \"${WORKSPACE_DIR}\" --csv_path \"${CSV_PATH}\" \"${DOCKER_RUN_SOURCE_FILE}\"",
       "environment": {
         "DOCKER_IMAGE_MOUNT_POINT": IMAGE_MOUNT_POINT,
         "DOCKER_IMAGE": CANOPY_COVER_DOCKER_IMAGE,
@@ -59,7 +59,10 @@
         CANOPY_COVER_WORKSPACE,
         CANOPY_COVER_WORKSPACE + "/" + ONE_FILE["BASE_METADATA_NAME"]
       ],
-      "outputs": []
+      "outputs": [
+        IMAGE_MOUNT_POINT + CANOPY_COVER_WORKSPACE_DIR_NAME + "/" + ONE_FILE["BASE_METADATA_NAME"] + "/result.json",
+        IMAGE_MOUNT_POINT + CANOPY_COVER_WORKSPACE_DIR_NAME + "/" + ONE_FILE["BASE_METADATA_NAME"] + "/rgb_plot.csv"
+      ]
     } for ONE_FILE in FILE_LIST
   ]
 }
