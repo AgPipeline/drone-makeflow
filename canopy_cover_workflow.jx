@@ -68,7 +68,7 @@
       "environment": {
         "CANOPY_COVER_CACHE_APP": "python3 " + CACHE_RESULTS_SCRIPT,
         "CANOPY_COVER_CACHE": CANOPY_COVER_CACHE,
-        "CANOPY_COVER_RESULTS": CANOPY_COVER_RUN_RESULTS,
+        "CANOPY_COVER_RESULTS": BASE_DIR + CANOPY_COVER_WORKSPACE_DIR_NAME + "/" + ONE_FILE["BASE_METADATA_NAME"] + "/result.json",
         "PATH_MAPS": IMAGE_MOUNT_POINT + ":" + BASE_DIR
       },
       "inputs": [
