@@ -77,7 +77,6 @@
         BASE_DIR + CANOPY_COVER_WORKSPACE_DIR_NAME + "/" + ONE_FILE["BASE_METADATA_NAME"] + "/result.json"
       ],
       "outputs": [
-        CANOPY_COVER_CACHE + "/" + "cached_files_makeflow_list.jx"
       ]
      } for ONE_FILE in FILE_LIST
   ]
