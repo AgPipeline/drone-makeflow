@@ -2,60 +2,80 @@
 """Script for caching results from a transformer run
 """
 
+import argparse
 import json
 import logging
 import os
 import shutil
-import sys
+from typing import Optional
 
 
-def _print_help(app_name: str = None) -> None:
-    """Prints the help for the script
+def _find_results_files(source_path: str, search_depth: int = 2) -> list:
+    """Looks for results.json files in the path specified
     Arguments:
-        app_name: the name to use for the application name. If None, executing file name is used
-    """
-    if not app_name:
-        app_name = os.path.basename(__file__)
-    print('Usage: %s [--maps <folder mappings>] <results file> <cache folder>' % str(app_name))
-    print('  --maps <folder mappings> specifies one or more folder mappings')
-    print('  <results file> the file containing the results to interpret')
-    print('  <cache folder> is the destination for the copied results')
-    print('')
-    print('Folder mappings are a comma separated list of source:dest mapping strings.')
-    print('For example: /root/foo:/home/user/bar will map folders from "/root/foo" to "/home/user/bar"')
-    print('All spaces are maintained when mapping paths')
-
-
-def _check_print_help(params: list) -> bool:
-    """Checks if help was specified in the parameters
-    Arguments:
-        params: the list of parameters to check
+        source_path: the path to use when looking for result files
+        search_depth: the maximum folder depth to search
     Return:
-        Returns True if help was requested (resulting in help being printed) and
-        False if help wasn't found in the parameters
+        Returns a list containing found files
+    Notes:
+        A search depth of less than 2 will not recurse into sub-folders; a search depth of 2 will only recurse into
+        immediate sub-folders and no deeper; a search depth of 3 will recurse into the sub-folders of sub-folders; and
+        so on
     """
-    # Look through the parameters
-    if params:
-        help_found = False
-        for one_param in params:
-            if one_param in ['-h', '--help']:
-                help_found = True
-                break
-    else:
-        help_found = True
+    res_name = 'results.json'
+    res_name_len = len(res_name)
 
-    # Display help if requested
-    if help_found:
-        app_name = None
-        if params:
-            if params[0] and params[0] not in ['-c']:
-                app_name = os.path.splitext(os.path.basename(__file__))[0]
-        _print_help(app_name)
+    # Common expression declared once outside of recursion
+    # Checks that the file name matches exactly the testing string (res_name)
+    name_check_passes = lambda name: name.endswith(res_name) and os.path.isdir(name[:-res_name_len])
 
-    return help_found
+    if not source_path:
+        return []
+
+    # Declare embedded function to do the work
+    def perform_recursive_find(path: str, depth: int) -> list:
+        """Recursively finds results files
+        Arguments:
+            path: the path to check for results files
+            depth: the maximum folder depth to recurse (starting at 1)
+        Return:
+            Returns a list of found files
+        """
+        return_list = []
+
+        # Basic checks
+        if os.path.isfile(path):
+            if name_check_passes(path):
+                logging.debug("Result file check specified result file: '%s'", path)
+                return [path]
+
+            logging.debug("Result file check name is not valid: '%s'", path)
+            return return_list
+
+        # We only process folders after the above checks
+        if not os.path.isdir(path):
+            logging.debug("Error: result file check path is not a file or folder: '%s'", path)
+            return return_list
+
+        # Loop over current folder looking for other folders and for a results file
+        for one_name in os.listdir(path):
+            check_name = os.path.join(path, one_name)
+            if name_check_passes(check_name):
+                logging.debug("Found result file: '%s'", check_name)
+                return_list.append(check_name)
+            elif depth > 1 and os.path.isdir(check_name):
+                logging.debug("Searching folder for result files: '%s'", check_name)
+                found_results = perform_recursive_find(check_name, depth - 1)
+                if found_results:
+                    return_list.extend(found_results)
+
+        return return_list
+
+    # Find those files!
+    return perform_recursive_find(source_path, search_depth)
 
 
-def _get_path_maps(maps_param: str) -> dict:
+def _get_path_maps(maps_param: str) -> Optional[dict]:
     """Parses the map parameter and returns a dictionary of mappings
     Arguments:
         maps_param: the parameter to parse into a mapping dictionary
@@ -103,74 +123,29 @@ def _check_paths_errors(file_path: str, dir_path: str) -> str:
     return error_msg if error_msg else None
 
 
-def _check_get_parameters(params: list) -> dict:
-    """Checks that the parameters were specified and available
+def _combine_results(source_results: list, new_results: list) -> list:
+    """Combines the specified dictionaries
     Arguments:
-        params: the list of parameters to use (only the first two unflagged parameters are used)
+        source_results: the source dictionary to merge into
+        new_results: the dictionary to add
     Return:
-        Returns a dict that contains the named parameters
-    Exception:
-        Raises RuntimeError if a problem is found
+        Returns the combined dictionary
+    Notes:
+        Runtime parameters that evaluate to False are transparently handled (for example, receiving an empty dict
+        runtime parameter will not raise an error and will return a list - which may also be empty)
     """
-    num_params = len(params)
-    if num_params < 3:
-        raise RuntimeError("Parameters are missing, use the '--help' parameter for usage information")
+    if not source_results:
+        source_results = []
 
-    results_file = None
-    cache_dir = None
-    path_maps = None
-    idx = 1
-    while idx < num_params:
-        if params[idx] and params[idx][0] == '-':
-            if params[idx] == "--maps":
-                idx += 1
-                if idx >= num_params:
-                    raise RuntimeError("--maps flag specified without a value")
-                path_maps = _get_path_maps(params[idx])
-            else:
-                logging.warning("Unknown flag specified: %s", str(params[idx]))
-        else:
-            # Only get the first two non-flag parameters & ignore the rest
-            if results_file is None:
-                results_file = params[idx]
-            elif cache_dir is None:
-                cache_dir = params[idx]
-        idx += 1
+    # Handle edge cases
+    if not source_results:
+        if not new_results:
+            return []
+        return new_results
+    if not new_results:
+        return source_results
 
-    # Check that we have a valid file and folder
-    error_msg = _check_paths_errors(results_file, cache_dir)
-    if error_msg:
-        logging.error(error_msg)
-        raise RuntimeError(error_msg)
-
-    # Load the contents of the results
-    with open(results_file, "r") as in_file:
-        results = json.load(in_file)
-
-    # Loop through and copy any files (without sub-paths)
-    return_dict = {'result_containers': None, 'result_files': None, 'cache_dir': None}
-
-    # Look for containers first
-    for key in ['container', 'containers']:
-        if key in results:
-            return_dict['result_containers'] = results[key]
-            return_dict['cache_dir'] = cache_dir
-            break
-    if return_dict['result_containers'] is None:
-        logging.info("No containers found in results")
-
-    for key in ['file', 'files']:
-        if key in results:
-            return_dict['result_files'] = results[key]
-            return_dict['cache_dir'] = cache_dir
-            break
-    if return_dict['result_files'] is None:
-        logging.info("No top-level files found in results")
-
-    # Add in other fields
-    return_dict['path_maps'] = path_maps
-
-    return return_dict
+    return source_results + new_results
 
 
 def _map_path(file_path: str, path_maps: dict = None) -> str:
@@ -268,12 +243,13 @@ def _save_result_metadata(metadata_file: str, metadata: dict) -> None:
         json.dump(write_metadata, out_file, indent=2)
 
 
-def cache_files(result_files: dict, cache_dir: str, path_maps: dict = None) -> list:
+def cache_files(result_files: dict, cache_dir: str, path_maps: dict = None, file_handlers: dict = None) -> list:
     """Copies any files found in the results to the cache location
     Arguments:
         result_files: the dictionary of files to copy
         cache_dir: the location to copy the files to
         path_maps: path mappings to use on file paths
+        file_handlers: special handling of files instead of normal copy
     Return:
         Returns a list of copied files
     """
@@ -313,24 +289,31 @@ def cache_files(result_files: dict, cache_dir: str, path_maps: dict = None) -> l
 
     # Copy the files
     for one_file in copy_list:
-        logging.debug("Copy file: '%s' to '%s'", str(one_file['src']), str(one_file['dst']))
-        shutil.copyfile(one_file['src'], one_file['dst'])
-        if 'metadata' in one_file:
-            metadata_file_name = os.path.splitext(one_file['dst'])[0] + '.json'
-            logging.debug("Saving metadata to file: %s", metadata_file_name)
-            _save_result_metadata(metadata_file_name, one_file['metadata'])
-        copied_files.append(one_file['dst'])
+        file_ext = os.path.splitext(one_file['src'])[1]
+        file_metadata = one_file['metadata'] if 'metadata' in one_file else None
+
+        if file_handlers and file_ext and file_ext in file_handlers:
+            file_handlers[file_ext](one_file['src'], cache_dir, file_metadata)
+        else:
+            logging.debug("Copy file: '%s' to '%s'", str(one_file['src']), str(one_file['dst']))
+            shutil.copyfile(one_file['src'], one_file['dst'])
+            if file_metadata:
+                metadata_file_name = os.path.splitext(one_file['dst'])[0] + '.json'
+                logging.debug("Saving metadata to file: %s", metadata_file_name)
+                _save_result_metadata(metadata_file_name, file_metadata)
+            copied_files.append(one_file['dst'])
 
     return copied_files
 
 
-def cache_containers(container_list: list, cache_dir: str, path_maps: dict = None) -> list:
+def cache_containers(container_list: list, cache_dir: str, path_maps: dict = None, file_handlers: dict = None) -> list:
     """Searches the list of containers for files to copy and copies them to a folder in the cache_dir.
        The folders are named after the container name.
     Arguments:
         container_list: the list of containers to search
         cache_dir: the location to copy the files to
         path_maps: path mappings to use on file paths
+        file_handlers: special handling of files instead of normal copy
     Return:
         Returns a list of copied files
     """
@@ -354,7 +337,7 @@ def cache_containers(container_list: list, cache_dir: str, path_maps: dict = Non
             # Copy files
             for key in ['file', 'files']:
                 if key in container:
-                    copied_files = cache_files(container[key], working_dir, path_maps)
+                    copied_files = cache_files(container[key], working_dir, path_maps, file_handlers)
                     if copied_files:
                         file_list.append({'files': copied_files, 'metadata_path': container_metadata_path})
                     break
@@ -362,25 +345,163 @@ def cache_containers(container_list: list, cache_dir: str, path_maps: dict = Non
     return file_list
 
 
-def cache_results(result_containers: list, result_files: dict, cache_dir: str, path_maps: dict = None) -> None:
+def _append_metadata_to_file(metadata: dict, metadata_file: str) -> None:
+    """Appends metadata to a file as a JSON array element
+    Arguments:
+        metadata: the metadata to store in the file
+        metadata_file: path to the metadata file to save to
+    """
+    write_metadata = metadata if 'data' not in metadata else metadata['data']
+
+    if not os.path.exists(metadata_file):
+        with open(metadata_file, "w") as out_file:
+            out_file.write("{\n[\n")
+            json.dump(write_metadata, out_file, indent=2)
+            out_file.write("]\n}\n")
+    else:
+        reverse_find_chars = '}]}'
+        with open(metadata_file, "a+") as out_file:
+            try:
+                for one_char in reverse_find_chars:
+                    found_char = False
+                    while not found_char:
+                        os.lseek(out_file.fileno(), -1, os.SEEK_END)
+                        if out_file.buffer.peek().decode('utf-8').startswith(one_char):
+                            found_char = True
+            except Exception as ex:
+                msg = "Unable to find end of metadata to append to in file: '%s'" % metadata_file
+                logging.error(msg)
+                if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+                    logging.error("Exception caught")
+                raise RuntimeError("Unable to append metadata to file") from ex
+
+            # Truncate the file and write out the new metadata
+            out_file.truncate()
+            out_file.write("},\n")
+            json.dump(write_metadata, out_file, indent=2)
+            out_file.write("]\n}\n")
+
+
+def _handle_csv_merge(csv_path: str, cache_dir: str, metadata: dict = None, header_lines: int = 0) -> None:
+    """Handles merging CSV files into a file off the specified cache folder
+    Arguments:
+        csv_path: the path to the source CSV file
+        cache_dir: the path to the cache to store CSV data
+        metadata: optional metadata associated with the file
+        header_lines: the number of header lines in the source CSV file (headers are discarded after first CSV file)
+    Exceptions:
+        Exceptions may be raised when accessing the file system or reading the CSV file
+    """
+    # Generate the destination filename
+    dest_file = os.path.join(cache_dir, os.path.basename(csv_path))
+
+    # If the destination isn't there, just copy the file. Otherwise assume it's configured correctly and copy content
+    if not os.path.exists(dest_file):
+        shutil.copyfile(csv_path, dest_file)
+    else:
+        with open(dest_file, "a") as out_file:
+            # We don't use shutil.copyfileobj to allow for ending line break (aka: newline, carriage return, etc)
+            with open(csv_path, "r") as in_file:
+                for line in in_file:
+                    # Skip over headers
+                    while header_lines > 0:
+                        header_lines -= 1
+                        continue
+                    # Write the data line: ensure we have one newline
+                    out_file.write(line.strip('\n') + '\n')
+
+    # If we have metadata merge it with existing metadata
+    if metadata:
+        metadata_file = os.path.splitext(dest_file)[0] + '.json'
+        _append_metadata_to_file(metadata, metadata_file)
+
+
+def _check_get_parameters(args: argparse.Namespace) -> dict:
+    """Checks that the parameters were specified and are available
+    Arguments:
+        args: the command line parameters to use
+    Return:
+        Returns a dict that contains the named parameters
+    Exception:
+        Raises RuntimeError if a problem is found
+    """
+    # Check that we have a valid file and folder
+    error_msg = _check_paths_errors(args.results_file, args.cache_folder)
+    if error_msg:
+        logging.error(error_msg)
+        raise RuntimeError(error_msg)
+
+    # Load the contents of the results
+    with open(args.results_file, "r") as in_file:
+        results = json.load(in_file)
+
+    # Loop through and copy any files (without sub-paths)
+    return_dict = {'result_containers': None, 'result_files': None, 'cache_dir': None}
+
+    # Loop through and copy any files (without sub-paths)
+    if os.path.isdir(args.results_file):
+        results_files = _find_results_files(args.results_file)
+    else:
+        results_files = [args.results_file]
+
+    for one_file in results_files:
+        with open(one_file, "r") as in_file:
+            results = json.load(in_file)
+
+        # Look for containers first
+        found_containers = None
+        for key in ['container', 'containers']:
+            if key in results:
+                found_containers = results[key]
+                return_dict['result_containers'] = _combine_results(return_dict['result_containers'], found_containers)
+                break
+        if found_containers is None:
+            logging.info("No containers found in results: '%s'", one_file)
+
+        # Look file top-level files
+        found_files = None
+        for key in ['file', 'files']:
+            if key in results:
+                found_files = results[key]
+                return_dict['result_files'] = _combine_results(return_dict['result_files'], found_files)
+                break
+        if found_files is None:
+            logging.info("No top-level files found in results: '%s'", one_file)
+
+    # Determine if we have special handlers to configure
+    file_handlers = {}
+    if args.merge_csv:
+        file_handlers['.csv'] = lambda source_file, cache_dir, metadata: _handle_csv_merge(source_file, cache_dir,
+                                                                                           metadata, args.csv_header_lines)
+
+    # Add in other fields
+    return_dict['cache_dir'] = args.cache_folder
+    return_dict['path_maps'] = args.maps
+    return_dict['file_handlers'] = file_handlers if file_handlers else None
+
+    return return_dict
+
+
+def cache_results(result_containers: list, result_files: dict, cache_dir: str, path_maps: dict = None, file_handlers: dict = None) -> None:
     """Handles caching the containers and files found in the results
     Arguments:
         result_containers: the dictionary of containers with files to copy
         result_files: the dictionary of files to copy
         cache_dir: the location to copy the files to
         path_maps: path mappings to use on file paths
+        file_handlers: special handling of files instead of normal copy
     """
     file_list = []
 
     # Handle containers first
     if result_containers:
-        copied_files = cache_containers(result_containers, cache_dir, path_maps)
+        copied_files = cache_containers(result_containers, cache_dir, path_maps, file_handlers)
         if copied_files:
             file_list.extend(copied_files)
 
     # Handle any top-level files
     if result_files:
-        copied_files = cache_files(result_files, cache_dir, path_maps)
+        copied_files = cache_files(result_files, cache_dir, path_maps, file_handlers)
         if copied_files:
             file_list.append({'files': copied_files})
 
@@ -407,11 +528,31 @@ def cache_results(result_containers: list, result_files: dict, cache_dir: str, p
         out_file.write('\n  ]\n}')
 
 
+def add_arguments(parser: argparse.ArgumentParser) -> None:
+    """Adds arguments to command line parser
+    Parameters:
+    """
+    parser.add_argument('--merge_csv', action='store_true', default=False,
+                        help='merge same-name CSV files into one file of the same name (default=False)')
+    parser.add_argument('--csv_header_lines', nargs='?', default=0,
+                        help='expected number of header lines in any CSV file when merging CSV files (default=0)')
+    parser.add_argument('--maps', nargs='?', type=str,
+                        help='one or more comma separated folder mappings of <source path>:<destination path>')
+    parser.add_argument('results_file', metavar='<results>', type=str,
+                        help='the path to the results file to act upon')
+    parser.add_argument('cache_folder', metavar='<cache>', type=str,
+                        help='the path to cache the results into')
+
+    parser.epilog = 'Mappings are exact character matches from the start of file paths; no checks are made to ensure complete' +\
+                    ' folder names are matched. For example, a mapping of "/home/tom:/home/sue" will map the path "/home/tomorrow"' +\
+                    ' to "/home/sueorrow".'
+
+
 if __name__ == "__main__":
-    # Get the command line arguments and check if help was specified
-    ARGS = sys.argv
-    if _check_print_help(ARGS):
-        sys.exit(0)
+    # Setup command line parameters and parse them
+    PARSER = argparse.ArgumentParser(description="Handles results for pipeline Docker containers by copying files and saving metadata")
+    add_arguments(PARSER)
+    ARGS = PARSER.parse_args()
 
     # Process the results
     PARAMS = _check_get_parameters(ARGS)

@@ -5,7 +5,7 @@
     "CANOPY_COVER_WORKSPACE_DIR_NAME": "workspace/canopycover",
     "CANOPY_COVER_WORKSPACE": BASE_DIR + CANOPY_COVER_WORKSPACE_DIR_NAME,
     "CANOPY_COVER_CACHE": BASE_DIR + "cache",
-    "CACHE_RESULTS_SCRIPT": BASE_DIR + "cache_results.py"
+    "CACHE_RESULTS_SCRIPT": BASE_DIR + "cache_csv_results.py"
   },
   "rules": [
     {
@@ -60,9 +60,25 @@
         CANOPY_COVER_WORKSPACE + "/" + ONE_FILE["BASE_METADATA_NAME"]
       ],
       "outputs": [
-        IMAGE_MOUNT_POINT + CANOPY_COVER_WORKSPACE_DIR_NAME + "/" + ONE_FILE["BASE_METADATA_NAME"] + "/result.json",
-        IMAGE_MOUNT_POINT + CANOPY_COVER_WORKSPACE_DIR_NAME + "/" + ONE_FILE["BASE_METADATA_NAME"] + "/rgb_plot.csv"
+        BASE_DIR + CANOPY_COVER_WORKSPACE_DIR_NAME + "/" + ONE_FILE["BASE_METADATA_NAME"] + "/result.json"
       ]
-    } for ONE_FILE in FILE_LIST
+    } for ONE_FILE in FILE_LIST,
+    {
+      "command": "${CANOPY_COVER_CACHE_APP} --maps \"${PATH_MAPS}\" \"${CANOPY_COVER_RESULTS}\" \"${CANOPY_COVER_CACHE}\" ",
+      "environment": {
+        "CANOPY_COVER_CACHE_APP": "python3 " + CACHE_RESULTS_SCRIPT,
+        "CANOPY_COVER_CACHE": CANOPY_COVER_CACHE,
+        "CANOPY_COVER_RESULTS": CANOPY_COVER_RUN_RESULTS,
+        "PATH_MAPS": IMAGE_MOUNT_POINT + ":" + BASE_DIR
+      },
+      "inputs": [
+        CACHE_RESULTS_SCRIPT,
+        CANOPY_COVER_CACHE,
+        BASE_DIR + CANOPY_COVER_WORKSPACE_DIR_NAME + "/" + ONE_FILE["BASE_METADATA_NAME"] + "/result.json"
+      ],
+      "outputs": [
+        CANOPY_COVER_CACHE + "/" + "cached_files_makeflow_list.jx"
+      ]
+     } for ONE_FILE in FILE_LIST
   ]
 }
