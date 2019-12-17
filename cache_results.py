@@ -468,6 +468,11 @@ def _check_get_parameters(args: argparse.Namespace) -> dict:
         if found_files is None:
             logging.info("No top-level files found in results: '%s'", one_file)
 
+    # Prepare the mappings
+    mappings = None
+    if args.maps:
+        mappings = _get_path_maps(args.maps)
+
     # Determine if we have special handlers to configure
     file_handlers = {}
     if args.merge_csv:
@@ -476,7 +481,7 @@ def _check_get_parameters(args: argparse.Namespace) -> dict:
 
     # Add in other fields
     return_dict['cache_dir'] = args.cache_folder
-    return_dict['path_maps'] = args.maps
+    return_dict['path_maps'] = mappings
     return_dict['file_handlers'] = file_handlers if file_handlers else None
 
     return return_dict
@@ -531,6 +536,7 @@ def cache_results(result_containers: list, result_files: dict, cache_dir: str, p
 def add_arguments(parser: argparse.ArgumentParser) -> None:
     """Adds arguments to command line parser
     Parameters:
+        parser: parser instance to add arguments to
     """
     parser.add_argument('--merge_csv', action='store_true', default=False,
                         help='merge same-name CSV files into one file of the same name (default=False)')
