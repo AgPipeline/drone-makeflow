@@ -64,7 +64,7 @@
       ]
     } for ONE_FILE in FILE_LIST,
     {
-      "command": "${CANOPY_COVER_CACHE_APP} --maps \"${PATH_MAPS}\" \"${CANOPY_COVER_RESULTS}\" \"${CANOPY_COVER_CACHE}\" ",
+      "command": "${CANOPY_COVER_CACHE_APP} --maps \"${PATH_MAPS}\" --merge_csv --csv_header_lines 1 \"${CANOPY_COVER_RESULTS}\" \"${CANOPY_COVER_CACHE}\" ",
       "environment": {
         "CANOPY_COVER_CACHE_APP": "python3 " + CACHE_RESULTS_SCRIPT,
         "CANOPY_COVER_CACHE": CANOPY_COVER_CACHE,

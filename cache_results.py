@@ -293,7 +293,14 @@ def cache_files(result_files: dict, cache_dir: str, path_maps: dict = None, file
         file_metadata = one_file['metadata'] if 'metadata' in one_file else None
 
         if file_handlers and file_ext and file_ext in file_handlers:
-            file_handlers[file_ext](one_file['src'], cache_dir, file_metadata)
+            logging.debug("Special handling for file: %s (%s)", file_ext, one_file['src'])
+            handled_files = file_handlers[file_ext](one_file['src'], cache_dir, file_metadata)
+            if isinstance(handled_files, list):
+                for one_handled_file in handled_files:
+                    if one_handled_file not in copied_files:
+                        copied_files.append(one_handled_file)
+            elif handled_files is not None:
+                logging.warning("Invalid return from special file handler. Ignoring results")
         else:
             logging.debug("Copy file: '%s' to '%s'", str(one_file['src']), str(one_file['dst']))
             shutil.copyfile(one_file['src'], one_file['dst'])
@@ -302,6 +309,7 @@ def cache_files(result_files: dict, cache_dir: str, path_maps: dict = None, file
                 logging.debug("Saving metadata to file: %s", metadata_file_name)
                 _save_result_metadata(metadata_file_name, file_metadata)
             copied_files.append(one_file['dst'])
+
 
     return copied_files
 
@@ -382,7 +390,7 @@ def _append_metadata_to_file(metadata: dict, metadata_file: str) -> None:
             out_file.write("]\n}\n")
 
 
-def _handle_csv_merge(csv_path: str, cache_dir: str, metadata: dict = None, header_lines: int = 0) -> None:
+def _handle_csv_merge(csv_path: str, cache_dir: str, metadata: dict = None, header_lines: int = 0) -> list:
     """Handles merging CSV files into a file off the specified cache folder
     Arguments:
         csv_path: the path to the source CSV file
@@ -404,7 +412,7 @@ def _handle_csv_merge(csv_path: str, cache_dir: str, metadata: dict = None, head
             with open(csv_path, "r") as in_file:
                 for line in in_file:
                     # Skip over headers
-                    while header_lines > 0:
+                    if header_lines > 0:
                         header_lines -= 1
                         continue
                     # Write the data line: ensure we have one newline
@@ -414,6 +422,8 @@ def _handle_csv_merge(csv_path: str, cache_dir: str, metadata: dict = None, head
     if metadata:
         metadata_file = os.path.splitext(dest_file)[0] + '.json'
         _append_metadata_to_file(metadata, metadata_file)
+
+    return [dest_file]
 
 
 def _check_get_parameters(args: argparse.Namespace) -> dict:
@@ -477,7 +487,7 @@ def _check_get_parameters(args: argparse.Namespace) -> dict:
     file_handlers = {}
     if args.merge_csv:
         file_handlers['.csv'] = lambda source_file, cache_dir, metadata: _handle_csv_merge(source_file, cache_dir,
-                                                                                           metadata, args.csv_header_lines)
+                                                                                           metadata, int(args.csv_header_lines))
 
     # Add in other fields
     return_dict['cache_dir'] = args.cache_folder
@@ -511,7 +521,7 @@ def cache_results(result_containers: list, result_files: dict, cache_dir: str, p
             file_list.append({'files': copied_files})
 
     # Save the list of copied files for makeflow use
-    makeflow_list_file = os.path.join(cache_dir, "cached_files_makeflow_list.jx")
+    makeflow_list_file = os.path.join(cache_dir, "cached_files_makeflow_list.json")
     with open(makeflow_list_file, "w") as out_file:
         out_file.write('{\n  "FILE_LIST": [')
         separator = ""

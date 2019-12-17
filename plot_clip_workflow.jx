@@ -66,7 +66,7 @@
         PLOT_CLIP_RUN_RESULTS
       ],
       "outputs": [
-        PLOT_CLIP_CACHE + "/" + "cached_files_makeflow_list.jx"
+        PLOT_CLIP_CACHE + "/" + "cached_files_makeflow_list.json"
       ]
     }
   ]
