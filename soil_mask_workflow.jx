@@ -32,8 +32,9 @@
       ]
     },
     {
-      "command": "docker run --rm -v $(pwd):${IMAGE_MOUNT_POINT} ${DOCKER_IMAGE} --metadata ${METADATA} --working_space ${WORKSPACE_DIR} ${DOCKER_RUN_PARAMS}",
+      "command": "docker run --rm -v ${IMAGE_MOUNT_SOURCE}:${IMAGE_MOUNT_POINT} ${DOCKER_IMAGE} --metadata ${METADATA} --working_space ${WORKSPACE_DIR} ${DOCKER_RUN_PARAMS}",
       "environment": {
+        "IMAGE_MOUNT_SOURCE": IMAGE_MOUNT_SOURCE,
         "IMAGE_MOUNT_POINT": IMAGE_MOUNT_POINT,
         "DOCKER_IMAGE": SOIL_MASK_DOCKER_IMAGE,
         "METADATA": IMAGE_MOUNT_POINT + EXPERIMENT_METADATA,

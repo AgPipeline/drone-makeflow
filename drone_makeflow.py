@@ -23,6 +23,15 @@ PROC_WAIT_SLEEP_SEC = 5  # Amount of time to sleep before checking process statu
 PROC_WAIT_TOTAL_SEC = 24 * 60 * 60  # Total wait time for process to finish
 PROC_COMMUNICATE_TIMEOUT_SEC = 2  # Number of seconds to wait for a communicate call to complete
 
+# Access permissions for folders we create
+CREATED_FOLDER_PERMISSIONS = stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP |\
+                             stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH
+
+# Name of mount point on Docker images
+IMAGE_MOUNT_POINT_NAME = '/mnt/'
+
+# docker run --network pipeline_clowder -v /var/run/docker.sock:/var/run/docker.sock -v "testing:/mnt" --user root -e 'RABBITMQ_URI=amqp://rabbitmq/%2F' -e 'RABBITMQ_EXCHANGE=terra' -e 'TZ=/user/share/zoneinfo/US/Central' -e "PIPELINE_KEY=\x84\n'\x08\xbd\\\xef\xe1\x00\r\xe5\xf6=\x80\x1c\xc6\xd1o\xc3\xad\\:\xce\x92\x14^\xf0\x8c\xf4\x1c\`\x0b" -e 'WORKING_SPACE=/mnt' -e 'NAMED_VOLUME=testing' -d --restart=always --name=extractor-dronemakeflow chrisatua/development:drone_makeflow
+
 WORKFLOW = [
     {
         'name': 'OpenDroneMap workflow',                        # Name of the workflow step
@@ -41,10 +50,23 @@ class __internal__():
         """Initializes class instance"""
 
     @staticmethod
-    def create_env_json(out_folder: str, workflow_step: dict, resources: dict) -> dict:
+    def create_folder_default_perms(folder_path: str) -> None:
+        """Convenience function for creating folders with the correct permissions
+        Arguments:
+            folder_path: the path to the folder to create
+        """
+        logging.debug("HACK: Creating folder at '%s':", folder_path)
+        os.makedirs(folder_path, exist_ok=True)
+        logging.debug("HACK:     changing folder permissions: %s", str(CREATED_FOLDER_PERMISSIONS))
+        os.chmod(folder_path, CREATED_FOLDER_PERMISSIONS)
+
+    @staticmethod
+    def create_env_json(out_folder: str, image_subfolder: str, mount_volume_name: str, workflow_step: dict, resources: dict) -> dict:
         """Creates the json used by executing workflow steps
         Arguments:
             out_folder: the folder to write the json to
+            image_subfolder: subfolder for where Docker image-specific runtime data can be found
+            mount_volume_name: the name of the volume to mount to running containers
             workflow_step: the information on the current workflow step
             resources: the resources associated with the request
         Return:
@@ -54,15 +76,20 @@ class __internal__():
             assumed to be the experiment JSON file)
         """
         # Build up our environment JSON object
-        # Docker images mounting point
-        env = {'IMAGE_MOUNT_POINT': '/mnt/'}
-
         # The working folder for the workflow on our file system
-        step_basedir = os.path.join(out_folder, os.path.splitext(os.path.basename(workflow_step['makeflow_file']))[0])
-        env['BASE_DIR'] = step_basedir.rstrip('/\\') + '/'
+        step_out_folder_name = os.path.splitext(os.path.basename(workflow_step['makeflow_file']))[0].lstrip('/\\')
 
-        # Get the folders for our files
-        env['IMAGES_FOLDER'] = 'images'
+        # Docker images mounting point
+        env = {'IMAGE_MOUNT_POINT': IMAGE_MOUNT_POINT_NAME,
+               'IMAGE_MOUNT_SOURCE': mount_volume_name,
+               # Starting folder within Docker images we run
+               'IMAGE_BASE_DIR': os.path.join(IMAGE_MOUNT_POINT_NAME, image_subfolder.lstrip('/\\'),
+                                              step_out_folder_name).rstrip('/\\') + '/',
+               # The working folder for the workflow on our file system
+               'BASE_DIR': os.path.join(out_folder, step_out_folder_name).rstrip('/\\') + '/',
+               # Get the folders for our files
+               'IMAGES_FOLDER': 'images'
+               }
 
         # Get the experiment information file
         found_experiment = None
@@ -99,7 +126,7 @@ class __internal__():
         dest_dir = os.path.join(env['BASE_DIR'], env['IMAGES_FOLDER'].lstrip('/'))
         updated_experiment_metadata_path = None
         logging.debug("Copying files to folder: '%s", dest_dir)
-        os.makedirs(dest_dir, exist_ok=True)
+        __internal__.create_folder_default_perms(dest_dir)
         for one_file in resources['local_paths']:
             if one_file.endswith(env['EXPERIMENT_METADATA']):
                 updated_experiment_metadata_path = os.path.join(env['BASE_DIR'], os.path.basename(one_file))
@@ -410,6 +437,8 @@ class DroneMakeflow(extractors.TerrarefExtractor):
 
         self.parser.add_argument('--working_space', default=os.getenv("WORKING_SPACE"),
                                  help="the folder to use as a workspace - will be created if it doesn't exist")
+        self.parser.add_argument('--named_volume', default=os.getenv("NAMED_VOLUME"),
+                                 help="the name of the Docker volume to use when starting other images (must contain working_space)")
 
         self.setup(sensor='stereoTop')
 
@@ -428,28 +457,35 @@ class DroneMakeflow(extractors.TerrarefExtractor):
         self.start_message(resource)
         super(DroneMakeflow, self).process_message(connector, host, secret_key, resource, parameters)
 
+        # Get the Docker volume name to use
+        if not self.args.named_volume:
+            raise RuntimeError("No named volume was specified. Try setting the NAMED_VOLUME environment variable"
+                               " (if using Docker set to a named volume to use)")
+
         # Get a working folder to use
         if self.args.working_space:
-            working_folder = self.args.working_space
-            logging.info("Folder for our working space: '%s'", working_folder)
-            if not os.path.exists(working_folder):
-                logging.debug("Attempting to create command line folder: '%s'", working_folder)
-                os.makedirs(working_folder, exist_ok=True)
+            logging.info("Folder for our working space: '%s'", self.args.working_space)
+            # Assume we're sharing out working space with other instances, create a temporary folder
+            working_folder = tempfile.mkdtemp(dir=self.args.working_space)
+            working_subfolder = working_folder[len(self.args.working_space):]
+            logging.debug("Creating working space folder for our instance: '%s'", working_folder)
+            __internal__.create_folder_default_perms(working_folder)
         else:
             raise RuntimeError("No working space folder was specified. Try setting the WORKING_SPACE environment variable"
-                               " (if using Docker set to a mount folder)")
+                               " (if using Docker set to a folder to mount)")
 
         # Process the steps sequentially
         for current_step in WORKFLOW:
-            logging.info("Starting workflow step: '%s'", current_step['name'])
+            logging.info("Starting workflow step: '%s' with named volume '%s'", current_step['name'], self.args.named_volume)
 
             # Get the environment information and setup for the run
-            env = __internal__.create_env_json(working_folder, current_step, resource)
+            env = __internal__.create_env_json(working_folder, working_subfolder, self.args.named_volume, current_step, resource)
             logging.debug("Makefile data: %s", str(env))
 
             # Relocate the files so sub-docker images can access them
             if not os.path.exists(env['BASE_DIR']):
                 logging.debug("Creating work step base folder: '%s'", env['BASE_DIR'])
+                __internal__.create_folder_default_perms(env['BASE_DIR'])
             current_working_folder, new_experiment_path = __internal__.relocate_files(env, resource)
             logging.debug("Current working folder: '%s'", current_working_folder)
             logging.debug("New experiment path: '%s'", new_experiment_path)

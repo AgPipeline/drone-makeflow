@@ -41,8 +41,9 @@
         ]
     } for ONE_FILE in FILE_LIST,
     {
-      "command": "docker run --rm -v $(pwd):${DOCKER_IMAGE_MOUNT_POINT} ${DOCKER_PARAMS} ${DOCKER_IMAGE} --metadata \"${METADATA}\"  --metadata \"${EXPERIMENT_METADATA}\" --working_space \"${WORKSPACE_DIR}\" --csv_path \"${CSV_PATH}\" \"${DOCKER_RUN_SOURCE_FILE}\"",
+      "command": "docker run --rm -v ${IMAGE_MOUNT_SOURCE}:${DOCKER_IMAGE_MOUNT_POINT} ${DOCKER_PARAMS} ${DOCKER_IMAGE} --metadata \"${METADATA}\"  --metadata \"${EXPERIMENT_METADATA}\" --working_space \"${WORKSPACE_DIR}\" --csv_path \"${CSV_PATH}\" \"${DOCKER_RUN_SOURCE_FILE}\"",
       "environment": {
+        "IMAGE_MOUNT_SOURCE": IMAGE_MOUNT_SOURCE,
         "DOCKER_IMAGE_MOUNT_POINT": IMAGE_MOUNT_POINT,
         "DOCKER_IMAGE": CANOPY_COVER_DOCKER_IMAGE,
         "DOCKER_PARAMS": "",
