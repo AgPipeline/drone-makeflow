@@ -31,7 +31,7 @@
       ]
     },
     {
-      "command": "docker run --rm -v ${IMAGE_MOUNT_SOURCE}:${IMAGE_MOUNT_POINT} ${DOCKER_IMAGE} --metadata ${METADATA} --working_space ${WORKSPACE_DIR} ${DOCKER_RUN_PARAMS}",
+      "command": "docker run --rm -v ${IMAGE_MOUNT_SOURCE}:${IMAGE_MOUNT_POINT} ${DOCKER_IMAGE} -d --metadata ${METADATA} --working_space ${WORKSPACE_DIR} ${DOCKER_RUN_PARAMS}",
       "environment": {
         "BASE_DIR" : BASE_DIR,
         "IMAGE_MOUNT_SOURCE": IMAGE_MOUNT_SOURCE,
@@ -49,6 +49,19 @@
       ],
       "outputs": [
         ODM_RUN_RESULTS
+      ]
+    },
+    {
+      "command": "cp ${RESULT_SOURCE} ${RESULT_DEST}",
+      "environment": {
+        "RESULT_SOURCE": ODM_RUN_RESULTS,
+        "RESULT_DEST": RESULTS_FILE_PATH
+      },
+      "inputs": [
+        ODM_RUN_RESULTS
+      ],
+      "outputs": [
+        RESULTS_FILE_PATH
       ]
     },
     {

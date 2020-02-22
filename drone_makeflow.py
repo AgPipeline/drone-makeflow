@@ -11,6 +11,7 @@ import subprocess
 import tempfile
 import time
 from typing import Union
+import yaml
 import requests
 
 import pyclowder.connectors as connectors
@@ -295,17 +296,21 @@ class __internal__():
         uploaded_files = []
         for one_result in file_results:
             # Perform either an upload or a soft upload
-            file_id = files.upload_to_dataset(connector, host, request_key, dataset_id, one_result.path)
+            logging.debug("Uploading one file to dataset %s: '%s'", dataset_id, str(one_result['path']))
+            file_id = files.upload_to_dataset(connector, host, request_key, dataset_id, one_result['path'])
             if file_id is None:
+                logging.error("Unable to upload file to dataset %s: '%s'", dataset_id, one_result['path'])
                 raise RuntimeError("Unable to upload file to dataset ID %s: '%s'" % (dataset_id, one_result['path']))
 
             # Check if there's metadata associated with the file
             if 'metadata' in one_result:
+                logging.debug("Uploading file metadata %s: '%s' %s", file_id, one_result['path'], str(one_result['metadata']))
                 __internal__.update_file_metadata(file_id, one_result['metadata'], connector, host, request_key)
 
             # Save the file information
             uploaded_files.append({**one_result, **{'id': file_id}})
 
+        logging.debug("Uploaded %s files", str(len(uploaded_files)))
         return uploaded_files
 
     @staticmethod
@@ -329,15 +334,18 @@ class __internal__():
         # pylint: disable=unused-argument
         # Check to see if we force a new dataset to be generated and generate the new dataset
         dataset_id = None
+        logging.debug("process_result_file: looking for dataset ID in %s", str(resources))
         if 'type' in resources and 'id' in resources and resources['type'] == 'dataset':
             dataset_id = resources['id']
         elif 'type' in resources and 'parent' in resources and resources['type'] == 'file':
             if 'type' in resources['parent'] and 'id' in resources['parent'] and resources['parent']['type'] == 'dataset':
                 dataset_id = resources['parent']['id']
         if dataset_id is None:
+            logging.error("Unable to find dataset ID for file uploads")
             raise RuntimeError("Unable to find dataset ID to place files into")
 
         # Load the files to the dataset
+        logging.debug("process_result_file: found dataset ID: %s", str(dataset_id))
         return __internal__.upload_files(dataset_id, file_results, connector, host, request_key)
 
     @staticmethod
@@ -410,7 +418,7 @@ class __internal__():
             return False
 
         # Get additional information in the processing results
-        process_metadata_keys = frozenset(['container', 'file', 'code', 'error', 'message']).difference(proc_results.keys())
+        process_metadata_keys = set(proc_results.keys()).difference(frozenset(['container', 'file', 'files', 'code', 'error', 'message']))
         logging.debug("Found process metadata keys: %s", str(process_metadata_keys))
         process_metadata = {}
         for one_key in process_metadata_keys:
@@ -418,11 +426,14 @@ class __internal__():
 
         # Get the results sent to Clowder
         if 'container' in proc_results:
+            logging.debug("Processing container as dataset: %s", proc_results['container'])
             __internal__.process_result_dataset(proc_results['container'], experiment_info, workflow_step, process_metadata,
                                                 connector, host, request_key, resources)
-        if 'file' in proc_results:
-            __internal__.process_result_file(proc_results['file'], experiment_info, workflow_step, process_metadata,
-                                             connector, host, request_key, resources)
+        for file_key in ['file', 'files']:
+            if file_key in proc_results:
+                logging.debug("Processing file (%s): %s", file_key, proc_results[file_key])
+                __internal__.process_result_file(proc_results[file_key], experiment_info, workflow_step, process_metadata,
+                                                 connector, host, request_key, resources)
 
         return True
 
@@ -531,20 +542,28 @@ class DroneMakeflow(extractors.TerrarefExtractor):
 
                 loop_iteration += 1
 
-            processing_time = (datetime.datetime.now() - start_time).total_seconds()
-            if processing_time > PROC_WAIT_TOTAL_SEC:
-                msg = "Processing is running too long (%s sec): %s" % (str(processing_time), str(cmd))
-                logging.error(msg)
-                raise RuntimeError(msg)
+                processing_time = (datetime.datetime.now() - start_time).total_seconds()
+                if processing_time > PROC_WAIT_TOTAL_SEC:
+                    msg = "Processing is running too long (%s sec): %s" % (str(processing_time), str(cmd))
+                    logging.error(msg)
+                    raise RuntimeError(msg)
 
             # Load the experiment data into a form processing the results file can use
-            with open(env['EXPERIMENT_METADATA'], 'r') as in_file:
-                experiment_json = json.load(in_file)
+            experiment_path = os.path.join(env['IMAGE_BASE_DIR'], env['EXPERIMENT_METADATA'])
+            logging.debug("Loading experiment metadata before looking at result: '%s'", experiment_path)
+            if os.path.splitext(experiment_path)[1] in ('.yml', '.yaml'):
+                load_func = yaml.safe_load
+            else:
+                load_func = json.load
+            with open(experiment_path, 'r') as in_file:
+                experiment_json = load_func(in_file)
                 experiment_info = {}
-                for key, value in experiment_json.items():
-                    experiment_info[key] = str(value)
+                if experiment_json:
+                    for key, value in experiment_json.items():
+                        experiment_info[key] = str(value)
 
             # Process the results file
+            logging.info("Loading and processing results: '%s'", env['RESULTS_FILE_PATH'])
             with open(env['RESULTS_FILE_PATH'], 'r') as in_file:
                 proc_results = json.load(in_file)
                 __internal__.process_results_json(proc_results, experiment_info, current_step, connector, host, secret_key, resource)
