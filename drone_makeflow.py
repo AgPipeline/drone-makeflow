@@ -1,6 +1,7 @@
 """Handles preparing and starting a makeflow run
 """
 
+from copy import deepcopy
 import datetime
 import json
 import logging
@@ -10,7 +11,7 @@ import stat
 import subprocess
 import tempfile
 import time
-from typing import Union
+from typing import Union, Optional
 import yaml
 import requests
 
@@ -18,6 +19,7 @@ import pyclowder.connectors as connectors
 import pyclowder.datasets as datasets
 import pyclowder.files as files
 import terrautils.extractors as extractors
+from terrautils.secure import encrypt_pipeline_string
 
 # Timeouts relating to processing
 PROC_WAIT_SLEEP_SEC = 5  # Amount of time to sleep before checking process status
@@ -301,6 +303,7 @@ class __internal__():
             if file_id is None:
                 logging.error("Unable to upload file to dataset %s: '%s'", dataset_id, one_result['path'])
                 raise RuntimeError("Unable to upload file to dataset ID %s: '%s'" % (dataset_id, one_result['path']))
+            logging.debug("    file ID: %s", str(file_id))
 
             # Check if there's metadata associated with the file
             if 'metadata' in one_result:
@@ -315,7 +318,8 @@ class __internal__():
 
     @staticmethod
     def process_result_file(file_results: dict, experiment_info: dict, workflow_step: dict, process_metadata: dict,
-                            connector: connectors.Connector, host: str, request_key: str, resources: dict) -> list:
+                            connector: connectors.Connector, host: str, request_key: str, workstep_metadata: dict,
+                            clowder_credentials: dict, resources: dict) -> list:
         """Processes the results as a Clowder dataset
         Arguments:
             file_results: the results file set to upload
@@ -325,6 +329,8 @@ class __internal__():
             connector: an instance of the pyclowder connector object
             host: the URL of the origination request
             request_key: the key associated with request
+            workstep_metadata: the metadata associated with this workstep
+            clowder_credentials: the access information for clowder
             resources: the resources associated with this request
         Return:
             Returns a list of information on the files that were uploaded
@@ -350,7 +356,8 @@ class __internal__():
 
     @staticmethod
     def process_result_dataset(container_results: dict, experiment_info: dict, workflow_step: dict, process_metadata: dict,
-                               connector: connectors.Connector, host: str, request_key: str, resources: dict) -> list:
+                               connector: connectors.Connector, host: str, request_key: str, workstep_metadata: dict,
+                               clowder_credentials: dict, resources: dict) -> list:
         """Processes the results as a Clowder dataset
         Arguments:
             container_results: the results for a container
@@ -360,6 +367,8 @@ class __internal__():
             connector: an instance of the pyclowder connector object
             host: the URL of the origination request
             request_key: the key associated with request
+            workstep_metadata: the metadata associated with this workstep
+            clowder_credentials: the access information for clowder
             resources: the resources associated with this request
         Return:
             Returns a list of dataset information consisting of dict for each dataset.
@@ -379,8 +388,10 @@ class __internal__():
 
         # Check for dataset existence and create it if needed
         created_dataset = False
+        logging.debug("Getting the ID for the dataset: %s", dataset_name)
         dataset_id = extractors.get_datasetid_by_name(host, request_key, dataset_name)
         if dataset_id is None:
+            logging.debug("Creating dataset: %s", dataset_name)
             dataset_id = __internal__.create_dataset(host, request_key, dataset_name)
             created_dataset = True
 
@@ -400,7 +411,7 @@ class __internal__():
 
     @staticmethod
     def process_results_json(proc_results: dict, experiment_info: dict, workflow_step: dict, connector: connectors.Connector,
-                             host: str, request_key: str, resources: dict) -> bool:
+                             host: str, request_key: str, workstep_metadata: dict, clowder_credentials: dict, resources: dict) -> bool:
         """Handles processing the results of running a workflow
         Arguments:
             proc_results: the results of the workflow process
@@ -409,6 +420,8 @@ class __internal__():
             connector: an instance of the pyclowder connector object
             host: the URL of the origination request
             request_key: the key associated with request
+            workstep_metadata: the metadata associated with this workstep
+            clowder_credentials: the access information for clowder
             resources: the resources associated with this request
         """
         # Check the return code for success
@@ -428,14 +441,58 @@ class __internal__():
         if 'container' in proc_results:
             logging.debug("Processing container as dataset: %s", proc_results['container'])
             __internal__.process_result_dataset(proc_results['container'], experiment_info, workflow_step, process_metadata,
-                                                connector, host, request_key, resources)
+                                                connector, host, request_key, workstep_metadata, clowder_credentials, resources)
         for file_key in ['file', 'files']:
             if file_key in proc_results:
                 logging.debug("Processing file (%s): %s", file_key, proc_results[file_key])
                 __internal__.process_result_file(proc_results[file_key], experiment_info, workflow_step, process_metadata,
-                                                 connector, host, request_key, resources)
+                                                 connector, host, request_key, workstep_metadata, clowder_credentials, resources)
 
         return True
+
+    @staticmethod
+    def find_dict_key(haystack: dict, key: str, case_insensitive: bool = True) -> Optional[tuple]:
+        """Searches the metadata for a particular key using a breadth-first method
+        Arguments:
+            haystack: the dict to search
+            key: the key to search for
+            case_insensitive: case-insensitive search for key (True, default), or case-sensitive (False)
+        Return:
+            Returns a tuple of the found key and its value. Will return None if the key was not found
+        """
+        if case_insensitive:
+            check_key = key.lower()
+        else:
+            check_key = key
+
+        # For breadth-first we need to keep track of dicts we haven't look into
+        dict_checks = []
+        for one_key, value in haystack.items():
+            if one_key == check_key or (case_insensitive and one_key.lower() == check_key):
+                return one_key, value
+            if isinstance(value, dict):
+                dict_checks.append(value)
+
+        # We didn't find it yet, check any found dicts
+        for one_check in dict_checks:
+            found = __internal__.find_dict_key(one_check, check_key, False)
+            if found is not None:
+                return found
+
+        return None
+
+    @staticmethod
+    def secure_string(plain_text: str) -> str:
+        """Secures the plain text string
+        Arguments:
+            plain_text: the text to secure
+        Return:
+            Returns the secured string. If the plain_text can't be directly secured, the string '<removed> is returned
+        """
+        encrypted = encrypt_pipeline_string(plain_text)
+        if encrypted is not None:
+            return "secured:" + encrypted
+        return "<removed>"
 
 
 class DroneMakeflow(extractors.TerrarefExtractor):
@@ -498,11 +555,15 @@ class DroneMakeflow(extractors.TerrarefExtractor):
                 logging.debug("Creating work step base folder: '%s'", env['BASE_DIR'])
                 __internal__.create_folder_default_perms(env['BASE_DIR'])
             current_working_folder, new_experiment_path = __internal__.relocate_files(env, resource)
+            if not current_working_folder:
+                raise RuntimeError("No working folder was determined for processing")
+            if not new_experiment_path:
+                raise RuntimeError("No experiment metadata file is available")
             logging.debug("Current working folder: '%s'", current_working_folder)
             logging.debug("New experiment path: '%s'", new_experiment_path)
             # Make sure the experiment file name is correct (not a full path, but a path particle)
             if os.path.exists(new_experiment_path) and not new_experiment_path.startswith(env['BASE_DIR']):
-                raise RuntimeError("Experiment metadata path does not start with the specified BASE_DIR folder")
+                raise RuntimeError("Experiment metadata path does not start with the specified BASE_DIR folder '%s'" % env['BASE_DIR'])
             if new_experiment_path.startswith(env['BASE_DIR']):
                 env['EXPERIMENT_METADATA'] = new_experiment_path[len(env['BASE_DIR']):]
 
@@ -551,22 +612,40 @@ class DroneMakeflow(extractors.TerrarefExtractor):
             # Load the experiment data into a form processing the results file can use
             experiment_path = os.path.join(env['IMAGE_BASE_DIR'], env['EXPERIMENT_METADATA'])
             logging.debug("Loading experiment metadata before looking at result: '%s'", experiment_path)
+            workstep_metadata = deepcopy(current_step)
+            clowder_info = {}
             if os.path.splitext(experiment_path)[1] in ('.yml', '.yaml'):
                 load_func = yaml.safe_load
             else:
                 load_func = json.load
             with open(experiment_path, 'r') as in_file:
-                experiment_json = load_func(in_file)
+                experiment_metadata = load_func(in_file)
                 experiment_info = {}
-                if experiment_json:
-                    for key, value in experiment_json.items():
+                if experiment_metadata:
+                    for key, value in experiment_metadata.items():
                         experiment_info[key] = str(value)
+                    # Check for a username and password for Clowder
+                    clowder_md = __internal__.find_dict_key(experiment_metadata, 'clowder')
+                    if clowder_md:
+                        space = __internal__.find_dict_key(clowder_md[1], 'space')
+                        username = __internal__.find_dict_key(clowder_md[1], 'username')
+                        password = __internal__.find_dict_key(clowder_md[1], 'password')
+                        if space:
+                            clowder_info['space'] = space[1]
+                            workstep_metadata['password'] = space[1]
+                        if username:
+                            clowder_info['username'] = username[1]
+                            workstep_metadata['password'] = username[1]
+                        if password:
+                            clowder_info['password'] = password[1]
+                            workstep_metadata['password'] = __internal__.secure_string(clowder_info['password'])
 
             # Process the results file
             logging.info("Loading and processing results: '%s'", env['RESULTS_FILE_PATH'])
             with open(env['RESULTS_FILE_PATH'], 'r') as in_file:
                 proc_results = json.load(in_file)
-                __internal__.process_results_json(proc_results, experiment_info, current_step, connector, host, secret_key, resource)
+                __internal__.process_results_json(proc_results, experiment_info, current_step, connector, host, secret_key,
+                                                  workstep_metadata, clowder_info, resource)
 
         # Finish up
         self.end_message(resource)
