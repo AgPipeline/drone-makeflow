@@ -1,75 +1,49 @@
 {
   "define": {
-    "SOURCE_IMAGE_NAME": "cache/rgb_mask_L2_ua-mac_2019-05-31__14-20-40_mask.tif",
-    "SOURCE_IMAGE": BASE_DIR + SOURCE_IMAGE_NAME,
-    "PLOT_CLIP_DOCKER_IMAGE": "agdrone/transformer-plotclip:" + PLOT_CLIP_DOCKER_IMAGE_VERSION,
-    "PLOT_CLIP_METADATA": BASE_DIR + EXPERIMENT_METADATA,
-    "PLOT_CLIP_WORKSPACE_DIR_NAME": "workspace/plot_clip",
-    "PLOT_CLIP_WORKSPACE": BASE_DIR + PLOT_CLIP_WORKSPACE_DIR_NAME,
-    "PLOT_CLIP_RUN_RESULTS": PLOT_CLIP_WORKSPACE + "/result.json",
-    "BETYDB_URL_PARAM": "BETYDB_URL=" + MF_BETYDB_URL,
-    "BETYDB_KEY_PARAM": "BETYDB_KEY=" + MF_BETYDB_KEY,
-    "BETYDB_DOCKER_PARAMS": " -e " + BETYDB_URL_PARAM + " -e " + BETYDB_KEY_PARAM,
-    "PLOT_CLIP_CACHE": BASE_DIR + "cache",
-    "CACHE_RESULTS_SCRIPT": BASE_DIR + "cache_results.py"
+    "SHELL_COMMAND": "bash -c ",
+    "BASE_DIR": BASE_DIR,
+    "PC_SCRIPT_NAME": "./plot_clip_workflow.sh",
+    "PC_CACHE_DIR": CACHE_DIR,
+    "PC_EXPERIMENT_METADATA_FILENAME": BASE_DIR + EXPERIMENT_METADATA_FILENAME,
+    "PC_SOURCE_IMAGES_DIR": BASE_DIR + DATA_FOLDER_NAME
   },
   "rules": [
     {
-      "command" : "mkdir -p ${PLOT_CLIP_WORKSPACE} && chmod a+w ${PLOT_CLIP_WORKSPACE}",
+      "command": "${SCRIPT_SHELL_COMMAND}",
       "environment": {
-        "PLOT_CLIP_WORKSPACE": PLOT_CLIP_WORKSPACE
-      },
-      "inputs": [],
-      "outputs": [
-        PLOT_CLIP_WORKSPACE
-      ]
-    },
-    {
-      "command" : "mkdir -p ${PLOT_CLIP_CACHE}",
-      "environment": {
-        "PLOT_CLIP_CACHE": PLOT_CLIP_CACHE
-      },
-      "inputs": [],
-      "outputs": [
-        PLOT_CLIP_CACHE
-      ]
-    },
-    {
-      "command": "docker run --rm -v ${IMAGE_MOUNT_SOURCE}:${IMAGE_MOUNT_POINT} ${DOCKER_PARAMS} ${DOCKER_IMAGE} --metadata ${METADATA} --working_space ${WORKSPACE_DIR} stereoTop ${DOCKER_RUN_PARAMS}",
-      "environment": {
+        "PC_SCRIPT_NAME": PC_SCRIPT_NAME,
+        "SCRIPT_SHELL_COMMAND": SHELL_COMMAND + PC_SCRIPT_NAME,
+        "CACHE_DIR": PC_CACHE_DIR,
+        "BASE_DIR": BASE_DIR,
+        "DATA_FOLDER_NAME": DATA_FOLDER_NAME,
+        "DOCKER_VERSION": DOCKER_VERSION,
+        "EXPERIMENT_METADATA_FILENAME": EXPERIMENT_METADATA_FILENAME,
         "IMAGE_MOUNT_SOURCE": IMAGE_MOUNT_SOURCE,
-        "IMAGE_MOUNT_POINT": IMAGE_MOUNT_POINT,
-        "DOCKER_IMAGE": PLOT_CLIP_DOCKER_IMAGE,
-        "DOCKER_PARAMS": BETYDB_DOCKER_PARAMS,
-        "METADATA": IMAGE_MOUNT_POINT + EXPERIMENT_METADATA,
-        "WORKSPACE_DIR": IMAGE_MOUNT_POINT + PLOT_CLIP_WORKSPACE_DIR_NAME,
-        "DOCKER_RUN_PARAMS": IMAGE_MOUNT_POINT + SOURCE_IMAGE_NAME
+        "RELATIVE_WORKING_FOLDER": RELATIVE_WORKING_FOLDER
       },
       "inputs": [
-        PLOT_CLIP_METADATA,
-        SOURCE_IMAGE
+        PC_SCRIPT_NAME,
+        PC_EXPERIMENT_METADATA_FILENAME,
+        PC_SOURCE_IMAGES_DIR
       ],
       "outputs": [
-        PLOT_CLIP_RUN_RESULTS
+        PC_CACHE_DIR
       ]
     },
     {
-      "command": "${PLOT_CLIP_CACHE_APP} --maps ${PATH_MAPS} ${PLOT_CLIP_RESULTS} ${PLOT_CLIP_CACHE}",
+      "command": "cp ${CACHE_DIR}${RESULTS_FILE_NAME} ${RESULTS_FILE_PATH}",
+      "local_job": true,
       "environment": {
-        "PLOT_CLIP_CACHE_APP": "python3 " + CACHE_RESULTS_SCRIPT,
-        "PLOT_CLIP_CACHE": PLOT_CLIP_CACHE,
-        "PLOT_CLIP_RESULTS": PLOT_CLIP_RUN_RESULTS,
-        "PATH_MAPS": IMAGE_MOUNT_POINT + ":" + BASE_DIR
+        "CACHE_DIR": PC_CACHE_DIR,
+        "RESULTS_FILE_NAME": "result.json",
+        "RESULTS_FILE_PATH": RESULTS_FILE_PATH
       },
       "inputs": [
-        CACHE_RESULTS_SCRIPT,
-        PLOT_CLIP_CACHE,
-        PLOT_CLIP_RUN_RESULTS
+        PC_CACHE_DIR
       ],
       "outputs": [
-        PLOT_CLIP_CACHE + "/" + "cached_files_makeflow_list.json"
+        RESULTS_FILE_PATH
       ]
     }
   ]
 }
-

@@ -56,6 +56,15 @@ WORKFLOW = [
         'return_code_success': lambda code: int(code) == 0,     # Function that indicates success based upon return code
         'force_dataset': False,                                 # Force the output to a dataset if not specified
         'dataset_name_template': '{date}_{experiment}_{name}'   # Template for dataset names
+    },
+    {
+        'name': 'Plot Clip workflow',                           # Name of the workflow step
+        'makeflow_file': 'plot_clip_workflow.jx',               # The makeflow file to use
+        'docker_version_number': '2.0',                         # The version of the docker image to use
+        'arguments': None,                                      # Additional arguments for makeflow command
+        'return_code_success': lambda code: int(code) == 0,     # Function that indicates success based upon return code
+        'force_dataset': False,                                 # Force the output to a dataset if not specified
+        'dataset_name_template': '{date}_{experiment}_{name}'   # Template for dataset names
     }
 ]
 
@@ -589,8 +598,9 @@ class DroneMakeflow(extractors.TerrarefExtractor):
         # TODO:
         #  1. cache to date stamped folder, per key, w/ user & experiment
         #  2. file metadata when no container specified
-        #  3. Support force_dataset
-        #  4.
+        #  3. support force_dataset
+        #  4. use latest dataset ID for subsequent steps
+        #  5.
         self.start_message(resource)
         super(DroneMakeflow, self).process_message(connector, host, secret_key, resource, parameters)
 
