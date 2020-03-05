@@ -173,6 +173,12 @@ def _map_path(file_path: str, path_maps: dict = None) -> str:
             path_len = len(one_path)
             if path_len == file_path_len:
                 return file_path
+            # Check for files that are already mapped
+            if file_path.startswith(path_maps[one_path]):
+                sep_char = file_path[len(path_maps[one_path])]
+                if sep_char in ['/', '\\']:
+                    return file_path
+            # Perform the mapping
             if path_len < file_path_len:
                 sep_char = file_path[path_len]
                 if sep_char in ['/', '\\']:
@@ -243,10 +249,10 @@ def _save_result_metadata(metadata_file: str, metadata: dict) -> None:
         json.dump(write_metadata, out_file, indent=2)
 
 
-def cache_files(result_files: dict, cache_dir: str, path_maps: dict = None, file_handlers: dict = None) -> list:
+def cache_files(result_files: list, cache_dir: str, path_maps: dict = None, file_handlers: dict = None) -> list:
     """Copies any files found in the results to the cache location
     Arguments:
-        result_files: the dictionary of files to copy
+        result_files: the list of file dictionary to copy
         cache_dir: the location to copy the files to
         path_maps: path mappings to use on file paths
         file_handlers: special handling of files instead of normal copy
@@ -445,8 +451,12 @@ def _check_get_parameters(args: argparse.Namespace) -> dict:
     with open(args.results_file, "r") as in_file:
         results = json.load(in_file)
 
-    # Loop through and copy any files (without sub-paths)
+    # Simple parameter setup
     return_dict = {'result_containers': None, 'result_files': None, 'cache_dir': None}
+    if args.extra_files:
+        return_dict['extra_files'] = []
+        for one_file in args.extra_files.split(':'):
+            return_dict['extra_files'].append({'path': one_file})
 
     # Loop through and copy any files (without sub-paths)
     if os.path.isdir(args.results_file):
@@ -497,12 +507,14 @@ def _check_get_parameters(args: argparse.Namespace) -> dict:
     return return_dict
 
 
-def cache_results(result_containers: list, result_files: dict, cache_dir: str, path_maps: dict = None, file_handlers: dict = None) -> None:
+def cache_results(result_containers: list, result_files: list, cache_dir: str, extra_files: list = None, path_maps: dict = None,
+                  file_handlers: dict = None) -> None:
     """Handles caching the containers and files found in the results
     Arguments:
         result_containers: the dictionary of containers with files to copy
         result_files: the dictionary of files to copy
         cache_dir: the location to copy the files to
+        extra_files: additional files to copy
         path_maps: path mappings to use on file paths
         file_handlers: special handling of files instead of normal copy
     """
@@ -520,6 +532,12 @@ def cache_results(result_containers: list, result_files: dict, cache_dir: str, p
         if copied_files:
             file_list.append({'files': copied_files})
 
+    # Handle any extra files
+    if extra_files:
+        copied_files = cache_files(extra_files, cache_dir, path_maps, file_handlers)
+        if copied_files:
+            file_list.append({'files': copied_files})
+
     # Save the list of copied files for makeflow use
     makeflow_list_file = os.path.join(cache_dir, "cached_files_makeflow_list.json")
     with open(makeflow_list_file, "w") as out_file:
@@ -528,16 +546,26 @@ def cache_results(result_containers: list, result_files: dict, cache_dir: str, p
         for one_set in file_list:
             definition_lines = []
             if 'metadata_path' in one_set:
-                definition_lines.append('\"METADATA\": \"%s\"' % one_set['metadata_path'])
-                definition_lines.append('\"METADATA_NAME\": \"%s\"' % _strip_mapped_path(one_set['metadata_path'], path_maps))
-                definition_lines.append('\"BASE_METADATA_NAME\": \"%s\"' % os.path.splitext(os.path.basename(one_set['metadata_path']))[0])
+                definition_lines.append({
+                    'METADATA': one_set['metadata_path'],
+                    'METADATA_NAME': _strip_mapped_path(one_set['metadata_path'], path_maps),
+                    'BASE_METADATA_NAME': os.path.splitext(os.path.basename(one_set['metadata_path']))[0]
+                })
+                #definition_lines.append('\"METADATA\": \"%s\"' % one_set['metadata_path'])
+                #definition_lines.append('\"METADATA_NAME\": \"%s\"' % _strip_mapped_path(one_set['metadata_path'], path_maps))
+                #definition_lines.append('\"BASE_METADATA_NAME\": \"%s\"' % os.path.splitext(os.path.basename(one_set['metadata_path']))[0])
 
             for one_file in one_set['files']:
-                definition_lines.append('\"PATH\": \"%s\"' % one_file)
-                definition_lines.append('\"NAME\": \"%s\"' % _strip_mapped_path(one_file, path_maps))
-                definition_lines.append('\"BASE_IMAGE_NAME\": \"%s\"' % os.path.splitext(os.path.basename(one_file))[0])
+                definition_lines.append({
+                    'PATH': one_file,
+                    'NAME': _strip_mapped_path(one_file, path_maps),
+                    'BASE_IMAGE_NAME': os.path.splitext(os.path.basename(one_file))[0]
+                })
+                #definition_lines.append('\"PATH\": \"%s\"' % one_file)
+                #definition_lines.append('\"NAME\": \"%s\"' % _strip_mapped_path(one_file, path_maps))
+                #definition_lines.append('\"BASE_IMAGE_NAME\": \"%s\"' % os.path.splitext(os.path.basename(one_file))[0])
 
-            out_file.write('%s\n  {\n    %s\n  }' % (separator, ',\n    '.join(definition_lines)))
+            out_file.write('%s\n  {\n    %s\n  }' % (separator, ',\n    '.join([str(entry) for entry in definition_lines])))
             separator = ','
 
         out_file.write('\n  ]\n}')
@@ -554,6 +582,8 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
                         help='expected number of header lines in any CSV file when merging CSV files (default=0)')
     parser.add_argument('--maps', nargs='?', type=str,
                         help='one or more comma separated folder mappings of <source path>:<destination path>')
+    parser.add_argument('--extra_files', nargs='?', type=str,
+                        help='one or more colon separated files to copy <file 1>:<file 2>:...')
     parser.add_argument('results_file', metavar='<results>', type=str,
                         help='the path to the results file to act upon')
     parser.add_argument('cache_folder', metavar='<cache>', type=str,

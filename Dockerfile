@@ -109,7 +109,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 COPY *.py *.jx *.json *.sh /home/extractor/
-RUN chmod a+x /home/extractor/entrypoint.sh
+RUN chmod a+x /home/extractor/*.sh
 
 USER extractor
 ENTRYPOINT ["/home/extractor/entrypoint.sh"]

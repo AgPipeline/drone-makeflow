@@ -1,68 +1,49 @@
 {
   "define": {
-    "SOURCE_IMAGE_NAME": "cache/odm_orthophoto.tif",
-    "SOURCE_IMAGE": BASE_DIR + SOURCE_IMAGE_NAME,
-    "SOIL_MASK_CACHE": BASE_DIR + "cache",
-    "SOIL_MASK_DOCKER_IMAGE": "agdrone/transformer-soilmask:" + SOIL_MASK_DOCKER_IMAGE_VERSION,
-    "SOIL_MASK_METADATA": BASE_DIR + EXPERIMENT_METADATA,
-    "SOIL_MASK_WORKSPACE_DIR_NAME": "workspace/soil_mask",
-    "SOIL_MASK_WORKSPACE": BASE_DIR + SOIL_MASK_WORKSPACE_DIR_NAME,
-    "SOIL_MASK_RUN_RESULTS": SOIL_MASK_WORKSPACE + "/result.json",
-    "CACHE_RESULTS_SCRIPT": BASE_DIR + "cache_results.py"
+    "SHELL_COMMAND": "bash -c ",
+    "BASE_DIR": BASE_DIR,
+    "SM_SCRIPT_NAME": "./soil_mask_workflow.sh",
+    "SM_CACHE_DIR": CACHE_DIR,
+    "SM_EXPERIMENT_METADATA_FILENAME": BASE_DIR + EXPERIMENT_METADATA_FILENAME,
+    "SM_SOURCE_IMAGES_DIR": BASE_DIR + DATA_FOLDER_NAME
   },
   "rules": [
     {
-      "command" : "mkdir -p ${SOIL_MASK_WORKSPACE} && chmod a+w ${SOIL_MASK_WORKSPACE}",
+      "command": "${SCRIPT_SHELL_COMMAND}",
       "environment": {
-        "SOIL_MASK_WORKSPACE": SOIL_MASK_WORKSPACE
-      },
-      "inputs": [],
-      "outputs": [
-        SOIL_MASK_WORKSPACE
-      ]
-    },
-    {
-      "command" : "mkdir -p ${SOIL_MASK_CACHE}",
-      "environment": {
-        "SOIL_MASK_CACHE": SOIL_MASK_CACHE
-      },
-      "inputs": [],
-      "outputs": [
-        SOIL_MASK_CACHE
-      ]
-    },
-    {
-      "command": "docker run --rm -v ${IMAGE_MOUNT_SOURCE}:${IMAGE_MOUNT_POINT} ${DOCKER_IMAGE} --metadata ${METADATA} --working_space ${WORKSPACE_DIR} ${DOCKER_RUN_PARAMS}",
-      "environment": {
+        "SM_SCRIPT_NAME": SM_SCRIPT_NAME,
+        "SCRIPT_SHELL_COMMAND": SHELL_COMMAND + SM_SCRIPT_NAME,
+        "CACHE_DIR": SM_CACHE_DIR,
+        "BASE_DIR": BASE_DIR,
+        "DATA_FOLDER_NAME": DATA_FOLDER_NAME,
+        "DOCKER_VERSION": DOCKER_VERSION,
+        "EXPERIMENT_METADATA_FILENAME": EXPERIMENT_METADATA_FILENAME,
         "IMAGE_MOUNT_SOURCE": IMAGE_MOUNT_SOURCE,
-        "IMAGE_MOUNT_POINT": IMAGE_MOUNT_POINT,
-        "DOCKER_IMAGE": SOIL_MASK_DOCKER_IMAGE,
-        "METADATA": IMAGE_MOUNT_POINT + EXPERIMENT_METADATA,
-        "WORKSPACE_DIR": IMAGE_MOUNT_POINT + SOIL_MASK_WORKSPACE_DIR_NAME,
-        "DOCKER_RUN_PARAMS": IMAGE_MOUNT_POINT + SOURCE_IMAGE_NAME
+        "RELATIVE_WORKING_FOLDER": RELATIVE_WORKING_FOLDER
       },
       "inputs": [
-        SOIL_MASK_METADATA,
-        SOURCE_IMAGE
+        SM_SCRIPT_NAME,
+        SM_EXPERIMENT_METADATA_FILENAME,
+        SM_SOURCE_IMAGES_DIR
       ],
       "outputs": [
-        SOIL_MASK_RUN_RESULTS
+        SM_CACHE_DIR
       ]
     },
     {
-      "command": "${SOIL_MASK_CACHE_APP} --maps ${PATH_MAPS} ${SOIL_MASK_RESULTS} ${SOIL_MASK_CACHE}",
+      "command": "cp ${CACHE_DIR}${RESULTS_FILE_NAME} ${RESULTS_FILE_PATH}",
+      "local_job": true,
       "environment": {
-        "SOIL_MASK_CACHE_APP": "python3 " + CACHE_RESULTS_SCRIPT,
-        "SOIL_MASK_CACHE": SOIL_MASK_CACHE,
-        "SOIL_MASK_RESULTS": SOIL_MASK_RUN_RESULTS,
-        "PATH_MAPS": IMAGE_MOUNT_POINT + ":" + BASE_DIR
+        "CACHE_DIR": SM_CACHE_DIR,
+        "RESULTS_FILE_NAME": "result.json",
+        "RESULTS_FILE_PATH": RESULTS_FILE_PATH
       },
       "inputs": [
-        CACHE_RESULTS_SCRIPT,
-        SOIL_MASK_CACHE,
-        SOIL_MASK_RUN_RESULTS
+        SM_CACHE_DIR
       ],
-      "outputs": []
+      "outputs": [
+        RESULTS_FILE_PATH
+      ]
     }
   ]
 }

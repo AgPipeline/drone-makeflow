@@ -33,16 +33,29 @@ CREATED_FOLDER_PERMISSIONS = stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S
 # Name of mount point on Docker images
 IMAGE_MOUNT_POINT_NAME = '/mnt/'
 
-# docker run --network pipeline_clowder -v /var/run/docker.sock:/var/run/docker.sock -v "testing:/mnt" --user root -e 'RABBITMQ_URI=amqp://rabbitmq/%2F' -e 'RABBITMQ_EXCHANGE=terra' -e 'TZ=/user/share/zoneinfo/US/Central' -e "PIPELINE_KEY=\x84\n'\x08\xbd\\\xef\xe1\x00\r\xe5\xf6=\x80\x1c\xc6\xd1o\xc3\xad\\:\xce\x92\x14^\xf0\x8c\xf4\x1c\`\x0b" -e 'WORKING_SPACE=/mnt' -e 'NAMED_VOLUME=testing' -d --restart=always --name=extractor-dronemakeflow chrisatua/development:drone_makeflow
+# docker run --network pipeline_clowder -v /var/run/docker.sock:/var/run/docker.sock -v "testing:/mnt" --user root
+# -e 'RABBITMQ_URI=amqp://rabbitmq/%2F' -e 'RABBITMQ_EXCHANGE=terra' -e 'TZ=/user/share/zoneinfo/US/Central' -e
+# "PIPELINE_KEY=\x84\n'\x08\xbd\\\xef\xe1\x00\r\xe5\xf6=\x80\x1c\xc6\xd1o\xc3\xad\\:\xce\x92\x14^\xf0\x8c\xf4\x1c\`\x0b"
+# -e 'WORKING_SPACE=/mnt' -e 'NAMED_VOLUME=testing' -d --restart=always --name=extractor-dronemakeflow chrisatua/development:drone_makeflow
 
 WORKFLOW = [
     {
         'name': 'OpenDroneMap workflow',                        # Name of the workflow step
         'makeflow_file': 'odm_workflow.jx',                     # The makeflow file to use
+        'docker_version_number': '2.0',                         # The version of the docker image to use
         'arguments': None,                                      # Additional arguments for makeflow command
         'return_code_success': lambda code: int(code) == 0,     # Function that indicates success based upon return code
         'force_dataset': True,                                  # Force the output to a dataset if not specified
-        'dataset_name_template': '{name}_{date}_{experiment}'   # Template for dataset names
+        'dataset_name_template': '{date}_{experiment}_{name}'   # Template for dataset names
+    },
+    {
+        'name': 'Soil Mask workflow',                           # Name of the workflow step
+        'makeflow_file': 'soil_mask_workflow.jx',               # The makeflow file to use
+        'docker_version_number': '2.0',                         # The version of the docker image to use
+        'arguments': None,                                      # Additional arguments for makeflow command
+        'return_code_success': lambda code: int(code) == 0,     # Function that indicates success based upon return code
+        'force_dataset': False,                                 # Force the output to a dataset if not specified
+        'dataset_name_template': '{date}_{experiment}_{name}'   # Template for dataset names
     }
 ]
 
@@ -51,6 +64,43 @@ class __internal__():
     """Internal use class"""
     def __init__(self):
         """Initializes class instance"""
+
+    @staticmethod
+    def prepare_metadata(host: str, version: str, creator_name: str, metadata: dict, target_id: str, target_is_dataset: bool = True) -> dict:
+        """Prepares the metadata as JSONLD if it isn't already
+        Arguments:
+            host: the host for the metadata
+            version: the version associated with the metadata
+            creator_name: name to associate with the metadata
+            metadata: the metadata to fix up
+            target_id: the Clowder ID of the metadata target
+            target_is_dataset: True indicates the target_id is a dataset, and False a file
+        Return:
+            Returns the JSONLD compatible metadata
+        """
+        if '@context' in metadata:
+            return metadata
+
+        context = ["https://clowder.ncsa.illinois.edu/contexts/metadata.jsonld"]
+
+        return_md = {
+            # TODO: Generate JSON-LD context for additional fields
+            "@context": context,
+            "content": metadata,
+            "agent": {
+                "@type": "cat:extractor",
+                "extractor_id": host + ("" if host.endswith("/") else "/") + "api/extractors/" + creator_name,
+                "version": version,
+                "name": creator_name
+            }
+        }
+
+        if target_is_dataset:
+            return_md['dataset_id'] = target_id
+        else:
+            return_md['file_id'] = target_id
+
+        return return_md
 
     @staticmethod
     def create_folder_default_perms(folder_path: str) -> None:
@@ -80,19 +130,19 @@ class __internal__():
         """
         # Build up our environment JSON object
         # The working folder for the workflow on our file system
-        step_out_folder_name = os.path.splitext(os.path.basename(workflow_step['makeflow_file']))[0].lstrip('/\\')
+        data_folder_name = os.path.splitext(os.path.basename(workflow_step['makeflow_file']))[0].lstrip('/\\')
 
         # Docker images mounting point
-        env = {'IMAGE_MOUNT_POINT': IMAGE_MOUNT_POINT_NAME,
-               'IMAGE_MOUNT_SOURCE': mount_volume_name,
-               # Starting folder within Docker images we run
-               'IMAGE_BASE_DIR': os.path.join(IMAGE_MOUNT_POINT_NAME, image_subfolder.lstrip('/\\'),
-                                              step_out_folder_name).rstrip('/\\') + '/',
-               # The working folder for the workflow on our file system
-               'BASE_DIR': os.path.join(out_folder, step_out_folder_name).rstrip('/\\') + '/',
-               # Get the folders for our files
-               'IMAGES_FOLDER': 'images'
+        env = {'IMAGE_MOUNT_SOURCE': mount_volume_name,
+               'DOCKER_VERSION': workflow_step['docker_version_number'],
+               # The working folder for the docker base folder
+               'BASE_DIR': "/mnt/",
+               # The relative working folder
+               'RELATIVE_WORKING_FOLDER': os.path.join(image_subfolder, data_folder_name).lstrip('/\\').rstrip('/\\') + '/'
                }
+        env['CACHE_DIR'] = os.path.join(env['BASE_DIR'], env['RELATIVE_WORKING_FOLDER'], "cache") + '/'
+        # Get the folders for our files
+        env['DATA_FOLDER_NAME'] = os.path.join(env['RELATIVE_WORKING_FOLDER'], 'images').lstrip('/\\')
 
         # Get the experiment information file
         found_experiment = None
@@ -101,50 +151,52 @@ class __internal__():
                 found_experiment = one_file
                 break
         if found_experiment:
-            env['EXPERIMENT_METADATA'] = os.path.basename(found_experiment)
-            logging.info("Experiment file: '%s' ('%s')", env['EXPERIMENT_METADATA'], found_experiment)
+            env['EXPERIMENT_METADATA_FILENAME'] = os.path.basename(found_experiment)
+            logging.info("Experiment file: '%s' ('%s')", env['EXPERIMENT_METADATA_FILENAME'], found_experiment)
         else:
             raise RuntimeError("Unable to find an experiment JSON file")
 
         # Where we want the results.json file to be located
-        env['RESULTS_FILE_PATH'] = os.path.join(env['BASE_DIR'], 'results.json')
-
-        # Setup the versions of docker images to use
-        env['ODM_DOCKER_IMAGE_VERSION'] = '2.0'
-        env['SOIL_MASK_DOCKER_IMAGE_VERSION'] = '2.0'
-        env['PLOT_CLIP_DOCKER_IMAGE_VERSION'] = '2.0'
-        env['CANOPY_COVER_DOCKER_IMAGE_VERSION'] = '0.1'
+        env['RESULTS_FILE_PATH'] = os.path.join(out_folder, 'results.json')
 
         return env
 
     @staticmethod
-    def relocate_files(env: dict, resources: dict) -> tuple:
+    def relocate_files(env: dict, resources: Union[dict, str]) -> tuple:
         """Prepares the files for processing by relocating them
         Arguments:
             env: the environment to be used for this workflow step
-            resources: the resources associated with the request
+            resources: the resources associated with the request or path of a folder on disk
         """
         # pylint: disable=unused-argument
-        # We need to hard link the files to the right spot
-        dest_dir = os.path.join(env['BASE_DIR'], env['IMAGES_FOLDER'].lstrip('/'))
+        # We need to copy the files to the right spot
+        dest_dir = os.path.join(env['BASE_DIR'], env['DATA_FOLDER_NAME'].lstrip('/'))
         updated_experiment_metadata_path = None
         logging.debug("Copying files to folder: '%s", dest_dir)
         __internal__.create_folder_default_perms(dest_dir)
-        for one_file in resources['local_paths']:
-            if one_file.endswith(env['EXPERIMENT_METADATA']):
-                updated_experiment_metadata_path = os.path.join(env['BASE_DIR'], os.path.basename(one_file))
+        if isinstance(resources, dict):
+            source_list = resources['local_paths']
+        elif isinstance(resources, str):
+            source_list = [os.path.join(resources, file_name) for file_name in os.listdir(resources)]
+        else:
+            raise RuntimeError("Parameter 'resource' must be of type dict or str for relocate_files() call")
+        for one_file in source_list:
+            if one_file.endswith(env['EXPERIMENT_METADATA_FILENAME']):
+                updated_experiment_metadata_path = os.path.join(env['BASE_DIR'], env['RELATIVE_WORKING_FOLDER'], os.path.basename(one_file))
                 logging.debug("Copying experiment metadata '%s' to '%s'", one_file, updated_experiment_metadata_path)
-                #os.link(one_file, dest_filename)
                 shutil.copyfile(one_file, updated_experiment_metadata_path)
-            else:
+            elif os.path.isfile(one_file):
                 dest_filename = os.path.join(dest_dir, os.path.basename(one_file))
                 logging.debug("Copying file '%s' to '%s'", one_file, dest_filename)
-                #os.link(one_file, dest_filename)
                 shutil.copyfile(one_file, dest_filename)
+            elif os.path.isdir(one_file):
+                logging.debug("Skipping copying of folder '%s'", one_file)
+            else:
+                logging.warning("Skipping copying of unknown path type: '%s'", one_file)
 
         # Copy any needed scripts
         source_filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'cache_results.py')
-        dest_filename = os.path.join(env['BASE_DIR'], os.path.basename(source_filename))
+        dest_filename = os.path.join(env['BASE_DIR'], env['RELATIVE_WORKING_FOLDER'], os.path.basename(source_filename))
         logging.debug("Copying script '%s' to '%s'", source_filename, dest_filename)
         shutil.copyfile(source_filename, dest_filename)
 
@@ -157,7 +209,6 @@ class __internal__():
             env: the environment to be used for this workflow step
             out_folder: the folder to write the json to
             workflow_step: the information on the current workflow step
-            resources: the resources associated with the request
         """
         # pylint: disable=unused-argument
 
@@ -189,11 +240,12 @@ class __internal__():
         return return_json['id']
 
     @staticmethod
-    def update_file_metadata(file_id: str, metadata: Union[str, dict], connector: connectors.Connector, host: str,
-                             request_key: str) -> None:
+    def update_file_metadata(file_id: str, replace_metadata: bool, metadata: Union[str, dict], connector: connectors.Connector,
+                             host: str, request_key: str) -> None:
         """Handles updating metadata associated with the file. Will add metadata if it doesn't exist already
         Arguments:
             file_id: Clowder ID of the file for which metadata is to be updated
+            replace_metadata: set to True if existing metadata is to be removed
             metadata: the metadata to update with. If a string is specified, metadata is replaced
             connector: an instance of the pyclowder connector object
             host: the URL of the origination request
@@ -201,23 +253,13 @@ class __internal__():
         Exceptions:
             Raises RuntimeError if the metadata is not properly formatted or other problems are found
         """
-        # Prepare the metadata information
-        replace_metadata = True
-        if isinstance(metadata, dict):
-            if 'replace' in metadata:
-                replace_metadata = (not metadata['replace']) is False
-            if 'data' in metadata:
-                update_metadata = metadata['data']
-            else:
-                raise RuntimeError("Invalid metadata specified for file ID %s - missing 'data' key" % file_id)
-        else:
-            update_metadata = metadata
-
-        # Remove metadata if asked
-        if replace_metadata is True:
-            url = '%sapi/files/%s/metadata.jsonld?key=%s' % (host, file_id, request_key)
-            result = requests.delete(url)
-            result.raise_for_status()
+        try:
+            # Remove metadata if asked
+            if replace_metadata is True:
+                url = '%sapi/files/%s/metadata.jsonld?key=%s' % (host, file_id, request_key)
+                logging.debug("Deleting file metadata: '%s'", url)
+                result = requests.delete(url)
+                result.raise_for_status()
 #        else:
 #            # Merge with existing metadata
 #            original_md = files.download_metadata(connector, host, request_key, file_id)
@@ -226,15 +268,19 @@ class __internal__():
 #            elif original_md:
 #                update_metadata = [original_md, update_metadata]
 
-        # Update the metadata
-        files.upload_metadata(connector, host, request_key, file_id, update_metadata)
+            # Update the metadata
+            logging.debug("Updating file '%s' metadata with: %s", file_id, str(metadata))
+            files.upload_metadata(connector, host, request_key, file_id, metadata)
+        except Exception as ex:
+            logging.warning("update_file_metadata failed: %s", str(ex))
 
     @staticmethod
-    def update_dataset_metadata(dataset_id: str, connector: connectors.Connector, host: str, request_key: str,
-                                container_metadata: dict = None, process_metadata: dict = None) -> None:
+    def update_dataset_metadata(dataset_id: str, replace_metadata: bool, connector: connectors.Connector, host: str,
+                                request_key: str, container_metadata: dict = None, process_metadata: dict = None) -> None:
         """Updates the metadata for the dataset
         Arguments:
             dataset_id: the Clowder ID of the dataset to update
+            replace_metadata: set to True if existing metadata is to be removed, only relevant if container_metadata specified
             connector: an instance of the pyclowder connector object
             host: the URL of the origination request
             request_key: the key associated with request
@@ -243,22 +289,8 @@ class __internal__():
         Exceptions:
             Raises RuntimeError if the metadata is not properly formatted or other problems are found
         """
-        # Prepare the metadata information
-        replace_metadata = True
-        update_metadata = ''
-        if container_metadata:
-            if isinstance(container_metadata, dict):
-                if 'replace' in container_metadata:
-                    replace_metadata = (not container_metadata['replace']) is False
-                if 'data' in container_metadata:
-                    update_metadata = container_metadata['data']
-                else:
-                    raise RuntimeError("Invalid metadata specified for dataset ID %s - missing 'data' key" % dataset_id)
-            else:
-                update_metadata = container_metadata
-
         # Update the metadata for the dataset, we handle process specific metadata after that
-        if update_metadata:
+        if container_metadata:
             # Remove metadata if asked
             if replace_metadata is True:
                 datasets.remove_metadata(connector, host, request_key, dataset_id)
@@ -271,18 +303,20 @@ class __internal__():
 #                    update_metadata = [original_md, update_metadata]
 
             # Update the metadata
-            datasets.upload_metadata(connector, host, request_key, dataset_id, update_metadata)
+            datasets.upload_metadata(connector, host, request_key, dataset_id, container_metadata)
 
         # We just add any process metadata
         if process_metadata:
             datasets.upload_metadata(connector, host, request_key, dataset_id, process_metadata)
 
     @staticmethod
-    def upload_files(dataset_id: str, file_results: dict, connector: connectors.Connector, host: str, request_key: str) -> list:
+    def upload_files(dataset_id: str, file_results: dict, workflow_step: dict, connector: connectors.Connector, host: str,
+                     request_key: str) -> list:
         """Uploads the specified files into the dataset
         Arguments:
             dataset_id: the ID of the dataset to upload files into
             file_results: the results file set to upload
+            workflow_step: the information on the current workflow step
             connector: an instance of the pyclowder connector object
             host: the URL of the origination request
             request_key: the key associated with request
@@ -308,7 +342,19 @@ class __internal__():
             # Check if there's metadata associated with the file
             if 'metadata' in one_result:
                 logging.debug("Uploading file metadata %s: '%s' %s", file_id, one_result['path'], str(one_result['metadata']))
-                __internal__.update_file_metadata(file_id, one_result['metadata'], connector, host, request_key)
+                replace_metadata = True
+                if 'replace' in one_result['metadata']:
+                    replace_metadata = (not one_result['metadata']['replace']) is False
+                if 'data' in one_result['metadata']:
+                    working_metadata = one_result['metadata']['data']
+                else:
+                    working_metadata = one_result['metadata']
+
+                prepared_metadata = __internal__.prepare_metadata(host, workflow_step['docker_version_number'],
+                                                                  workflow_step['makeflow_file'], working_metadata,
+                                                                  file_id, target_is_dataset=False)
+                logging.debug("Prepared metadata for file upload: %s", str(prepared_metadata))
+                __internal__.update_file_metadata(file_id, replace_metadata, prepared_metadata, connector, host, request_key)
 
             # Save the file information
             uploaded_files.append({**one_result, **{'id': file_id}})
@@ -352,7 +398,7 @@ class __internal__():
 
         # Load the files to the dataset
         logging.debug("process_result_file: found dataset ID: %s", str(dataset_id))
-        return __internal__.upload_files(dataset_id, file_results, connector, host, request_key)
+        return __internal__.upload_files(dataset_id, file_results, workflow_step, connector, host, request_key)
 
     @staticmethod
     def process_result_dataset(container_results: dict, experiment_info: dict, workflow_step: dict, process_metadata: dict,
@@ -399,13 +445,31 @@ class __internal__():
         uploaded_files = []
         for key in ['file', 'files']:
             if key in container_results:
-                uploaded_files = __internal__.upload_files(dataset_id, container_results[key], connector, host, request_key)
+                uploaded_files = __internal__.upload_files(dataset_id, container_results[key], workflow_step, connector, host, request_key)
 
         # Update the dataset metadata
+        replace_metadata = True
         container_metadata = None
+        prepared_process_metadata = None
         if 'metadata' in container_results:
-            container_metadata = container_results['metadata']
-        __internal__.update_dataset_metadata(dataset_id, connector, host, request_key, container_metadata, process_metadata)
+            if 'replace' in container_results['metadata']:
+                replace_metadata = (not container_results['metadata']['replace']) is False
+            if 'data' in container_results['metadata']:
+                working_metadata = container_results['metadata']['data']
+            else:
+                working_metadata = container_results['metadata']
+            container_metadata = __internal__.prepare_metadata(host, workflow_step['docker_version_number'],
+                                                               workflow_step['makeflow_file'], working_metadata,
+                                                               dataset_id, target_is_dataset=True)
+            logging.debug("Prepared metadata for dataset upload: %s", str(container_metadata))
+        if process_metadata:
+            prepared_process_metadata = __internal__.prepare_metadata(host, workflow_step['docker_version_number'],
+                                                                      workflow_step['makeflow_file'], process_metadata,
+                                                                      dataset_id, target_is_dataset=True)
+            logging.debug("Prepared process metadata for dataset upload: %s", str(container_metadata))
+
+        __internal__.update_dataset_metadata(dataset_id, replace_metadata, connector, host, request_key, container_metadata,
+                                             prepared_process_metadata)
 
         return [{'id': dataset_id, 'created': created_dataset, 'file_ids': uploaded_files}]
 
@@ -522,6 +586,11 @@ class DroneMakeflow(extractors.TerrarefExtractor):
             resource: the resources associated with this request
             parameters: the message body
         """
+        # TODO:
+        #  1. cache to date stamped folder, per key, w/ user & experiment
+        #  2. file metadata when no container specified
+        #  3. Support force_dataset
+        #  4.
         self.start_message(resource)
         super(DroneMakeflow, self).process_message(connector, host, secret_key, resource, parameters)
 
@@ -535,26 +604,37 @@ class DroneMakeflow(extractors.TerrarefExtractor):
             logging.info("Folder for our working space: '%s'", self.args.working_space)
             # Assume we're sharing out working space with other instances, create a temporary folder
             working_folder = tempfile.mkdtemp(dir=self.args.working_space)
+#            working_folder = os.path.join(self.args.working_space, 'tmpjhvq63gh')
             working_subfolder = working_folder[len(self.args.working_space):]
             logging.debug("Creating working space folder for our instance: '%s'", working_folder)
             __internal__.create_folder_default_perms(working_folder)
         else:
-            raise RuntimeError("No working space folder was specified. Try setting the WORKING_SPACE environment variable"
-                               " (if using Docker set to a folder to mount)")
+            raise RuntimeError("No working space folder was specified. Try setting the WORKING_SPACE environment variable "
+                               "(if using Docker set to a folder to mount)")
 
         # Process the steps sequentially
+        env = {}
+        step_number = 0
+        previous_step_cache_dir = None
         for current_step in WORKFLOW:
-            logging.info("Starting workflow step: '%s' with named volume '%s'", current_step['name'], self.args.named_volume)
+            step_number += 1
+            logging.info("Starting workflow step %s: '%s' with named volume '%s'", str(step_number), current_step['name'],
+                         self.args.named_volume)
 
             # Get the environment information and setup for the run
+            if env:
+                previous_step_cache_dir = env['CACHE_DIR']
             env = __internal__.create_env_json(working_folder, working_subfolder, self.args.named_volume, current_step, resource)
             logging.debug("Makefile data: %s", str(env))
 
-            # Relocate the files so sub-docker images can access them
-            if not os.path.exists(env['BASE_DIR']):
-                logging.debug("Creating work step base folder: '%s'", env['BASE_DIR'])
-                __internal__.create_folder_default_perms(env['BASE_DIR'])
-            current_working_folder, new_experiment_path = __internal__.relocate_files(env, resource)
+            # Relocate the files so docker-within-docker images can access them
+#            if not os.path.exists(env['BASE_DIR']):
+#                logging.debug("Creating work step base folder: '%s'", env['BASE_DIR'])
+#                __internal__.create_folder_default_perms(env['BASE_DIR'])
+            if step_number <= 1:
+                current_working_folder, new_experiment_path = __internal__.relocate_files(env, resource)
+            else:
+                current_working_folder, new_experiment_path = __internal__.relocate_files(env, previous_step_cache_dir)
             if not current_working_folder:
                 raise RuntimeError("No working folder was determined for processing")
             if not new_experiment_path:
@@ -565,7 +645,7 @@ class DroneMakeflow(extractors.TerrarefExtractor):
             if os.path.exists(new_experiment_path) and not new_experiment_path.startswith(env['BASE_DIR']):
                 raise RuntimeError("Experiment metadata path does not start with the specified BASE_DIR folder '%s'" % env['BASE_DIR'])
             if new_experiment_path.startswith(env['BASE_DIR']):
-                env['EXPERIMENT_METADATA'] = new_experiment_path[len(env['BASE_DIR']):]
+                env['EXPERIMENT_METADATA_FILENAME'] = new_experiment_path[len(env['BASE_DIR']):]
 
             # Prepare for processing
             logging.debug("Working env.json file: %s", str(env))
@@ -576,29 +656,29 @@ class DroneMakeflow(extractors.TerrarefExtractor):
                    '--jx', current_step['makeflow_file'],
                    '--jx-args', os.path.join(working_folder, 'env.json')]
             logging.debug("Running command: %s", str(cmd))
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            proc = subprocess.Popen(cmd, bufsize=1, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
             # Wait for it to finish
-            return_code = None
             loop_iteration = 1
             start_time = datetime.datetime.now()
             while (datetime.datetime.now() - start_time).total_seconds() <= PROC_WAIT_TOTAL_SEC:
-                return_code = proc.poll()
-                if return_code is None:
+                if proc.returncode is None:
                     logging.info("Waiting for process to finish %s", str(loop_iteration))
-                    try:
-                        proc_stdout, proc_stderr = proc.communicate(timeout=PROC_COMMUNICATE_TIMEOUT_SEC)
-                        if proc_stdout:
-                            logging.debug("Proc stdout: %s", str(proc_stdout))
-                        if proc_stderr:
-                            logging.warning("Proc stderr: %s", str(proc_stderr))
-                            logging.warning("Continuing to wait on process %s", str(loop_iteration))
-                        time.sleep(PROC_WAIT_SLEEP_SEC)
-                    except subprocess.TimeoutExpired as ex:
-                        logging.debug("Timed out waiting for process to respond %s", str(ex))
+                    if proc.stdout:
+                        try:
+                            while True:
+                                line = proc.stdout.readline()
+                                if line:
+                                    logging.debug(line.rstrip(b'\n'))
+                                else:
+                                    break
+                        except Exception as ex:
+                            logging.debug("Ignoring exception while waiting for process %s", str(ex))
+                    proc.poll()
+                    time.sleep(PROC_WAIT_SLEEP_SEC)
                 else:
                     logging.info("Process completed")
-                    logging.debug("Process return code: %s", str(return_code))
+                    logging.debug("Process return code: %s", str(proc.returncode))
                     break
 
                 loop_iteration += 1
@@ -610,7 +690,7 @@ class DroneMakeflow(extractors.TerrarefExtractor):
                     raise RuntimeError(msg)
 
             # Load the experiment data into a form processing the results file can use
-            experiment_path = os.path.join(env['IMAGE_BASE_DIR'], env['EXPERIMENT_METADATA'])
+            experiment_path = os.path.join(env['BASE_DIR'], env['EXPERIMENT_METADATA_FILENAME'])
             logging.debug("Loading experiment metadata before looking at result: '%s'", experiment_path)
             workstep_metadata = deepcopy(current_step)
             clowder_info = {}
@@ -642,10 +722,15 @@ class DroneMakeflow(extractors.TerrarefExtractor):
 
             # Process the results file
             logging.info("Loading and processing results: '%s'", env['RESULTS_FILE_PATH'])
-            with open(env['RESULTS_FILE_PATH'], 'r') as in_file:
-                proc_results = json.load(in_file)
-                __internal__.process_results_json(proc_results, experiment_info, current_step, connector, host, secret_key,
-                                                  workstep_metadata, clowder_info, resource)
+            if os.path.exists(env['RESULTS_FILE_PATH']):
+                with open(env['RESULTS_FILE_PATH'], 'r') as in_file:
+                    proc_results = json.load(in_file)
+                    __internal__.process_results_json(proc_results, experiment_info, current_step, connector, host, secret_key,
+                                                      workstep_metadata, clowder_info, resource)
+            else:
+                msg = "Result file from current step '%s' is not found: %s" % (current_step['name'], env['RESULTS_FILE_PATH'])
+                logging.error(msg)
+                raise RuntimeError(msg)
 
         # Finish up
         self.end_message(resource)
