@@ -1,84 +1,51 @@
 {
   "define": {
-    "CANOPY_COVER_DOCKER_IMAGE": "agdrone/transformer-canopycover:" + CANOPY_COVER_DOCKER_IMAGE_VERSION,
-    "CANOPY_COVER_METADATA": BASE_DIR + EXPERIMENT_METADATA,
-    "CANOPY_COVER_WORKSPACE_DIR_NAME": "workspace/canopycover",
-    "CANOPY_COVER_WORKSPACE": BASE_DIR + CANOPY_COVER_WORKSPACE_DIR_NAME,
-    "CANOPY_COVER_CACHE": BASE_DIR + "cache",
-    "CACHE_RESULTS_SCRIPT": BASE_DIR + "cache_results.py"
+    "SHELL_COMMAND": "bash -c ",
+    "BASE_DIR": BASE_DIR,
+    "CC_SCRIPT_NAME": "./canopy_cover_workflow.sh",
+    "CC_CACHE_DIR": CACHE_DIR,
+    "CC_EXPERIMENT_METADATA_FILENAME": BASE_DIR + EXPERIMENT_METADATA_FILENAME,
+    "CC_SOURCE_IMAGES_DIR": BASE_DIR + DATA_FOLDER_NAME
   },
   "rules": [
     {
-      "command" : "mkdir -p ${CANOPY_COVER_WORKSPACE} && chmod a+w ${CANOPY_COVER_WORKSPACE}",
+      "command": "${SCRIPT_SHELL_COMMAND}",
       "environment": {
-        "CANOPY_COVER_WORKSPACE": CANOPY_COVER_WORKSPACE
-      },
-      "inputs": [],
-      "outputs": [
-        CANOPY_COVER_WORKSPACE
-      ]
-    },
-    {
-      "command" : "mkdir -p ${CANOPY_COVER_CACHE}",
-      "environment": {
-        "CANOPY_COVER_CACHE": CANOPY_COVER_CACHE
-      },
-      "inputs": [],
-      "outputs": [
-        CANOPY_COVER_CACHE
-      ]
-    },
-    {
-        "command": "mkdir -p \"${CANOPY_COVER_IMAGE_WORKSPACE}\" && chmod a+w \"${CANOPY_COVER_IMAGE_WORKSPACE}\"",
-        "environment": {
-            "CANOPY_COVER_IMAGE_WORKSPACE": CANOPY_COVER_WORKSPACE + "/" + ONE_FILE["BASE_METADATA_NAME"]
-        },
-        "inputs": [
-            CANOPY_COVER_WORKSPACE
-        ],
-        "outputs": [
-            CANOPY_COVER_WORKSPACE + "/" + ONE_FILE["BASE_METADATA_NAME"]
-        ]
-    } for ONE_FILE in FILE_LIST,
-    {
-      "command": "docker run --rm -v ${IMAGE_MOUNT_SOURCE}:${DOCKER_IMAGE_MOUNT_POINT} ${DOCKER_PARAMS} ${DOCKER_IMAGE} --metadata \"${METADATA}\"  --metadata \"${EXPERIMENT_METADATA}\" --working_space \"${WORKSPACE_DIR}\" --csv_path \"${CSV_PATH}\" \"${DOCKER_RUN_SOURCE_FILE}\"",
-      "environment": {
+        "CC_SCRIPT_NAME": CC_SCRIPT_NAME,
+        "SCRIPT_SHELL_COMMAND": SHELL_COMMAND + CC_SCRIPT_NAME,
+        "CACHE_DIR": CC_CACHE_DIR,
+        "BASE_DIR": BASE_DIR,
+        "DATA_FOLDER_NAME": DATA_FOLDER_NAME,
+        "DOCKER_VERSION": DOCKER_VERSION,
+        "EXPERIMENT_METADATA_FILENAME": EXPERIMENT_METADATA_FILENAME,
         "IMAGE_MOUNT_SOURCE": IMAGE_MOUNT_SOURCE,
-        "DOCKER_IMAGE_MOUNT_POINT": IMAGE_MOUNT_POINT,
-        "DOCKER_IMAGE": CANOPY_COVER_DOCKER_IMAGE,
-        "DOCKER_PARAMS": "",
-        "EXPERIMENT_METADATA": IMAGE_MOUNT_POINT + EXPERIMENT_METADATA,
-        "METADATA": IMAGE_MOUNT_POINT + ONE_FILE["METADATA_NAME"],
-        "WORKSPACE_DIR": IMAGE_MOUNT_POINT + CANOPY_COVER_WORKSPACE_DIR_NAME + "/" + ONE_FILE["BASE_METADATA_NAME"],
-        "DOCKER_RUN_SOURCE_FILE": IMAGE_MOUNT_POINT + ONE_FILE["NAME"]
+        "RELATIVE_WORKING_FOLDER": RELATIVE_WORKING_FOLDER,
+        "ADDITIONAL_METADATA": ONE_ENTRY["METADATA"],
+        "TARGET_FILENAME": ONE_ENTRY["PATH"]
       },
       "inputs": [
-        ONE_FILE["PATH"],
-        ONE_FILE["METADATA"],
-        CANOPY_COVER_CACHE,
-        CANOPY_COVER_METADATA,
-        CANOPY_COVER_WORKSPACE,
-        CANOPY_COVER_WORKSPACE + "/" + ONE_FILE["BASE_METADATA_NAME"]
+        CC_SCRIPT_NAME,
+        CC_EXPERIMENT_METADATA_FILENAME,
+        CC_SOURCE_IMAGES_DIR
       ],
       "outputs": [
-        BASE_DIR + CANOPY_COVER_WORKSPACE_DIR_NAME + "/" + ONE_FILE["BASE_METADATA_NAME"] + "/result.json"
+        CC_CACHE_DIR
       ]
-    } for ONE_FILE in FILE_LIST,
+    } for ONE_ENTRY in FILE_LIST,
     {
-      "command": "${CANOPY_COVER_CACHE_APP} --maps \"${PATH_MAPS}\" --merge_csv --csv_header_lines 1 \"${CANOPY_COVER_RESULTS}\" \"${CANOPY_COVER_CACHE}\" ",
+      "command": "cp ${CACHE_DIR}${RESULTS_FILE_NAME} ${RESULTS_FILE_PATH}",
+      "local_job": true,
       "environment": {
-        "CANOPY_COVER_CACHE_APP": "python3 " + CACHE_RESULTS_SCRIPT,
-        "CANOPY_COVER_CACHE": CANOPY_COVER_CACHE,
-        "CANOPY_COVER_RESULTS": BASE_DIR + CANOPY_COVER_WORKSPACE_DIR_NAME + "/" + ONE_FILE["BASE_METADATA_NAME"] + "/result.json",
-        "PATH_MAPS": IMAGE_MOUNT_POINT + ":" + BASE_DIR
+        "CACHE_DIR": CC_CACHE_DIR,
+        "RESULTS_FILE_NAME": FILE_NAME,
+        "RESULTS_FILE_PATH": RESULTS_FILE_PATH
       },
       "inputs": [
-        CACHE_RESULTS_SCRIPT,
-        CANOPY_COVER_CACHE,
-        BASE_DIR + CANOPY_COVER_WORKSPACE_DIR_NAME + "/" + ONE_FILE["BASE_METADATA_NAME"] + "/result.json"
+        CC_CACHE_DIR
       ],
       "outputs": [
+        RESULTS_FILE_PATH + FILE_NAME
       ]
-    } for ONE_FILE in FILE_LIST
+    } for FILE_NAME in RESULTS_FILE_NAMES
   ]
 }

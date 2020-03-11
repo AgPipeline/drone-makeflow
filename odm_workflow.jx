@@ -35,15 +35,15 @@
       "local_job": true,
       "environment": {
         "CACHE_DIR": ODM_CACHE_DIR,
-        "RESULTS_FILE_NAME": "result.json",
+        "RESULTS_FILE_NAME": FILE_NAME,
         "RESULTS_FILE_PATH": RESULTS_FILE_PATH
       },
       "inputs": [
         ODM_CACHE_DIR
       ],
       "outputs": [
-        RESULTS_FILE_PATH
+        RESULTS_FILE_PATH + FILE_NAME
       ]
-    }
+    } for FILE_NAME in RESULTS_FILE_NAMES
   ]
 }

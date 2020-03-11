@@ -3,7 +3,7 @@
 set -e
 
 PC_CACHE_DIR=${CACHE_DIR}
-PC_DOCKER_IMAGE="agdrone/transformer-plotclip:${DOCKER_VERSION}"
+PC_DOCKER_IMAGE="agdrone/transformer-canopycover:${DOCKER_VERSION}"
 PC_METADATA="${BASE_DIR}${EXPERIMENT_METADATA_FILENAME}"
 PC_SOURCE_IMAGES_DIR="${BASE_DIR}${DATA_FOLDER_NAME}"
 PC_WORKSPACE_DIR_NAME="workspace"
@@ -14,9 +14,9 @@ PC_RUN_RESULTS="${PC_WORKSPACE}${PC_RESULT_FILENAME}"
 CACHE_RESULTS_SCRIPT="${BASE_DIR}${RELATIVE_WORKING_FOLDER}cache_results.py"
 
 DOCKER_MOUNT_POINT="/mnt/"
-METADATA="${DOCKER_MOUNT_POINT}${EXPERIMENT_METADATA_FILENAME}"
+DOCKER_METADATA_PARAMS="--metadata " + "${DOCKER_MOUNT_POINT}${EXPERIMENT_METADATA_FILENAME}" + " --metadata " + "${DOCKER_MOUNT_POINT}${ADDITIONAL_METADATA}"
 WORKSPACE_DIR="${DOCKER_MOUNT_POINT}${RELATIVE_WORKING_FOLDER}${PC_WORKSPACE_DIR_NAME}"
-DOCKER_RUN_PARAMS="stereoTop ${DOCKER_MOUNT_POINT}${DATA_FOLDER_NAME}/odm_orthophoto_mask.tif"
+DOCKER_RUN_PARAMS=${DOCKER_MOUNT_POINT}${TARGET_FILE}"
 
 PATH_MAPS="${DOCKER_MOUNT_POINT}:${BASE_DIR}${RELATIVE_WORKING_FOLDER}"
 
@@ -29,7 +29,7 @@ echo "Local workspace dir: $PC_WORKSPACE"
 echo "Results: $PC_RUN_RESULTS"
 echo "Results script: $CACHE_RESULTS_SCRIPT"
 echo "Docker mount: $DOCKER_MOUNT_POINT"
-echo "Metadata: $METADATA"
+echo "Docker Metadata params: DOCKER_METADATA_PARAMS"
 echo "Docker workspace Dir: $WORKSPACE_DIR"
 echo "Docker run params: $DOCKER_RUN_PARAMS"
 echo "Path maps: $PATH_MAPS"
@@ -38,8 +38,8 @@ echo "Docker mount source: $IMAGE_MOUNT_SOURCE"
 echo "Creating workspace folder '${PC_WORKSPACE}'"
 mkdir -p ${PC_WORKSPACE} && chmod a+w ${PC_WORKSPACE}
 
-echo docker run --rm --name pc_testing -v "${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}" -e "BETYDB_URL=https://terraref.ncsa.illinois.edu/bety/" -e "BETYDB_KEY=9999999999999999999999999999999999999999" ${PC_DOCKER_IMAGE} -d --metadata "${METADATA}" --working_space "${WORKSPACE_DIR}" ${DOCKER_RUN_PARAMS}
-docker run --rm --name pc_testing -v "${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}" -e "BETYDB_URL=https://terraref.ncsa.illinois.edu/bety/" -e "BETYDB_KEY=9999999999999999999999999999999999999999" ${PC_DOCKER_IMAGE} -d --metadata "${METADATA}" --working_space "${WORKSPACE_DIR}" ${DOCKER_RUN_PARAMS}
+echo docker run --rm --name cc_testing -v "${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}" ${PC_DOCKER_IMAGE} -d "${DOCKER_METADATA_PARAMS}" --working_space "${WORKSPACE_DIR}" ${DOCKER_RUN_PARAMS}
+docker run --rm --name cc_testing -v "${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}" ${PC_DOCKER_IMAGE} -d "${DOCKER_METADATA_PARAMS}" --working_space "${WORKSPACE_DIR}" ${DOCKER_RUN_PARAMS}
 
 echo "Creating cache folder: '${PC_CACHE_DIR}'"
 mkdir -p ${PC_CACHE_DIR}

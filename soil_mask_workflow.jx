@@ -42,8 +42,8 @@
         SM_CACHE_DIR
       ],
       "outputs": [
-        RESULTS_FILE_PATH
+        RESULTS_FILE_PATH + FILE_NAME
       ]
-    }
+    } for FILE_NAME in RESULTS_FILE_NAMES
   ]
 }

@@ -545,27 +545,29 @@ def cache_results(result_containers: list, result_files: list, cache_dir: str, e
         separator = ""
         for one_set in file_list:
             definition_lines = []
+            file_metadata = {}
             if 'metadata_path' in one_set:
-                definition_lines.append({
+                file_metadata = {
                     'METADATA': one_set['metadata_path'],
                     'METADATA_NAME': _strip_mapped_path(one_set['metadata_path'], path_maps),
                     'BASE_METADATA_NAME': os.path.splitext(os.path.basename(one_set['metadata_path']))[0]
-                })
+                }
                 #definition_lines.append('\"METADATA\": \"%s\"' % one_set['metadata_path'])
                 #definition_lines.append('\"METADATA_NAME\": \"%s\"' % _strip_mapped_path(one_set['metadata_path'], path_maps))
                 #definition_lines.append('\"BASE_METADATA_NAME\": \"%s\"' % os.path.splitext(os.path.basename(one_set['metadata_path']))[0])
 
             for one_file in one_set['files']:
-                definition_lines.append({
+                definition_lines.append({**{
                     'PATH': one_file,
                     'NAME': _strip_mapped_path(one_file, path_maps),
                     'BASE_IMAGE_NAME': os.path.splitext(os.path.basename(one_file))[0]
-                })
+                }, **file_metadata})
                 #definition_lines.append('\"PATH\": \"%s\"' % one_file)
                 #definition_lines.append('\"NAME\": \"%s\"' % _strip_mapped_path(one_file, path_maps))
                 #definition_lines.append('\"BASE_IMAGE_NAME\": \"%s\"' % os.path.splitext(os.path.basename(one_file))[0])
 
-            out_file.write('%s\n  {\n    %s\n  }' % (separator, ',\n    '.join([str(entry) for entry in definition_lines])))
+            out_file.write('%s\n  \n    %s\n' % (separator, ',\n    '.join([str(entry).replace("'", '"')
+                                                                            for entry in definition_lines])))
             separator = ','
 
         out_file.write('\n  ]\n}')

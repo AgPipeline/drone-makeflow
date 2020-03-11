@@ -33,14 +33,50 @@ CREATED_FOLDER_PERMISSIONS = stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S
 # Name of mount point on Docker images
 IMAGE_MOUNT_POINT_NAME = '/mnt/'
 
+# Result file names
+WORKFLOW_STEP_RESULT_FILE_NAME = 'result.json'                      # Results from a workflow step
+WORKFLOW_STEP_CACHE_FILE_NAME = 'cached_files_makeflow_list.json'   # Results from caching a workflow step
+
 # docker run --network pipeline_clowder -v /var/run/docker.sock:/var/run/docker.sock -v "testing:/mnt" --user root
 # -e 'RABBITMQ_URI=amqp://rabbitmq/%2F' -e 'RABBITMQ_EXCHANGE=terra' -e 'TZ=/user/share/zoneinfo/US/Central' -e
 # "PIPELINE_KEY=\x84\n'\x08\xbd\\\xef\xe1\x00\r\xe5\xf6=\x80\x1c\xc6\xd1o\xc3\xad\\:\xce\x92\x14^\xf0\x8c\xf4\x1c\`\x0b"
 # -e 'WORKING_SPACE=/mnt' -e 'NAMED_VOLUME=testing' -d --restart=always --name=extractor-dronemakeflow chrisatua/development:drone_makeflow
 
+
+def _preprocess_canopy_cover_json(env: dict, json_file: str) -> str:
+    """Preprocesses canopy cover JSON files
+    Arguments:
+        env: runtime environment for commands
+        files: list of JSON files to preprocess
+    """
+    dest_dir = os.path.join(env['BASE_DIR'], env['DATA_FOLDER_NAME'].lstrip('/'))
+    return_filename = json_file
+    try:
+        new_json = None
+        with open(json_file, 'r') as in_file:
+            target_json = json.load(in_file)
+            if 'FILE_LIST' in target_json:
+                new_json = []
+                for one_file in target_json['FILE_LIST']:
+                    if 'METADATA' in one_file:
+                        new_json.append(one_file)
+
+        if new_json is not None:
+            new_json_file = os.path.join(dest_dir, WORKFLOW_STEP_CACHE_FILE_NAME)
+            with open(new_json_file, 'w') as out_file:
+                json.dump(new_json, out_file)
+                return_filename = new_json_file
+
+    except Exception as ex:
+        msg = "Ignoring exception while pre processing canopy cover JSON file: '%s' %s" % (json_file, str(ex))
+        logging.debug(msg)
+        logging.exception(msg)
+
+    return return_filename
+
 WORKFLOW = [
     {
-        'name': 'OpenDroneMap workflow',                        # Name of the workflow step
+        'name': 'OpenDroneMap',                                 # Name of the workflow step
         'makeflow_file': 'odm_workflow.jx',                     # The makeflow file to use
         'docker_version_number': '2.0',                         # The version of the docker image to use
         'arguments': None,                                      # Additional arguments for makeflow command
@@ -49,7 +85,7 @@ WORKFLOW = [
         'dataset_name_template': '{date}_{experiment}_{name}'   # Template for dataset names
     },
     {
-        'name': 'Soil Mask workflow',                           # Name of the workflow step
+        'name': 'Soil Mask',                                    # Name of the workflow step
         'makeflow_file': 'soil_mask_workflow.jx',               # The makeflow file to use
         'docker_version_number': '2.0',                         # The version of the docker image to use
         'arguments': None,                                      # Additional arguments for makeflow command
@@ -58,13 +94,23 @@ WORKFLOW = [
         'dataset_name_template': '{date}_{experiment}_{name}'   # Template for dataset names
     },
     {
-        'name': 'Plot Clip workflow',                           # Name of the workflow step
+        'name': 'Plot Clip',                                    # Name of the workflow step
         'makeflow_file': 'plot_clip_workflow.jx',               # The makeflow file to use
         'docker_version_number': '2.0',                         # The version of the docker image to use
         'arguments': None,                                      # Additional arguments for makeflow command
         'return_code_success': lambda code: int(code) == 0,     # Function that indicates success based upon return code
         'force_dataset': False,                                 # Force the output to a dataset if not specified
         'dataset_name_template': '{date}_{experiment}_{name}'   # Template for dataset names
+    },
+    {
+        'name': 'Canopy Cover',                                 # Name of the workflow step
+        'makeflow_file': 'canopy_cover_workflow.jx',            # The makeflow file to use
+        'docker_version_number': '1.0',                         # The version of the docker image to use
+        'arguments': None,                                      # Additional arguments for makeflow command
+        'return_code_success': lambda code: int(code) == 0,     # Function that indicates success based upon return code
+        'force_dataset': False,                                 # Force the output to a dataset if not specified
+        'dataset_name_template': '{date}_{experiment}_{name}',  # Template for dataset names
+        'preprocess_json': _preprocess_canopy_cover_json       # Function for preprocessing JSON
     }
 ]
 
@@ -93,7 +139,6 @@ class __internal__():
         context = ["https://clowder.ncsa.illinois.edu/contexts/metadata.jsonld"]
 
         return_md = {
-            # TODO: Generate JSON-LD context for additional fields
             "@context": context,
             "content": metadata,
             "agent": {
@@ -109,7 +154,27 @@ class __internal__():
         else:
             return_md['file_id'] = target_id
 
-        return return_md
+        def clean_md(clean_metadata: dict) -> dict:
+            """Cleans up the copied metadata
+            Arguments:
+                clean_metadata: the metadata to clean
+            Return:
+                The cleaned up metadata
+            Notes:
+                Replaces None values with an empty string
+            """
+            for key in clean_metadata.keys():
+                if clean_metadata[key] is None:
+                    clean_metadata[key] = ''
+                elif isinstance(clean_metadata[key], dict):
+                    clean_metadata[key] = clean_md(clean_metadata[key])
+                if '.' in key:
+                    new_key = key.replace('.', '_')
+                    clean_metadata[new_key] = clean_metadata[key]
+                    clean_metadata.pop(key)
+            return clean_metadata
+
+        return clean_md(return_md)
 
     @staticmethod
     def create_folder_default_perms(folder_path: str) -> None:
@@ -166,7 +231,8 @@ class __internal__():
             raise RuntimeError("Unable to find an experiment JSON file")
 
         # Where we want the results.json file to be located
-        env['RESULTS_FILE_PATH'] = os.path.join(out_folder, 'results.json')
+        env['RESULTS_FILE_PATH'] = out_folder.rstrip('/\\') + '/'
+        env['RESULTS_FILE_NAMES'] = [WORKFLOW_STEP_RESULT_FILE_NAME, WORKFLOW_STEP_CACHE_FILE_NAME]
 
         return env
 
@@ -285,7 +351,7 @@ class __internal__():
 
     @staticmethod
     def update_dataset_metadata(dataset_id: str, replace_metadata: bool, connector: connectors.Connector, host: str,
-                                request_key: str, container_metadata: dict = None, process_metadata: dict = None) -> None:
+                                request_key: str, container_metadata: dict = None) -> None:
         """Updates the metadata for the dataset
         Arguments:
             dataset_id: the Clowder ID of the dataset to update
@@ -294,32 +360,33 @@ class __internal__():
             host: the URL of the origination request
             request_key: the key associated with request
             container_metadata: optional metadata for the container
-            process_metadata: metadata associated with the current process
         Exceptions:
             Raises RuntimeError if the metadata is not properly formatted or other problems are found
         """
         # Update the metadata for the dataset, we handle process specific metadata after that
-        if container_metadata:
-            # Remove metadata if asked
-            if replace_metadata is True:
-                datasets.remove_metadata(connector, host, request_key, dataset_id)
-#            else:
-#               # Merge with existing metadata
-#                original_md = datasets.download_metadata(connector, host, request_key, dataset_id)
-#                if isinstance(original_md, list):
-#                    update_metadata = [*original_md, update_metadata]
-#                elif original_md:
-#                    update_metadata = [original_md, update_metadata]
+        try:
+            if container_metadata:
+                logging.debug("HACK: update_dataset_metadata: have container metadata, checking for replacing")
+                # Remove metadata if asked
+                if replace_metadata is True:
+                    logging.debug("HACK: update_dataset_metadata: about to remove dataset metadata: %s", dataset_id)
+                    datasets.remove_metadata(connector, host, request_key, dataset_id)
+    #            else:
+    #               # Merge with existing metadata
+    #                original_md = datasets.download_metadata(connector, host, request_key, dataset_id)
+    #                if isinstance(original_md, list):
+    #                    update_metadata = [*original_md, update_metadata]
+    #                elif original_md:
+    #                    update_metadata = [original_md, update_metadata]
 
-            # Update the metadata
-            datasets.upload_metadata(connector, host, request_key, dataset_id, container_metadata)
-
-        # We just add any process metadata
-        if process_metadata:
-            datasets.upload_metadata(connector, host, request_key, dataset_id, process_metadata)
+                # Update the metadata
+                logging.debug("HACK: update_dataset_metadata: about to upload container metadata: %s %s", dataset_id, container_metadata)
+                datasets.upload_metadata(connector, host, request_key, dataset_id, container_metadata)
+        except Exception as ex:
+            logging.debug("HACK: update_dataset_metadata: EXCEPTION CAUGHT: %s", str(ex))
 
     @staticmethod
-    def upload_files(dataset_id: str, file_results: dict, workflow_step: dict, connector: connectors.Connector, host: str,
+    def upload_files(dataset_id: str, file_results: list, workflow_step: dict, connector: connectors.Connector, host: str,
                      request_key: str) -> list:
         """Uploads the specified files into the dataset
         Arguments:
@@ -372,7 +439,7 @@ class __internal__():
         return uploaded_files
 
     @staticmethod
-    def process_result_file(file_results: dict, experiment_info: dict, workflow_step: dict, process_metadata: dict,
+    def process_result_file(file_results: list, experiment_info: dict, workflow_step: dict, process_metadata: dict,
                             connector: connectors.Connector, host: str, request_key: str, workstep_metadata: dict,
                             clowder_credentials: dict, resources: dict) -> list:
         """Processes the results as a Clowder dataset
@@ -410,7 +477,7 @@ class __internal__():
         return __internal__.upload_files(dataset_id, file_results, workflow_step, connector, host, request_key)
 
     @staticmethod
-    def process_result_dataset(container_results: dict, experiment_info: dict, workflow_step: dict, process_metadata: dict,
+    def process_result_dataset(container_results: list, experiment_info: dict, workflow_step: dict, process_metadata: dict,
                                connector: connectors.Connector, host: str, request_key: str, workstep_metadata: dict,
                                clowder_credentials: dict, resources: dict) -> list:
         """Processes the results as a Clowder dataset
@@ -435,52 +502,60 @@ class __internal__():
             ...]
         """
         # pylint: disable=unused-argument
-        # Create the name of the dataset
-        if 'dataset_name_template' in workflow_step:
-            dataset_name = workflow_step['dataset_name_template'].format(**experiment_info)
-        else:
-            dataset_name = '{name}_{date}_{experiment}'.format(**experiment_info)
-
-        # Check for dataset existence and create it if needed
-        created_dataset = False
-        logging.debug("Getting the ID for the dataset: %s", dataset_name)
-        dataset_id = extractors.get_datasetid_by_name(host, request_key, dataset_name)
-        if dataset_id is None:
-            logging.debug("Creating dataset: %s", dataset_name)
-            dataset_id = __internal__.create_dataset(host, request_key, dataset_name)
-            created_dataset = True
-
-        # Load the files into the dataset
-        uploaded_files = []
-        for key in ['file', 'files']:
-            if key in container_results:
-                uploaded_files = __internal__.upload_files(dataset_id, container_results[key], workflow_step, connector, host, request_key)
-
-        # Update the dataset metadata
-        replace_metadata = True
-        container_metadata = None
-        prepared_process_metadata = None
-        if 'metadata' in container_results:
-            if 'replace' in container_results['metadata']:
-                replace_metadata = (not container_results['metadata']['replace']) is False
-            if 'data' in container_results['metadata']:
-                working_metadata = container_results['metadata']['data']
+        return_info = []
+        template_metadata = deepcopy(workstep_metadata)
+        for one_container in container_results:
+            # Create the name of the dataset
+            template_metadata['name'] = one_container['name']
+            if 'dataset_name_template' in workflow_step:
+                dataset_name = workflow_step['dataset_name_template'].format(**template_metadata).replace(' ', '_')
             else:
-                working_metadata = container_results['metadata']
-            container_metadata = __internal__.prepare_metadata(host, workflow_step['docker_version_number'],
-                                                               workflow_step['makeflow_file'], working_metadata,
-                                                               dataset_id, target_is_dataset=True)
-            logging.debug("Prepared metadata for dataset upload: %s", str(container_metadata))
-        if process_metadata:
-            prepared_process_metadata = __internal__.prepare_metadata(host, workflow_step['docker_version_number'],
-                                                                      workflow_step['makeflow_file'], process_metadata,
-                                                                      dataset_id, target_is_dataset=True)
-            logging.debug("Prepared process metadata for dataset upload: %s", str(container_metadata))
+                dataset_name = '{name}_{date}_{experiment}'.format(**template_metadata).replace(' ', '_')
 
-        __internal__.update_dataset_metadata(dataset_id, replace_metadata, connector, host, request_key, container_metadata,
-                                             prepared_process_metadata)
+            # Check for dataset existence and create it if needed
+            created_dataset = False
+            logging.debug("Getting the ID for the dataset: %s", dataset_name)
+            dataset_id = extractors.get_datasetid_by_name(host, request_key, dataset_name)
+            if dataset_id is None:
+                logging.debug("Creating dataset: %s", dataset_name)
+                dataset_id = __internal__.create_dataset(host, request_key, dataset_name)
+                created_dataset = True
+            logging.debug("Using dataset ID: %s", str(dataset_id))
 
-        return [{'id': dataset_id, 'created': created_dataset, 'file_ids': uploaded_files}]
+            # Load the files into the dataset
+            uploaded_files = []
+            logging.debug("Looking for 'file' key in container results keys: %s", str(one_container.keys()))
+            for key in ['file', 'files']:
+                if key in one_container:
+                    logging.debug("Uploading files to dataset [key: %s]: %s", key, str(one_container[key]))
+                    uploaded_files = __internal__.upload_files(dataset_id, one_container[key], workflow_step, connector, host, request_key)
+
+            # Update the dataset metadata
+            replace_metadata = True
+            container_metadata = None
+            if 'metadata' in one_container:
+                if 'replace' in one_container['metadata']:
+                    replace_metadata = (not one_container['metadata']['replace']) is False
+                if 'data' in one_container['metadata']:
+                    working_metadata = one_container['metadata']['data']
+                else:
+                    working_metadata = one_container['metadata']
+
+                if process_metadata:
+                    logging.debug("Merging container metadata with process metadata")
+                    working_metadata = {**working_metadata, **process_metadata}
+
+                container_metadata = __internal__.prepare_metadata(host, workflow_step['docker_version_number'],
+                                                                   workflow_step['makeflow_file'], working_metadata,
+                                                                   dataset_id, target_is_dataset=True)
+                logging.debug("Prepared metadata for dataset upload: %s", str(container_metadata))
+
+            __internal__.update_dataset_metadata(dataset_id, replace_metadata, connector, host, request_key, container_metadata)
+
+            return_info.append({'id': dataset_id, 'created': created_dataset, 'file_ids': uploaded_files})
+
+        logging.debug("Done processing result datasets")
+        return return_info
 
     @staticmethod
     def process_results_json(proc_results: dict, experiment_info: dict, workflow_step: dict, connector: connectors.Connector,
@@ -511,16 +586,19 @@ class __internal__():
             process_metadata[one_key] = proc_results[one_key]
 
         # Get the results sent to Clowder
+        logging.debug("About to check for 'container' in results")
         if 'container' in proc_results:
             logging.debug("Processing container as dataset: %s", proc_results['container'])
             __internal__.process_result_dataset(proc_results['container'], experiment_info, workflow_step, process_metadata,
                                                 connector, host, request_key, workstep_metadata, clowder_credentials, resources)
+        logging.debug("About to check for 'file' in results")
         for file_key in ['file', 'files']:
             if file_key in proc_results:
                 logging.debug("Processing file (%s): %s", file_key, proc_results[file_key])
                 __internal__.process_result_file(proc_results[file_key], experiment_info, workflow_step, process_metadata,
                                                  connector, host, request_key, workstep_metadata, clowder_credentials, resources)
 
+        logging.debug("Finished processing return JSON")
         return True
 
     @staticmethod
@@ -600,7 +678,8 @@ class DroneMakeflow(extractors.TerrarefExtractor):
         #  2. file metadata when no container specified
         #  3. support force_dataset
         #  4. use latest dataset ID for subsequent steps
-        #  5.
+        #  5. add docker environment variables such as BETYDB_KEY
+        #  6.
         self.start_message(resource)
         super(DroneMakeflow, self).process_message(connector, host, secret_key, resource, parameters)
 
@@ -626,6 +705,7 @@ class DroneMakeflow(extractors.TerrarefExtractor):
         env = {}
         step_number = 0
         previous_step_cache_dir = None
+        previous_step_cached_file = None
         for current_step in WORKFLOW:
             step_number += 1
             logging.info("Starting workflow step %s: '%s' with named volume '%s'", str(step_number), current_step['name'],
@@ -634,13 +714,19 @@ class DroneMakeflow(extractors.TerrarefExtractor):
             # Get the environment information and setup for the run
             if env:
                 previous_step_cache_dir = env['CACHE_DIR']
+                previous_step_cached_file = os.path.join(env['RESULTS_FILE_PATH'], WORKFLOW_STEP_CACHE_FILE_NAME)
+                if os.path.exists(previous_step_cached_file):
+                    if 'preprocess_json' in current_step:
+                        logging.info("Preprocessing cached file JSON: '%s'", previous_step_cached_file)
+                        previous_step_cached_file = current_step['preprocess_json'](previous_step_cached_file)
+                        logging.debug("Preprocessed cached file JSON to new file: '%s'", previous_step_cached_file)
+                else:
+                    logging.warning("Continuing after not finding cache file results from previous step: %s", previous_step_cached_file)
+                    previous_step_cached_file = None
             env = __internal__.create_env_json(working_folder, working_subfolder, self.args.named_volume, current_step, resource)
             logging.debug("Makefile data: %s", str(env))
 
             # Relocate the files so docker-within-docker images can access them
-#            if not os.path.exists(env['BASE_DIR']):
-#                logging.debug("Creating work step base folder: '%s'", env['BASE_DIR'])
-#                __internal__.create_folder_default_perms(env['BASE_DIR'])
             if step_number <= 1:
                 current_working_folder, new_experiment_path = __internal__.relocate_files(env, resource)
             else:
@@ -665,6 +751,9 @@ class DroneMakeflow(extractors.TerrarefExtractor):
             cmd = [os.path.join(os.path.dirname(os.path.realpath(__file__)), 'cctools/bin/makeflow'),
                    '--jx', current_step['makeflow_file'],
                    '--jx-args', os.path.join(working_folder, 'env.json')]
+            if previous_step_cached_file:
+                cmd.append('--jx-args')
+                cmd.append(previous_step_cached_file)
             logging.debug("Running command: %s", str(cmd))
             proc = subprocess.Popen(cmd, bufsize=1, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
@@ -710,10 +799,23 @@ class DroneMakeflow(extractors.TerrarefExtractor):
                 load_func = json.load
             with open(experiment_path, 'r') as in_file:
                 experiment_metadata = load_func(in_file)
+                if 'pipeline' in experiment_metadata:
+                    logging.debug("Found 'pipeline' key in experiment metadata, using its value as top level metadata")
+                    experiment_metadata = experiment_metadata['pipeline']
                 experiment_info = {}
                 if experiment_metadata:
+                    # Fix up experiment information
                     for key, value in experiment_metadata.items():
                         experiment_info[key] = str(value)
+                    if 'observationTimeStamp' in experiment_info:
+                        workstep_metadata['date'] = experiment_info['observationTimeStamp'][0:10]
+                    elif 'date' in experiment_info:
+                        workstep_metadata['date'] = experiment_info['date']
+                    else:
+                        logging.info("No timestamp or date was specified in experiment metadata, using current date")
+                        workstep_metadata['date'] = datetime.datetime.now().strftime('%Y-%m-%d')
+                    if 'studyName' in experiment_info:
+                        workstep_metadata['experiment'] = experiment_info['studyName']
                     # Check for a username and password for Clowder
                     clowder_md = __internal__.find_dict_key(experiment_metadata, 'clowder')
                     if clowder_md:
@@ -731,9 +833,10 @@ class DroneMakeflow(extractors.TerrarefExtractor):
                             workstep_metadata['password'] = __internal__.secure_string(clowder_info['password'])
 
             # Process the results file
-            logging.info("Loading and processing results: '%s'", env['RESULTS_FILE_PATH'])
-            if os.path.exists(env['RESULTS_FILE_PATH']):
-                with open(env['RESULTS_FILE_PATH'], 'r') as in_file:
+            result_filename = os.path.join(env['RESULTS_FILE_PATH'], WORKFLOW_STEP_RESULT_FILE_NAME)
+            logging.info("Loading and processing results: '%s'", result_filename)
+            if os.path.exists(result_filename):
+                with open(result_filename, 'r') as in_file:
                     proc_results = json.load(in_file)
                     __internal__.process_results_json(proc_results, experiment_info, current_step, connector, host, secret_key,
                                                       workstep_metadata, clowder_info, resource)
@@ -743,6 +846,7 @@ class DroneMakeflow(extractors.TerrarefExtractor):
                 raise RuntimeError(msg)
 
         # Finish up
+        logging.debug("Finished processing message")
         self.end_message(resource)
 
 
