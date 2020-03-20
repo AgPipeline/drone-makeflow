@@ -51,21 +51,30 @@ def _preprocess_canopy_cover_json(env: dict, json_file: str) -> str:
     """
     dest_dir = os.path.join(env['BASE_DIR'], env['DATA_FOLDER_NAME'].lstrip('/'))
     return_filename = json_file
+    logging.debug("Looking into canopy cover makeflow preprocess file: '%s' to folder '%s'", json_file, dest_dir)
     try:
         new_json = None
         with open(json_file, 'r') as in_file:
             target_json = json.load(in_file)
+            logging.debug("Checking for FILE_LIST key in %s", str(target_json.keys()))
             if 'FILE_LIST' in target_json:
                 new_json = []
                 for one_file in target_json['FILE_LIST']:
+                    logging.debug("Looking for METADATA in %s", str(one_file))
                     if 'METADATA' in one_file:
+                        logging.debug("Adding to new JSON")
                         new_json.append(one_file)
 
         if new_json is not None:
             new_json_file = os.path.join(dest_dir, WORKFLOW_STEP_CACHE_FILE_NAME)
+            if not os.path.exists(dest_dir):
+                os.makedirs(dest_dir)
+            logging.debug("Saving new JSON to '%s' with %s entries", new_json_file, str(len(new_json)))
             with open(new_json_file, 'w') as out_file:
-                json.dump(new_json, out_file)
+                json.dump({'FILE_LIST': new_json}, out_file)
                 return_filename = new_json_file
+        else:
+            logging.debug("No new data stored")
 
     except Exception as ex:
         msg = "Ignoring exception while pre processing canopy cover JSON file: '%s' %s" % (json_file, str(ex))
@@ -110,7 +119,8 @@ WORKFLOW = [
         'return_code_success': lambda code: int(code) == 0,     # Function that indicates success based upon return code
         'force_dataset': False,                                 # Force the output to a dataset if not specified
         'dataset_name_template': '{date}_{experiment}_{name}',  # Template for dataset names
-        'preprocess_json': _preprocess_canopy_cover_json       # Function for preprocessing JSON
+        'preprocess_json': _preprocess_canopy_cover_json,       # Function for preprocessing JSON
+        'copy_cached_folders': True                             # Do we copy cached folders from previous step
     }
 ]
 
@@ -237,11 +247,12 @@ class __internal__():
         return env
 
     @staticmethod
-    def relocate_files(env: dict, resources: Union[dict, str]) -> tuple:
+    def relocate_files(env: dict, resources: Union[dict, str], copy_folders: bool = False) -> tuple:
         """Prepares the files for processing by relocating them
         Arguments:
             env: the environment to be used for this workflow step
             resources: the resources associated with the request or path of a folder on disk
+            copy_folders: copy any found subfolders; defaults to False
         """
         # pylint: disable=unused-argument
         # We need to copy the files to the right spot
@@ -261,11 +272,23 @@ class __internal__():
                 logging.debug("Copying experiment metadata '%s' to '%s'", one_file, updated_experiment_metadata_path)
                 shutil.copyfile(one_file, updated_experiment_metadata_path)
             elif os.path.isfile(one_file):
-                dest_filename = os.path.join(dest_dir, os.path.basename(one_file))
-                logging.debug("Copying file '%s' to '%s'", one_file, dest_filename)
-                shutil.copyfile(one_file, dest_filename)
+                if not os.path.basename(one_file).lower() == WORKFLOW_STEP_RESULT_FILE_NAME:
+                    dest_filename = os.path.join(dest_dir, os.path.basename(one_file))
+                    logging.debug("Copying file '%s' to '%s'", one_file, dest_filename)
+                    shutil.copyfile(one_file, dest_filename)
+                else:
+                    logging.debug("Skipping result file: '%s'", one_file)
             elif os.path.isdir(one_file):
-                logging.debug("Skipping copying of folder '%s'", one_file)
+                if copy_folders:
+                    dest_folder = os.path.join(dest_dir, os.path.basename(one_file))
+                    logging.debug("Copying folder '%s' to '%s'", one_file, dest_folder)
+                    try:
+                        shutil.copytree(one_file, dest_folder)
+                    except Exception as ex:
+                        logging.warning("Copying folder '%s' to '%s'", one_file, dest_folder)
+                        logging.warning("Exception caught copying folder: %s", str(ex))
+                else:
+                    logging.debug("Skipping copying of folder '%s'", one_file)
             else:
                 logging.warning("Skipping copying of unknown path type: '%s'", one_file)
 
@@ -715,28 +738,35 @@ class DroneMakeflow(extractors.TerrarefExtractor):
             if env:
                 previous_step_cache_dir = env['CACHE_DIR']
                 previous_step_cached_file = os.path.join(env['RESULTS_FILE_PATH'], WORKFLOW_STEP_CACHE_FILE_NAME)
-                if os.path.exists(previous_step_cached_file):
-                    if 'preprocess_json' in current_step:
-                        logging.info("Preprocessing cached file JSON: '%s'", previous_step_cached_file)
-                        previous_step_cached_file = current_step['preprocess_json'](previous_step_cached_file)
-                        logging.debug("Preprocessed cached file JSON to new file: '%s'", previous_step_cached_file)
-                else:
+                if not os.path.exists(previous_step_cached_file):
                     logging.warning("Continuing after not finding cache file results from previous step: %s", previous_step_cached_file)
                     previous_step_cached_file = None
             env = __internal__.create_env_json(working_folder, working_subfolder, self.args.named_volume, current_step, resource)
             logging.debug("Makefile data: %s", str(env))
 
             # Relocate the files so docker-within-docker images can access them
+            copy_cached_folders = False
+            if 'copy_cached_folders' in current_step and current_step['copy_cached_folders']:
+                copy_cached_folders = True
             if step_number <= 1:
-                current_working_folder, new_experiment_path = __internal__.relocate_files(env, resource)
+                current_working_folder, new_experiment_path = __internal__.relocate_files(env, resource,
+                                                                                          copy_cached_folders)
             else:
-                current_working_folder, new_experiment_path = __internal__.relocate_files(env, previous_step_cache_dir)
+                current_working_folder, new_experiment_path = __internal__.relocate_files(env, previous_step_cache_dir,
+                                                                                          copy_cached_folders)
             if not current_working_folder:
                 raise RuntimeError("No working folder was determined for processing")
             if not new_experiment_path:
                 raise RuntimeError("No experiment metadata file is available")
             logging.debug("Current working folder: '%s'", current_working_folder)
             logging.debug("New experiment path: '%s'", new_experiment_path)
+
+            # Check for pre-processing the cache copying JSON file
+            if previous_step_cached_file and 'preprocess_json' in current_step:
+                logging.info("Preprocessing cached file JSON: '%s'", previous_step_cached_file)
+                previous_step_cached_file = current_step['preprocess_json'](env, previous_step_cached_file)
+                logging.debug("Preprocessed cached file JSON to new file: '%s'", previous_step_cached_file)
+
             # Make sure the experiment file name is correct (not a full path, but a path particle)
             if os.path.exists(new_experiment_path) and not new_experiment_path.startswith(env['BASE_DIR']):
                 raise RuntimeError("Experiment metadata path does not start with the specified BASE_DIR folder '%s'" % env['BASE_DIR'])
@@ -840,6 +870,7 @@ class DroneMakeflow(extractors.TerrarefExtractor):
                     proc_results = json.load(in_file)
                     __internal__.process_results_json(proc_results, experiment_info, current_step, connector, host, secret_key,
                                                       workstep_metadata, clowder_info, resource)
+                    logging.debug("Removing copied result file: '%s'", result_filename)
             else:
                 msg = "Result file from current step '%s' is not found: %s" % (current_step['name'], env['RESULTS_FILE_PATH'])
                 logging.error(msg)

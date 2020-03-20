@@ -31,11 +31,11 @@
       ]
     },
     {
-      "command": "cp ${CACHE_DIR}${RESULTS_FILE_NAME} ${RESULTS_FILE_PATH}",
+      "command": "echo copying ${CACHE_DIR}${FILE_NAME} ${RESULTS_FILE_PATH} && cp ${CACHE_DIR}${FILE_NAME} ${RESULTS_FILE_PATH}",
       "local_job": true,
       "environment": {
         "CACHE_DIR": ODM_CACHE_DIR,
-        "RESULTS_FILE_NAME": FILE_NAME,
+        "FILE_NAME": FILE_NAME,
         "RESULTS_FILE_PATH": RESULTS_FILE_PATH
       },
       "inputs": [

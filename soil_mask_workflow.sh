@@ -36,7 +36,7 @@ echo "Path maps: $PATH_MAPS"
 echo "Docker mount source: $IMAGE_MOUNT_SOURCE"
 
 echo "Creating workspace folder '${SM_WORKSPACE}'"
-mkdir -p ${SM_WORKSPACE} && chmod a+w ${SM_WORKSPACE}
+mkdir -p "${SM_WORKSPACE}" && chmod a+w "${SM_WORKSPACE}"
 
 echo docker run --rm --name sm_testing -v "${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}" ${SM_DOCKER_IMAGE} -d --metadata "${METADATA}" --working_space "${WORKSPACE_DIR}" ${DOCKER_RUN_PARAMS}
 docker run --rm --name sm_testing -v "${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}" ${SM_DOCKER_IMAGE} -d --metadata "${METADATA}" --working_space "${WORKSPACE_DIR}" ${DOCKER_RUN_PARAMS}

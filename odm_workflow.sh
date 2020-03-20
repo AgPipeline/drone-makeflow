@@ -36,7 +36,7 @@ echo "Path maps: $PATH_MAPS"
 echo "Docker mount source: $IMAGE_MOUNT_SOURCE"
 
 echo "Creating workspace folder '${ODM_WORKSPACE}'"
-mkdir -p ${ODM_WORKSPACE} && chmod a+w ${ODM_WORKSPACE}
+mkdir -p "${ODM_WORKSPACE}" && chmod a+w "${ODM_WORKSPACE}"
 
 echo docker run --rm --name odm_transformer -v "${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}" ${ODM_DOCKER_IMAGE} -d --metadata "${METADATA}" --working_space "${WORKSPACE_DIR}" ${DOCKER_RUN_PARAMS}
 docker run --rm --name odm_transformer -v "${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}" ${ODM_DOCKER_IMAGE} -d --metadata "${METADATA}" --working_space "${WORKSPACE_DIR}" ${DOCKER_RUN_PARAMS}

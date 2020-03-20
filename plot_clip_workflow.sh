@@ -36,7 +36,7 @@ echo "Path maps: $PATH_MAPS"
 echo "Docker mount source: $IMAGE_MOUNT_SOURCE"
 
 echo "Creating workspace folder '${PC_WORKSPACE}'"
-mkdir -p ${PC_WORKSPACE} && chmod a+w ${PC_WORKSPACE}
+mkdir -p "${PC_WORKSPACE}" && chmod a+w "${PC_WORKSPACE}"
 
 echo docker run --rm --name pc_testing -v "${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}" -e "BETYDB_URL=https://terraref.ncsa.illinois.edu/bety/" -e "BETYDB_KEY=9999999999999999999999999999999999999999" ${PC_DOCKER_IMAGE} -d --metadata "${METADATA}" --working_space "${WORKSPACE_DIR}" ${DOCKER_RUN_PARAMS}
 docker run --rm --name pc_testing -v "${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}" -e "BETYDB_URL=https://terraref.ncsa.illinois.edu/bety/" -e "BETYDB_KEY=9999999999999999999999999999999999999999" ${PC_DOCKER_IMAGE} -d --metadata "${METADATA}" --working_space "${WORKSPACE_DIR}" ${DOCKER_RUN_PARAMS}

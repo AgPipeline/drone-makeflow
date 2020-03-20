@@ -269,6 +269,7 @@ def cache_files(result_files: list, cache_dir: str, path_maps: dict = None, file
         if 'path' in one_file:
             total_count += 1
             source_path = _map_path(one_file['path'], path_maps)
+            logging.debug("HACK: Path mapped: '%s' to '%s'", one_file['path'], source_path)
             if os.path.exists(source_path):
                 dest_path = os.path.join(cache_dir, os.path.basename(one_file['path']))
                 copy_info = {'src': source_path, 'dst': dest_path}
@@ -534,7 +535,7 @@ def cache_results(result_containers: list, result_files: list, cache_dir: str, e
 
     # Handle any extra files
     if extra_files:
-        copied_files = cache_files(extra_files, cache_dir, path_maps, file_handlers)
+        copied_files = cache_files(extra_files, cache_dir, None, file_handlers)
         if copied_files:
             file_list.append({'files': copied_files})
 
@@ -601,6 +602,8 @@ if __name__ == "__main__":
     PARSER = argparse.ArgumentParser(description="Handles results for pipeline Docker containers by copying files and saving metadata")
     add_arguments(PARSER)
     ARGS = PARSER.parse_args()
+
+    logging.getLogger().setLevel(logging.DEBUG)
 
     # Process the results
     PARAMS = _check_get_parameters(ARGS)
