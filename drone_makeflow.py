@@ -120,7 +120,9 @@ WORKFLOW = [
         'force_dataset': False,                                 # Force the output to a dataset if not specified
         'dataset_name_template': '{date}_{experiment}_{name}',  # Template for dataset names
         'preprocess_json': _preprocess_canopy_cover_json,       # Function for preprocessing JSON
-        'copy_cached_folders': True                             # Do we copy cached folders from previous step
+        'copy_cached_folders': True,                            # Do we copy cached folders from previous step
+        'use_extended_results_path': True,                      # Use a path specifier for results that's not the default
+        'discover_run_results': True                            # Perform a folder search for results file instead of the default
     }
 ]
 
@@ -242,6 +244,8 @@ class __internal__():
 
         # Where we want the results.json file to be located
         env['RESULTS_FILE_PATH'] = out_folder.rstrip('/\\') + '/'
+        if 'use_extended_results_path' in workflow_step:
+            env['RESULTS_FILE_PATH'] = os.path.join(env['RESULTS_FILE_PATH'], data_folder_name) + '/'
         env['RESULTS_FILE_NAMES'] = [WORKFLOW_STEP_RESULT_FILE_NAME, WORKFLOW_STEP_CACHE_FILE_NAME]
 
         return env
@@ -625,6 +629,35 @@ class __internal__():
         return True
 
     @staticmethod
+    def discover_result_files(source_folder: str, file_name: str) -> list:
+        """Recursively searches the specified folder for first instances of the file name
+        Arguments:
+            source_folder: the folder to search
+            file_name: the name of the file to find
+        Return:
+            A list of all the fully qualified names of the files found
+        """
+        found = []
+        if not os.path.isdir(source_folder):
+            logging.debug("Ignoring invalid folder parameter while recursively searching for result file")
+            return found
+
+        found_dirs = []
+        for one_file in os.listdir(source_folder):
+            found_name = os.path.join(source_folder, one_file)
+            if os.path.basename(found_name) == file_name:
+                if found_name not in found:
+                    found.append(found_name)
+            elif os.path.isdir(found_name):
+                found_dirs.append(found_name)
+
+        if not found:
+            for one_dir in found_dirs:
+                found.extend(__internal__.discover_result_files(one_dir, file_name))
+
+        return found
+
+    @staticmethod
     def find_dict_key(haystack: dict, key: str, case_insensitive: bool = True) -> Optional[tuple]:
         """Searches the metadata for a particular key using a breadth-first method
         Arguments:
@@ -863,18 +896,27 @@ class DroneMakeflow(extractors.TerrarefExtractor):
                             workstep_metadata['password'] = __internal__.secure_string(clowder_info['password'])
 
             # Process the results file
-            result_filename = os.path.join(env['RESULTS_FILE_PATH'], WORKFLOW_STEP_RESULT_FILE_NAME)
-            logging.info("Loading and processing results: '%s'", result_filename)
-            if os.path.exists(result_filename):
-                with open(result_filename, 'r') as in_file:
-                    proc_results = json.load(in_file)
-                    __internal__.process_results_json(proc_results, experiment_info, current_step, connector, host, secret_key,
-                                                      workstep_metadata, clowder_info, resource)
-                    logging.debug("Removing copied result file: '%s'", result_filename)
+            if 'discover_run_results' in current_step:
+                result_filenames = __internal__.discover_result_files(env['RESULTS_FILE_PATH'], WORKFLOW_STEP_RESULT_FILE_NAME)
+                if not result_filenames:
+                    logging.warning("Did not find any result files through discovery for step %s, this may not be an issue",
+                                    current_step['name'])
             else:
-                msg = "Result file from current step '%s' is not found: %s" % (current_step['name'], env['RESULTS_FILE_PATH'])
-                logging.error(msg)
-                raise RuntimeError(msg)
+                result_filenames = [os.path.join(env['RESULTS_FILE_PATH'], WORKFLOW_STEP_RESULT_FILE_NAME)]
+            logging.info("Loading and processing results: '%s'", str(result_filenames))
+            for one_filename in result_filenames:
+                if os.path.exists(one_filename):
+                    logging.debug("Result processing for file: '%s'", one_filename)
+                    with open(one_filename, 'r') as in_file:
+                        proc_results = json.load(in_file)
+                        __internal__.process_results_json(proc_results, experiment_info, current_step, connector, host, secret_key,
+                                                          workstep_metadata, clowder_info, resource)
+                    logging.debug("Removing copied result file: '%s'", one_filename)
+#                    os.unlink(one_filename)
+                else:
+                    msg = "Result file from current step '%s' is not found: %s" % (current_step['name'], env['RESULTS_FILE_PATH'])
+                    logging.error(msg)
+                    raise RuntimeError(msg)
 
         # Finish up
         logging.debug("Finished processing message")
