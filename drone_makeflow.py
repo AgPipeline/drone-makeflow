@@ -132,7 +132,7 @@ class __internal__():
     def __init__(self):
         """Initializes class instance"""
 
-    @staticmethod
+    @staticmethod # Clowder
     def prepare_metadata(host: str, version: str, creator_name: str, metadata: dict, target_id: str, target_is_dataset: bool = True) -> dict:
         """Prepares the metadata as JSONLD if it isn't already
         Arguments:
@@ -238,7 +238,8 @@ class __internal__():
                 break
         if found_experiment:
             env['EXPERIMENT_METADATA_FILENAME'] = os.path.basename(found_experiment)
-            logging.info("Experiment file: '%s' ('%s')", env['EXPERIMENT_METADATA_FILENAME'], found_experiment)
+            env['EXPERIMENT_METADATA_RELATIVE_PATH'] = env['EXPERIMENT_METADATA_FILENAME']
+            logging.info("Experiment file: '%s' ('%s')", env['EXPERIMENT_METADATA_RELATIVE_PATH'], found_experiment)
         else:
             raise RuntimeError("Unable to find an experiment JSON file")
 
@@ -271,7 +272,7 @@ class __internal__():
         else:
             raise RuntimeError("Parameter 'resource' must be of type dict or str for relocate_files() call")
         for one_file in source_list:
-            if one_file.endswith(env['EXPERIMENT_METADATA_FILENAME']):
+            if one_file.endswith(env['EXPERIMENT_METADATA_RELATIVE_PATH']):
                 updated_experiment_metadata_path = os.path.join(env['BASE_DIR'], env['RELATIVE_WORKING_FOLDER'], os.path.basename(one_file))
                 logging.debug("Copying experiment metadata '%s' to '%s'", one_file, updated_experiment_metadata_path)
                 shutil.copyfile(one_file, updated_experiment_metadata_path)
@@ -320,7 +321,7 @@ class __internal__():
         with open(env_filename, 'w') as out_file:
             json.dump(env, out_file, indent=2)
 
-    @staticmethod
+    @staticmethod # Clowder
     def create_dataset(host: str, request_key: str, dataset_name: str) -> str:
         """Creates a dataset on the remote host. Assumes dataset does not exist already
         Arguments:
@@ -341,7 +342,7 @@ class __internal__():
 
         return return_json['id']
 
-    @staticmethod
+    @staticmethod # Clowder
     def update_file_metadata(file_id: str, replace_metadata: bool, metadata: Union[str, dict], connector: connectors.Connector,
                              host: str, request_key: str) -> None:
         """Handles updating metadata associated with the file. Will add metadata if it doesn't exist already
@@ -376,7 +377,7 @@ class __internal__():
         except Exception as ex:
             logging.warning("update_file_metadata failed: %s", str(ex))
 
-    @staticmethod
+    @staticmethod # Clowder
     def update_dataset_metadata(dataset_id: str, replace_metadata: bool, connector: connectors.Connector, host: str,
                                 request_key: str, container_metadata: dict = None) -> None:
         """Updates the metadata for the dataset
@@ -412,7 +413,7 @@ class __internal__():
         except Exception as ex:
             logging.debug("HACK: update_dataset_metadata: EXCEPTION CAUGHT: %s", str(ex))
 
-    @staticmethod
+    @staticmethod # Clowder
     def upload_files(dataset_id: str, file_results: list, workflow_step: dict, connector: connectors.Connector, host: str,
                      request_key: str) -> list:
         """Uploads the specified files into the dataset
@@ -465,7 +466,7 @@ class __internal__():
         logging.debug("Uploaded %s files", str(len(uploaded_files)))
         return uploaded_files
 
-    @staticmethod
+    @staticmethod # Clowder
     def process_result_file(file_results: list, experiment_info: dict, workflow_step: dict, process_metadata: dict,
                             connector: connectors.Connector, host: str, request_key: str, workstep_metadata: dict,
                             clowder_credentials: dict, resources: dict) -> list:
@@ -503,7 +504,7 @@ class __internal__():
         logging.debug("process_result_file: found dataset ID: %s", str(dataset_id))
         return __internal__.upload_files(dataset_id, file_results, workflow_step, connector, host, request_key)
 
-    @staticmethod
+    @staticmethod # Clowder
     def process_result_dataset(container_results: list, experiment_info: dict, workflow_step: dict, process_metadata: dict,
                                connector: connectors.Connector, host: str, request_key: str, workstep_metadata: dict,
                                clowder_credentials: dict, resources: dict) -> list:
@@ -584,7 +585,7 @@ class __internal__():
         logging.debug("Done processing result datasets")
         return return_info
 
-    @staticmethod
+    @staticmethod # Clowder
     def process_results_json(proc_results: dict, experiment_info: dict, workflow_step: dict, connector: connectors.Connector,
                              host: str, request_key: str, workstep_metadata: dict, clowder_credentials: dict, resources: dict) -> bool:
         """Handles processing the results of running a workflow
@@ -688,7 +689,7 @@ class __internal__():
 
         return None
 
-    @staticmethod
+    @staticmethod # Clowder
     def secure_string(plain_text: str) -> str:
         """Secures the plain text string
         Arguments:
@@ -749,7 +750,6 @@ class DroneMakeflow(extractors.TerrarefExtractor):
             logging.info("Folder for our working space: '%s'", self.args.working_space)
             # Assume we're sharing out working space with other instances, create a temporary folder
             working_folder = tempfile.mkdtemp(dir=self.args.working_space)
-#            working_folder = os.path.join(self.args.working_space, 'tmpjhvq63gh')
             working_subfolder = working_folder[len(self.args.working_space):]
             logging.debug("Creating working space folder for our instance: '%s'", working_folder)
             __internal__.create_folder_default_perms(working_folder)
@@ -804,7 +804,7 @@ class DroneMakeflow(extractors.TerrarefExtractor):
             if os.path.exists(new_experiment_path) and not new_experiment_path.startswith(env['BASE_DIR']):
                 raise RuntimeError("Experiment metadata path does not start with the specified BASE_DIR folder '%s'" % env['BASE_DIR'])
             if new_experiment_path.startswith(env['BASE_DIR']):
-                env['EXPERIMENT_METADATA_FILENAME'] = new_experiment_path[len(env['BASE_DIR']):]
+                env['EXPERIMENT_METADATA_RELATIVE_PATH'] = new_experiment_path[len(env['BASE_DIR']):]
 
             # Prepare for processing
             logging.debug("Working env.json file: %s", str(env))
@@ -852,7 +852,7 @@ class DroneMakeflow(extractors.TerrarefExtractor):
                     raise RuntimeError(msg)
 
             # Load the experiment data into a form processing the results file can use
-            experiment_path = os.path.join(env['BASE_DIR'], env['EXPERIMENT_METADATA_FILENAME'])
+            experiment_path = os.path.join(env['BASE_DIR'], env['EXPERIMENT_METADATA_RELATIVE_PATH'])
             logging.debug("Loading experiment metadata before looking at result: '%s'", experiment_path)
             workstep_metadata = deepcopy(current_step)
             clowder_info = {}
