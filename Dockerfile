@@ -109,6 +109,8 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 COPY *.py *.jx *.json *.sh /home/extractor/
+RUN chown -R extractor /home/extractor/
+RUN chgrp -R extractor /home/extractor/
 RUN chmod a+x /home/extractor/*.sh
 
 USER extractor
@@ -122,4 +124,5 @@ CMD ["extractor"]
 ENV RABBITMQ_EXCHANGE="terra" \
     RABBITMQ_VHOST="%2F" \
     RABBITMQ_QUEUE="drone.makeflow" \
-    MAIN_SCRIPT="drone_makeflow.py"
+    MAIN_SCRIPT="drone_makeflow.py" \
+    PATH="/home/extractor/cctools/bin:${PATH}"

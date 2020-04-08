@@ -7,15 +7,11 @@
     "CC_DOCKER_IMAGE": "agdrone/transformer-canopycover:" + DOCKER_VERSION,
     "CC_METADATA": BASE_DIR + EXPERIMENT_METADATA_RELATIVE_PATH,
     "CC_WORKSPACE_DIR_NAME": "workspace",
-#    "CC_WORKSPACE": BASE_DIR + RELATIVE_WORKING_FOLDER + CC_WORKSPACE_DIR_NAME+ "/",
     "CC_RESULT_FILENAME": "result.json",
-#    "CC_RUN_RESULTS": CC_WORKSPACE + CC_RESULT_FILENAME,
     "CACHE_RESULTS_SCRIPT": BASE_DIR + RELATIVE_WORKING_FOLDER + "cache_results.py",
     "DOCKER_MOUNT_POINT": "/mnt/",
     "METADATA": DOCKER_MOUNT_POINT + EXPERIMENT_METADATA_RELATIVE_PATH,
-####    "WORKSPACE_DIR": DOCKER_MOUNT_POINT + RELATIVE_WORKING_FOLDER + CC_WORKSPACE_DIR_NAME,
-####    "DOCKER_RUN_PARAMS": TARGET_FILENAME,
-####    "LOCAL_RESULT_FILE": CC_CACHE_DIR + CC_RESULT_FILENAME
+    "PROCESS_FILE_LIST": [ONE_ENTRY for ONE_ENTRY in FILE_LIST if ONE_ENTRY["BASE_METADATA_NAME"] != ""]
   },
   "rules": [
     {
@@ -39,7 +35,7 @@
       "outputs": [
         BASE_DIR + RELATIVE_WORKING_FOLDER + ONE_ENTRY["BASE_METADATA_NAME"] + "/" + CC_WORKSPACE_DIR_NAME
       ]
-    } for ONE_ENTRY in FILE_LIST,
+    } for ONE_ENTRY in PROCESS_FILE_LIST,
     {
       "command": "docker run --rm -v \"${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}\" ${CC_DOCKER_IMAGE} -d --metadata  \"${DOCKER_MOUNT_POINT}${EXPERIMENT_METADATA_RELATIVE_PATH}\" --metadata \"${ADDITIONAL_METADATA}\" --working_space \"${WORKSPACE_DIR}\" \"${DOCKER_RUN_PARAMS}\" ",
       "local_job": true,
@@ -60,7 +56,7 @@
         BASE_DIR + RELATIVE_WORKING_FOLDER + ONE_ENTRY["BASE_METADATA_NAME"] + "/" + CC_WORKSPACE_DIR_NAME + "/" + CC_RESULT_FILENAME
       ]
 
-    } for ONE_ENTRY in FILE_LIST,
+    } for ONE_ENTRY in PROCESS_FILE_LIST,
     {
       "command": "echo Copying results \\\"${CC_RUN_RESULTS}\\\" to \\\"${CC_CACHE_DIR}\\\" && mkdir -p \"${CC_CACHE_DIR}\/\" && cp \"${CC_RUN_RESULTS}\" \"${CC_CACHE_DIR}\/\" ",
       "local_job": true,
@@ -74,7 +70,7 @@
       "outputs": [
         CC_CACHE_DIR + ONE_ENTRY["BASE_METADATA_NAME"] + "/" + CC_RESULT_FILENAME
       ]
-    } for ONE_ENTRY in FILE_LIST,
+    } for ONE_ENTRY in PROCESS_FILE_LIST,
     {
       "command": "echo Processing results && python3 \"${CACHE_RESULTS_SCRIPT}\" --extra_files \"${CC_METADATA}\" \"${CC_RUN_RESULTS}\" \"${CC_CACHE_DIR}\" ",
       "local_job": true,
@@ -90,7 +86,7 @@
       "outputs": [
         CC_CACHE_DIR + ONE_ENTRY["BASE_METADATA_NAME"]
       ]
-    } for ONE_ENTRY in FILE_LIST,
+    } for ONE_ENTRY in PROCESS_FILE_LIST,
     {
       "command": "echo copying \\\"${CACHE_DIR}${FILE_NAME}\\\" \\\"${RESULTS_FILE_PATH}\\\" && mkdir -p \"${RESULTS_FILE_FOLDER}\" && cp \"${CACHE_DIR}${FILE_NAME}\" \"${RESULTS_FILE_PATH}\"",
       "local_job": true,
@@ -106,6 +102,6 @@
       "outputs": [
         RESULTS_FILE_PATH + COPIES[0] + "/" + COPIES[1]
       ]
-    } for COPIES in [[ONE_ENTRY["BASE_METADATA_NAME"], FILE_NAME] for ONE_ENTRY in FILE_LIST for FILE_NAME in RESULTS_FILE_NAMES]
+    } for COPIES in [[ONE_ENTRY["BASE_METADATA_NAME"], FILE_NAME] for ONE_ENTRY in PROCESS_FILE_LIST for FILE_NAME in RESULTS_FILE_NAMES]
   ]
 }
