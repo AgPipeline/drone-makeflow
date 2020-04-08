@@ -1,0 +1,33 @@
+
+# Runtime environment settings
+configuration: {
+  # Top level workflow folder
+  working_space: /mnt/test/,
+  docker: {
+    # Named volume to use when running inside a docker container
+    volume: testing
+  },
+}
+
+# The workflow steps
+workflow:
+  - name: OpenDroneMap                                     # Name of the workflow step
+    makeflow_file: odm_workflow.jx                         # The makeflow file to use
+    docker_image: agdrone/transformer-opendronemap:2.0     # The docker image to use
+    return_code_success:  0                                # Value that indicates success based upon return code
+    execution_order: 1                                     # Order of execution
+  - name: Soil Mask                                        # Name of the workflow step
+    makeflow_file: soil_mask_workflow.jx                   # The makeflow file to use
+    docker_image: agdrone/transformer-soilmask:2.0         # The docker image to use
+    return_code_success: 0                                 # Value that indicates success based upon return code
+    execution_order: 2                                     # Order of execution
+  - name: Plot Clip                                        # Name of the workflow step
+    makeflow_file: plot_clip_workflow.jx                   # The makeflow file to use
+    docker_image: agdrone/transformer-plotclip:2.0         # The docker image to use
+    return_code_success: 0                                 # Value that indicates success based upon return code
+    execution_order: 3                                     # Order of execution
+  - name: Canopy Cover                                     # Name of the workflow step
+    makeflow_file: canopy_cover_workflow.jx                # The makeflow file to use
+    docker_image: agdrone/transformer-canopycover:1.0      # The docker image to use
+    return_code_success: 0                                 # Function that indicates success based upon return code
+    execution_order: 4                                     # Order of execution}
