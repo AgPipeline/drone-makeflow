@@ -8,12 +8,12 @@
     "ODM_WORKSPACE": RELATIVE_WORKING_FOLDER + ODM_WORKSPACE_DIR_NAME+ "/",
     "ODM_RESULT_FILENAME": "result.json",
     "ODM_RUN_RESULTS": ODM_WORKSPACE + ODM_RESULT_FILENAME,
-    "CACHE_RESULTS_SCRIPT": RELATIVE_WORKING_FOLDER + "cache_results.py",
+    "CACHE_RESULTS_SCRIPT": SCRIPT_FOLDER + "cache_results.py",
     "DOCKER_MOUNT_POINT": "/mnt/",
     "METADATA": EXPERIMENT_METADATA_RELATIVE_PATH,
     "WORKSPACE_DIR": RELATIVE_WORKING_FOLDER + ODM_WORKSPACE_DIR_NAME,
     "DOCKER_RUN_PARAMS": DATA_FOLDER_NAME,
-    "PATH_MAPS": DOCKER_MOUNT_POINT + ":" + BASE_DIR + RELATIVE_WORKING_FOLDER,
+    "PATH_MAPS": DOCKER_MOUNT_POINT + ":" + RELATIVE_WORKING_FOLDER,
     "LOCAL_RESULT_FILE": ODM_CACHE_DIR + ODM_RESULT_FILENAME
   },
   "rules": [
@@ -42,20 +42,20 @@
     {
       "command": "docker run --rm --name odm_transformer -v \"${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}\" ${ODM_DOCKER_IMAGE} -d --metadata \"${METADATA}\" --working_space \"${WORKSPACE_DIR}\" ${DOCKER_RUN_PARAMS}",
       "local_job": true,
-       "environment": {
-         "IMAGE_MOUNT_SOURCE": IMAGE_MOUNT_SOURCE,
-         "DOCKER_MOUNT_POINT": DOCKER_MOUNT_POINT,
-         "ODM_DOCKER_IMAGE": ODM_DOCKER_IMAGE,
-         "METADATA": METADATA,
-         "WORKSPACE_DIR": WORKSPACE_DIR,
-         "DOCKER_RUN_PARAMS": DOCKER_RUN_PARAMS
-       },
-       "inputs": [
-         ODM_WORKSPACE
-       ],
-       "outputs": [
-         ODM_RUN_RESULTS
-       ]
+      "environment": {
+        "IMAGE_MOUNT_SOURCE": IMAGE_MOUNT_SOURCE,
+        "DOCKER_MOUNT_POINT": DOCKER_MOUNT_POINT,
+        "ODM_DOCKER_IMAGE": ODM_DOCKER_IMAGE,
+        "METADATA": METADATA,
+        "WORKSPACE_DIR": WORKSPACE_DIR,
+        "DOCKER_RUN_PARAMS": DOCKER_RUN_PARAMS
+      },
+      "inputs": [
+        ODM_WORKSPACE
+      ],
+      "outputs": [
+        ODM_RUN_RESULTS
+      ]
     },
     {
       "command": "echo Copying results \\\"${ODM_RUN_RESULTS}\\\" to \\\"${ODM_CACHE_DIR}\\\" && cp \"${ODM_RUN_RESULTS}\" \"${ODM_CACHE_DIR}\" ",

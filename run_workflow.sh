@@ -1,9 +1,18 @@
 #!/bin/bash
 
 WORKFLOW_FILE="run_workflow.jx"
-CONFIGURATION_FILE="canopycover_workflow.json"
+CONFIGURATION_FILE="canopycover_workflow.yml"
 SOURCE_IMAGES_DIR="/mnt/test/images/"
 EXPERIMENT_FILENAME="experiment.yaml"
+
+if [ -n "${1}" ]; then
+  CONFIGURATION_FILE="${1}"
+fi;
+echo "Using configuration file: ${CONFIGURATION_FILE}"
+if [ -n "${2}" ]; then
+  SOURCE_IMAGES_DIR="${2}"
+fi;
+echo "Using source file: ${SOURCE_IMAGES_DIR}"
 
 echo "Converting YAML to JSON for makeflow"
 printf "
@@ -11,8 +20,9 @@ import yaml
 import json
 import tempfile
 import os
-f = open('/mnt/canopycover_workflow.yml','r')
+f = open('${CONFIGURATION_FILE}','r')
 y = yaml.safe_load(f)
+script_folder = os.path.dirname(os.path.realpath('${0}')) + '/'
 #if configuration' in y and 'working_space' in y['configuration']:
 #    working_folder = tempfile.mkdtemp(dir=y['configuration']['working_space'])
 #    y['configuration']['working_space'] = working_folder
@@ -20,6 +30,7 @@ if 'configuration' in y:
     y['configuration']['experiment_filename'] = '${EXPERIMENT_FILENAME}'
     y['configuration']['source_data_folder_name'] = 'images'
     y['configuration']['cache_folder_name'] = 'cache'
+    y['configuration']['script_folder'] = script_folder
 if 'workflow' in y:
     step_source_files = [None] * (len(y['workflow']) + 2)
     step_source_files[1] = '${SOURCE_IMAGES_DIR}'
