@@ -22,9 +22,12 @@
       ]
     },
     {
-      "command": "echo Running step ${NAME} && echo Creating folder: \"${RESULTS_FILE_PATH}\" && mkdir -p \"${RESULTS_FILE_PATH}\" && echo Copying: \"${SOURCES_FILE_FOLDER}\" to \"${DATA_FOLDER_NAME}/\" && cp -r \"${SOURCES_FILE_FOLDER}\" \"${DATA_FOLDER_NAME}/\" && [ -f \"${PREVSTEP_CACHE_JSON}\" ] && (echo makeflow --jx \"${MAKEFLOW_FILE}\" --jx-args \"${PREVSTEP_CACHE_JSON}\") || (echo makeflow --jx \"${MAKEFLOW_FILE}\") && mkdir -p \"${NEXTSTEP_FOLDER}\" ",
-      "environment": {
+      "workflow": "sub_workflow.jx",
+      "args": {
+#      "command": "echo ${NAME} ${STEP_NUMBER} ${PREVSTEP_CACHE_JSON} ${NEXTSTEP_FOLDER} ${NEXTSTEP_CACHE_JSON} && mkdir -p \"${NEXTSTEP_FOLDER}\" ",
+#      "environment": {
           "NAME": ONE_STEP["name"],
+          "STEP_NUMBER": format("%d", ONE_STEP["execution_order"]),
           "WORKING_SPACE": WORKING_SPACE,
           "MAKEFLOW_FILE": ONE_STEP["makeflow_file"],
           "DOCKER_IMAGE": ONE_STEP["docker_image"],
@@ -39,7 +42,9 @@
           "EXPERIMENT_METADATA_FILENAME": EXPERIMENT_METADATA_FILENAME,
           "RESULTS_FILE_PATH": BASE_DIR + ONE_STEP["step_folder"],
           "PREVSTEP_CACHE_JSON": ONE_STEP["sources_folder"] + WORKFLOW_STEP_CACHE_FILE_NAME,
-          "NEXTSTEP_FOLDER": WORKING_SPACE + format("%d", ONE_STEP["next_step"])
+#          "NEXTSTEP_FOLDER": WORKING_SPACE + format("%d", ONE_STEP["next_step"]),
+          "NEXTSTEP_FOLDER": format("%d", ONE_STEP["next_step"]),
+          "NEXTSTEP_CACHE_JSON": WORKING_SPACE + format("%d", ONE_STEP["next_step"]) + "/" + WORKFLOW_STEP_CACHE_FILE_NAME
       },
       "inputs": [
         WORKING_SPACE + format("%d", ONE_STEP["execution_order"])
