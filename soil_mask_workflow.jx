@@ -1,97 +1,91 @@
 {
   "define": {
-    "BASE_DIR": BASE_DIR,
-    "SM_CACHE_DIR": CACHE_DIR,
-    "SM_SOURCE_IMAGES_DIR": DATA_FOLDER_NAME,
-    "SM_DOCKER_IMAGE": DOCKER_IMAGE,
-    "SM_WORKSPACE_DIR_NAME": "workspace",
-    "SM_WORKSPACE": RELATIVE_WORKING_FOLDER + SM_WORKSPACE_DIR_NAME+ "/",
-    "SM_RESULT_FILENAME": "result.json",
-    "SM_RUN_RESULTS": SM_WORKSPACE + SM_RESULT_FILENAME,
+    "WORKSPACE_DIR_NAME": "workspace",
+    "RESULT_FILENAME": "result.json",
+    "WORKSPACE_DIR": RELATIVE_WORKING_FOLDER + WORKSPACE_DIR_NAME,
+    "RUN_RESULTS": WORKSPACE_DIR + "/" + RESULT_FILENAME,
     "CACHE_RESULTS_SCRIPT": SCRIPT_FOLDER + "cache_results.py",
     "DOCKER_MOUNT_POINT": "/mnt/",
-    "METADATA": EXPERIMENT_METADATA_RELATIVE_PATH,
-    "WORKSPACE_DIR": RELATIVE_WORKING_FOLDER + SM_WORKSPACE_DIR_NAME,
     "DOCKER_RUN_PARAMS": DATA_FOLDER_NAME + "/odm_orthophoto.tif",
     "PATH_MAPS": DOCKER_MOUNT_POINT + ":" + RELATIVE_WORKING_FOLDER,
-    "LOCAL_RESULT_FILE": SM_CACHE_DIR + SM_RESULT_FILENAME
+    "LOCAL_RESULT_FILE": CACHE_DIR + RESULT_FILENAME
   },
   "rules": [
     {
-      "command": "echo Creating cache folder \\\"${SM_CACHE_DIR}\\\" && mkdir -p \"${SM_CACHE_DIR}\" ",
+      "command": "echo Creating cache folder \\\"${CACHE_DIR}\\\" && mkdir -p \"${CACHE_DIR}\" ",
       "environment": {
-        "SM_CACHE_DIR": SM_CACHE_DIR,
+        "CACHE_DIR": CACHE_DIR,
       },
       "inputs": [],
       "output": [
-        SM_CACHE_DIR
+        CACHE_DIR
       ]
     },
     {
-      "command": "echo Creating workspace \\\"${SM_WORKSPACE}\\\" && mkdir -p \"${SM_WORKSPACE}\" && chmod a+w \"${SM_WORKSPACE}\" ",
+      "command": "echo Creating workspace \\\"${WORKSPACE_DIR}\\\" && mkdir -p \"${WORKSPACE_DIR}\" && chmod a+w \"${WORKSPACE_DIR}\" ",
       "environment": {
-        "SM_WORKSPACE": SM_WORKSPACE
+        "WORKSPACE_DIR": WORKSPACE_DIR
       },
       "inputs": [],
       "outputs": [
-        SM_WORKSPACE
+        WORKSPACE_DIR
       ]
     },
     {
-      "command": "docker run --rm --name sm_transformer -v \"${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}\" ${SM_DOCKER_IMAGE} -d --metadata \"${METADATA}\" --working_space \"${WORKSPACE_DIR}\" ${DOCKER_RUN_PARAMS}",
+      "command": "docker run --rm --name sm_transformer -v \"${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}\" ${DOCKER_IMAGE} -d --metadata \"${METADATA}\" --working_space \"${WORKSPACE_DIR}\" ${DOCKER_RUN_PARAMS}",
       "environment": {
         "IMAGE_MOUNT_SOURCE": IMAGE_MOUNT_SOURCE,
         "DOCKER_MOUNT_POINT": DOCKER_MOUNT_POINT,
-        "SM_DOCKER_IMAGE": SM_DOCKER_IMAGE,
-        "METADATA": METADATA,
+        "DOCKER_IMAGE": DOCKER_IMAGE,
+        "METADATA": EXPERIMENT_METADATA_RELATIVE_PATH,
         "WORKSPACE_DIR": WORKSPACE_DIR,
         "DOCKER_RUN_PARAMS": DOCKER_RUN_PARAMS
       },
       "inputs": [
-        SM_WORKSPACE
+        WORKSPACE_DIR
       ],
       "outputs": [
-        SM_RUN_RESULTS
+        RUN_RESULTS
       ]
     },
     {
-      "command": "echo Copying results \\\"${SM_RUN_RESULTS}\\\" to \\\"${SM_CACHE_DIR}\\\" && cp \"${SM_RUN_RESULTS}\" \"${SM_CACHE_DIR}\" ",
+      "command": "echo Copying results \\\"${RUN_RESULTS}\\\" to \\\"${CACHE_DIR}\\\" && mkdir -p \"${CACHE_DIR}\/\" && cp \"${RUN_RESULTS}\" \"${CACHE_DIR}\/\" ",
       "environment": {
-        "SM_RUN_RESULTS": SM_RUN_RESULTS,
-        "SM_CACHE_DIR": SM_CACHE_DIR
+        "RUN_RESULTS": RUN_RESULTS,
+        "CACHE_DIR": CACHE_DIR
       },
       "inputs": [
-        SM_RUN_RESULTS
+        RUN_RESULTS
       ],
       "outputs": [
         LOCAL_RESULT_FILE
       ]
     },
     {
-      "command": "echo Processing results && python3 \"${CACHE_RESULTS_SCRIPT}\" --maps \"${PATH_MAPS}\" --extra_files \"${SM_METADATA}\" \"${SM_RUN_RESULTS}\" \"${SM_CACHE_DIR}\" ",
+      "command": "echo Processing results && python3 \"${CACHE_RESULTS_SCRIPT}\" --maps \"${PATH_MAPS}\" --extra_files \"${METADATA}\" \"${RUN_RESULTS}\" \"${CACHE_DIR}\" ",
       "environment": {
         "CACHE_RESULTS_SCRIPT": CACHE_RESULTS_SCRIPT,
         "PATH_MAPS": PATH_MAPS,
-        "SM_METADATA": METADATA,
-        "SM_RUN_RESULTS": SM_RUN_RESULTS,
-        "SM_CACHE_DIR": SM_CACHE_DIR
+        "METADATA": EXPERIMENT_METADATA_RELATIVE_PATH,
+        "RUN_RESULTS": RUN_RESULTS,
+        "CACHE_DIR": CACHE_DIR
       },
       "inputs": [
         LOCAL_RESULT_FILE
       ],
       "outputs": [
-        SM_CACHE_DIR + EXPERIMENT_METADATA_FILENAME
+        CACHE_DIR + EXPERIMENT_METADATA_FILENAME
       ]
     },
     {
-      "command": "echo copying ${CACHE_DIR}${FILE_NAME} ${RESULTS_FILE_PATH} && cp ${CACHE_DIR}${FILE_NAME} ${RESULTS_FILE_PATH}",
+      "command": "echo copying \\\"${CACHE_DIR}${FILE_NAME}\\\" \\\"${RESULTS_FILE_PATH}\\\" && cp \"${CACHE_DIR}${FILE_NAME}\" \"${RESULTS_FILE_PATH}\"",
       "environment": {
-        "CACHE_DIR": SM_CACHE_DIR,
+        "CACHE_DIR": CACHE_DIR,
         "FILE_NAME": FILE_NAME,
         "RESULTS_FILE_PATH": RESULTS_FILE_PATH
       },
       "inputs": [
-        SM_CACHE_DIR + EXPERIMENT_METADATA_FILENAME
+        CACHE_DIR + EXPERIMENT_METADATA_FILENAME
       ],
       "outputs": [
         RESULTS_FILE_PATH + FILE_NAME
