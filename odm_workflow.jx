@@ -19,7 +19,6 @@
   "rules": [
     {
       "command": "echo Creating cache folder \\\"${ODM_CACHE_DIR}\\\" && mkdir -p \"${ODM_CACHE_DIR}\" ",
-      "local_job": true,
       "environment": {
         "ODM_CACHE_DIR": ODM_CACHE_DIR,
       },
@@ -30,7 +29,6 @@
     },
     {
       "command": "echo Creating workspace \\\"${ODM_WORKSPACE}\\\" && mkdir -p \"${ODM_WORKSPACE}\" && chmod a+w \"${ODM_WORKSPACE}\" ",
-      "local_job": true,
       "environment": {
         "ODM_WORKSPACE": ODM_WORKSPACE
       },
@@ -41,7 +39,6 @@
     },
     {
       "command": "docker run --rm --name odm_transformer -v \"${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}\" ${ODM_DOCKER_IMAGE} -d --metadata \"${METADATA}\" --working_space \"${WORKSPACE_DIR}\" ${DOCKER_RUN_PARAMS}",
-      "local_job": true,
       "environment": {
         "IMAGE_MOUNT_SOURCE": IMAGE_MOUNT_SOURCE,
         "DOCKER_MOUNT_POINT": DOCKER_MOUNT_POINT,
@@ -59,7 +56,6 @@
     },
     {
       "command": "echo Copying results \\\"${ODM_RUN_RESULTS}\\\" to \\\"${ODM_CACHE_DIR}\\\" && cp \"${ODM_RUN_RESULTS}\" \"${ODM_CACHE_DIR}\" ",
-      "local_job": true,
       "environment": {
         "ODM_RUN_RESULTS": ODM_RUN_RESULTS,
         "ODM_CACHE_DIR": ODM_CACHE_DIR
@@ -73,7 +69,6 @@
     },
     {
       "command": "echo Processing results && python3 \"${CACHE_RESULTS_SCRIPT}\" --maps \"${PATH_MAPS}\" --extra_files \"${ODM_METADATA}\" \"${ODM_RUN_RESULTS}\" \"${ODM_CACHE_DIR}\" ",
-      "local_job": true,
       "environment": {
         "CACHE_RESULTS_SCRIPT": CACHE_RESULTS_SCRIPT,
         "PATH_MAPS": PATH_MAPS,
@@ -90,7 +85,6 @@
     },
     {
       "command": "echo copying ${CACHE_DIR}${FILE_NAME} ${RESULTS_FILE_PATH} && cp ${CACHE_DIR}${FILE_NAME} ${RESULTS_FILE_PATH}",
-      "local_job": true,
       "environment": {
         "CACHE_DIR": ODM_CACHE_DIR,
         "FILE_NAME": FILE_NAME,

@@ -19,7 +19,6 @@
   "rules": [
     {
       "command": "echo Creating cache folder \\\"${PC_CACHE_DIR}\\\" && mkdir -p \"${PC_CACHE_DIR}\" ",
-      "local_job": true,
       "environment": {
         "PC_CACHE_DIR": PC_CACHE_DIR,
       },
@@ -30,7 +29,6 @@
     },
     {
       "command": "echo Creating workspace \\\"${PC_WORKSPACE}\\\" && mkdir -p \"${PC_WORKSPACE}\" && chmod a+w \"${PC_WORKSPACE}\" ",
-      "local_job": true,
       "environment": {
         "PC_WORKSPACE": PC_WORKSPACE
       },
@@ -41,7 +39,6 @@
     },
     {
       "command": "docker run --rm --name pc_transformer -v \"${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}\" -e \"BETYDB_URL=https://terraref.ncsa.illinois.edu/bety/\" -e \"BETYDB_KEY=9999999999999999999999999999999999999999\" ${PC_DOCKER_IMAGE} -d --metadata \"${METADATA}\" --working_space \"${WORKSPACE_DIR}\" ${DOCKER_RUN_PARAMS}",
-      "local_job": true,
       "environment": {
         "IMAGE_MOUNT_SOURCE": IMAGE_MOUNT_SOURCE,
         "DOCKER_MOUNT_POINT": DOCKER_MOUNT_POINT,
@@ -59,7 +56,6 @@
     },
     {
       "command": "echo Copying results \\\"${PC_RUN_RESULTS}\\\" to \\\"${PC_CACHE_DIR}\\\" && cp \"${PC_RUN_RESULTS}\" \"${PC_CACHE_DIR}\" ",
-      "local_job": true,
       "environment": {
         "PC_RUN_RESULTS": PC_RUN_RESULTS,
         "PC_CACHE_DIR": PC_CACHE_DIR
@@ -73,7 +69,6 @@
     },
     {
       "command": "echo Processing results && python3 \"${CACHE_RESULTS_SCRIPT}\" --maps \"${PATH_MAPS}\" --extra_files \"${PC_METADATA}\" \"${PC_RUN_RESULTS}\" \"${PC_CACHE_DIR}\" ",
-      "local_job": true,
       "environment": {
         "CACHE_RESULTS_SCRIPT": CACHE_RESULTS_SCRIPT,
         "PATH_MAPS": PATH_MAPS,
@@ -90,7 +85,6 @@
     },
     {
       "command": "echo copying ${CACHE_DIR}${FILE_NAME} ${RESULTS_FILE_PATH} && cp ${CACHE_DIR}${FILE_NAME} ${RESULTS_FILE_PATH}",
-      "local_job": true,
       "environment": {
         "CACHE_DIR": PC_CACHE_DIR,
         "FILE_NAME": FILE_NAME,

@@ -2,6 +2,7 @@
 
 WORKFLOW_FILE="run_workflow.jx"
 CONFIGURATION_FILE="canopycover_workflow.yml"
+CONFIGURATION_JSON_FILE="canopycover_workflow.json"
 SOURCE_IMAGES_DIR="/mnt/test/images/"
 EXPERIMENT_FILENAME="experiment.yaml"
 
@@ -41,10 +42,30 @@ if 'workflow' in y:
         step['next_step'] = int(step['execution_order']) + 1
         step['step_folder'] = os.path.splitext(os.path.basename(step['makeflow_file']))[0] + '/'
         step['sources_folder'] = step_source_files[int(step['execution_order'])]
-with open('./canopycover_workflow.json','w') as o:
-    json.dump(y, o, indent=2)" | python3 -
+with open('${CONFIGURATION_JSON_FILE}','w') as o:
+    json.dump(y, o, indent=2)
+if 'workflow' in y:
+    for idx in range(1, len(y['workflow'])+1):
+        link_name = 'sub_workflow{}.jx'.format(idx)
+        if os.path.isfile(link_name):
+            os.unlink(link_name)
+        os.link('sub_workflow.jx', link_name)
+" | python3 -
 
 echo Running workflow: "${WORKFLOW_FILE}"
-echo Configuration file: "${CONFIGURATION_FILE}"
-#makeflow --jx "${WORKFLOW_FILE}" --jx-args "${CONFIGURATION_FILE}"
+echo Configuration JSON file: "${CONFIGURATION_JSON_FILE}"
+makeflow --jx "${WORKFLOW_FILE}" --jx-args "${CONFIGURATION_JSON_FILE}"
 
+printf "
+import yaml
+import os
+f = open('${CONFIGURATION_FILE}','r')
+y = yaml.safe_load(f)
+if 'workflow' in y:
+    for idx in range(1, len(y['workflow'])+1):
+        link_name = 'sub_workflow{}.jx'.format(idx)
+        if os.path.isfile(link_name):
+            os.unlink(link_name)
+" | python3 -
+
+#makeflow --jx "${WORKFLOW_FILE}" --jx-args "${CONFIGURATION_JSON_FILE}" --clean --skip-file-check

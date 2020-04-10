@@ -19,7 +19,6 @@
   "rules": [
     {
       "command": "echo Creating cache folder \\\"${CC_CACHE_DIR}\\\" && mkdir -p \"${CC_CACHE_DIR}\" ",
-      "local_job": true,
       "environment": {
         "CC_CACHE_DIR": CC_CACHE_DIR,
       },
@@ -30,7 +29,6 @@
     },
     {
       "command": "echo Creating file workspace \\\"${CC_WORKSPACE}\\\" && mkdir -p \"${CC_WORKSPACE}\" && chmod a+w \"${CC_WORKSPACE}\" ",
-      "local_job": true,
       "environment": {
         "CC_WORKSPACE": RELATIVE_WORKING_FOLDER + ONE_ENTRY["BASE_METADATA_NAME"] + "/" +  CC_WORKSPACE_DIR_NAME
       },
@@ -40,8 +38,7 @@
       ]
     } for ONE_ENTRY in PROCESS_FILE_LIST,
     {
-      "command": "docker run --rm -v \"${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}\" ${CC_DOCKER_IMAGE} -d --metadata  \"${DOCKER_MOUNT_POINT}${EXPERIMENT_METADATA_RELATIVE_PATH}\" --metadata \"${ADDITIONAL_METADATA}\" --working_space \"${WORKSPACE_DIR}\" \"${DOCKER_RUN_PARAMS}\" ",
-      "local_job": true,
+      "command": "docker run --rm -v \"${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}\" ${CC_DOCKER_IMAGE} -d --metadata  \"${EXPERIMENT_METADATA_RELATIVE_PATH}\" --metadata \"${ADDITIONAL_METADATA}\" --working_space \"${WORKSPACE_DIR}\" \"${DOCKER_RUN_PARAMS}\" ",
       "environment": {
         "IMAGE_MOUNT_SOURCE": IMAGE_MOUNT_SOURCE,
         "DOCKER_MOUNT_POINT": DOCKER_MOUNT_POINT,
@@ -49,7 +46,7 @@
         "RELATIVE_WORKING_FOLDER": RELATIVE_WORKING_FOLDER + ONE_ENTRY["BASE_METADATA_NAME"],
         "EXPERIMENT_METADATA_RELATIVE_PATH": EXPERIMENT_METADATA_RELATIVE_PATH,
         "ADDITIONAL_METADATA": ONE_ENTRY["METADATA"],
-        "WORKSPACE_DIR": DOCKER_MOUNT_POINT + RELATIVE_WORKING_FOLDER + ONE_ENTRY["BASE_METADATA_NAME"] + "/" + CC_WORKSPACE_DIR_NAME,
+        "WORKSPACE_DIR": RELATIVE_WORKING_FOLDER + ONE_ENTRY["BASE_METADATA_NAME"] + "/" + CC_WORKSPACE_DIR_NAME,
         "DOCKER_RUN_PARAMS": ONE_ENTRY["PATH"]
       },
       "inputs": [
@@ -61,7 +58,6 @@
     } for ONE_ENTRY in PROCESS_FILE_LIST,
     {
       "command": "echo Copying results \\\"${CC_RUN_RESULTS}\\\" to \\\"${CC_CACHE_DIR}\\\" && mkdir -p \"${CC_CACHE_DIR}\/\" && cp \"${CC_RUN_RESULTS}\" \"${CC_CACHE_DIR}\/\" ",
-      "local_job": true,
       "environment": {
         "CC_RUN_RESULTS": RELATIVE_WORKING_FOLDER + ONE_ENTRY["BASE_METADATA_NAME"] + "/" + CC_WORKSPACE_DIR_NAME + "/" + CC_RESULT_FILENAME,
         "CC_CACHE_DIR": CC_CACHE_DIR + ONE_ENTRY["BASE_METADATA_NAME"]
@@ -75,7 +71,6 @@
     } for ONE_ENTRY in PROCESS_FILE_LIST,
     {
       "command": "echo Processing results && python3 \"${CACHE_RESULTS_SCRIPT}\" --extra_files \"${CC_METADATA}\" \"${CC_RUN_RESULTS}\" \"${CC_CACHE_DIR}\" ",
-      "local_job": true,
       "environment": {
         "CACHE_RESULTS_SCRIPT": CACHE_RESULTS_SCRIPT,
         "CC_METADATA": METADATA,
@@ -90,13 +85,13 @@
       ]
     } for ONE_ENTRY in PROCESS_FILE_LIST,
     {
-      "command": "echo copying \\\"${CACHE_DIR}${FILE_NAME}\\\" \\\"${RESULTS_FILE_PATH}\\\" && mkdir -p \"${RESULTS_FILE_FOLDER}\" && cp \"${CACHE_DIR}${FILE_NAME}\" \"${RESULTS_FILE_PATH}\"",
-      "local_job": true,
+      "command": "echo copying \\\"${CACHE_DIR}${FILE_NAME}\\\" \\\"${RESULTS_FILE_PATH}\\\" && mkdir -p \"${RESULTS_FILE_FOLDER}\" && cp \"${CACHE_DIR}${FILE_NAME}\" \"${RESULTS_FILE_PATH}\" && touch \"${CURRENT_STEP_CACHE_JSON}\"",
       "environment": {
         "CACHE_DIR": CC_CACHE_DIR + COPIES[0] + "/",
         "FILE_NAME": COPIES[1],
         "RESULTS_FILE_FOLDER": RESULTS_FILE_PATH + COPIES[0],
-        "RESULTS_FILE_PATH": RESULTS_FILE_PATH + COPIES[0] + "/"
+        "RESULTS_FILE_PATH": RESULTS_FILE_PATH + COPIES[0] + "/",
+        "CURRENT_STEP_CACHE_JSON": CURRENT_STEP_CACHE_JSON
       },
       "inputs": [
         CC_CACHE_DIR + COPIES[0]
