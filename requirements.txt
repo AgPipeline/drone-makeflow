@@ -1,6 +1,0 @@
-setuptools
-numpy
-laspy
-cryptography
-pyclowder
-terrautils
