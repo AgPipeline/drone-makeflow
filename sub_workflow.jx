@@ -1,0 +1,78 @@
+{
+  "define": {
+    "EXTRA_CONFIG_JSON": ["--jx-args " + PREVSTEP_CACHE_JSON for SN in [STEP_NUMBER] if SN != "1", " " for SN in [STEP_NUMBER] if SN == "1"],
+  },
+  "rules": [
+    {
+      "command": "echo Running step ${NAME} && echo Creating folder: \"${RESULTS_FILE_PATH}\" && mkdir -p \"${RESULTS_FILE_PATH}\"",
+      "environment": {
+        "NAME": NAME,
+        "RESULTS_FILE_PATH": RESULTS_FILE_PATH
+      },
+      "inputs": [],
+      "outputs": [
+        RESULTS_FILE_PATH
+      ]
+    },
+    {
+      "command": "mkdir -p \"${DATA_FOLDER_NAME}\" && echo Copying: \"${SOURCES_FILE_FOLDER}\"* to \"${DATA_FOLDER_NAME}/\" && cp -r \"${SOURCES_FILE_FOLDER}\"* \"${DATA_FOLDER_NAME}/\"",
+      "environment": {
+        "SOURCES_FILE_FOLDER": SOURCES_FILE_FOLDER,
+        "DATA_FOLDER_NAME": DATA_FOLDER_NAME
+      },
+      "inputs": [
+        RESULTS_FILE_PATH
+      ],
+      "outputs": [
+        DATA_FOLDER_NAME
+      ]
+    },
+    {
+      "workflow": "${MAKEFLOW_FILE} ${ADDITIONAL_JSON}",
+      "args": {
+        "NAME": NAME,
+        "STEP_NUMBER": STEP_NUMBER,
+        "WORKING_SPACE": WORKING_SPACE,
+        "MAKEFLOW_FILE": MAKEFLOW_FILE,
+        "DOCKER_IMAGE": DOCKER_IMAGE,
+        "RESULTS_FILE_NAMES": RESULTS_FILE_NAMES,
+        "BASE_DIR": BASE_DIR,
+        "IMAGE_MOUNT_SOURCE": IMAGE_MOUNT_SOURCE,
+        "RELATIVE_WORKING_FOLDER": RELATIVE_WORKING_FOLDER,
+        "CACHE_DIR": CACHE_DIR,
+        "DATA_FOLDER_NAME": DATA_FOLDER_NAME,
+        "SOURCES_FILE_FOLDER": SOURCES_FILE_FOLDER,
+        "EXPERIMENT_METADATA_RELATIVE_PATH": EXPERIMENT_METADATA_RELATIVE_PATH,
+        "EXPERIMENT_METADATA_FILENAME": EXPERIMENT_METADATA_FILENAME,
+        "RESULTS_FILE_PATH": RESULTS_FILE_PATH,
+        "PREVSTEP_CACHE_JSON": PREVSTEP_CACHE_JSON,
+        "NEXTSTEP_FOLDER": NEXTSTEP_FOLDER,
+        "CURRENT_STEP_CACHE_JSON": CURRENT_STEP_CACHE_JSON,
+        "WORKFLOW_STEP_CACHE_FILE_NAME": WORKFLOW_STEP_CACHE_FILE_NAME,
+        "SCRIPT_FOLDER": SCRIPT_FOLDER
+      },
+      "environment": {
+        "MAKEFLOW_FILE": MAKEFLOW_FILE,
+        "ADDITIONAL_JSON": ADDITIONAL_JSON
+      },
+      "inputs": [
+        DATA_FOLDER_NAME,
+      ],
+      "outputs": [
+        CURRENT_STEP_CACHE_JSON
+      ]
+    } for ADDITIONAL_JSON in EXTRA_CONFIG_JSON,
+    {
+      "command": "mkdir -p \"${NEXTSTEP_FOLDER}\"",
+      "environment": {
+        "NEXTSTEP_FOLDER": NEXTSTEP_FOLDER
+      },
+      "inputs": [
+        CURRENT_STEP_CACHE_JSON
+      ],
+      "outputs": [
+        NEXTSTEP_FOLDER
+      ]
+    }
+  ]
+}

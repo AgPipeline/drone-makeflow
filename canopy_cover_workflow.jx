@@ -1,0 +1,110 @@
+{
+  "define": {
+    "WORKSPACE_DIR_NAME": "workspace",
+    "RESULT_FILENAME": "result.json",
+#   "WORKSPACE_DIR": RELATIVE_WORKING_FOLDER + WORKSPACE_DIR_NAME,
+#   "RUN_RESULTS": WORKSPACE_DIR + "/" + RESULT_FILENAME,
+    "CACHE_RESULTS_SCRIPT": SCRIPT_FOLDER + "cache_results.py",
+    "DOCKER_MOUNT_POINT": "/mnt/",
+#   "DOCKER_RUN_PARAMS": DATA_FOLDER_NAME,
+#   "PATH_MAPS": DOCKER_MOUNT_POINT + ":" + RELATIVE_WORKING_FOLDER,
+    "PROCESS_FILE_LIST": [ONE_ENTRY for ONE_ENTRY in FILE_LIST if ONE_ENTRY["BASE_METADATA_NAME"] != ""]
+  },
+  "rules": [
+    {
+      "command": "echo Creating cache folder \\\"${CACHE_DIR}\\\" && mkdir -p \"${CACHE_DIR}\" ",
+      "environment": {
+        "CACHE_DIR": CACHE_DIR,
+      },
+      "inputs": [],
+      "output": [
+        CACHE_DIR
+      ]
+    },
+    {
+      "command": "echo Creating workspace \\\"${WORKSPACE_DIR}\\\" && mkdir -p \"${WORKSPACE_DIR}\" && chmod a+w \"${WORKSPACE_DIR}\" ",
+      "environment": {
+        "WORKSPACE_DIR": RELATIVE_WORKING_FOLDER + ONE_ENTRY["BASE_METADATA_NAME"] + "/" +  WORKSPACE_DIR_NAME
+      },
+      "inputs": [],
+      "outputs": [
+        RELATIVE_WORKING_FOLDER + ONE_ENTRY["BASE_METADATA_NAME"] + "/" + WORKSPACE_DIR_NAME
+      ]
+    } for ONE_ENTRY in PROCESS_FILE_LIST,
+    {
+      "command": "docker run --rm -v \"${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}\" ${DOCKER_IMAGE} -d --metadata  \"${EXPERIMENT_METADATA_RELATIVE_PATH}\" --metadata \"${ADDITIONAL_METADATA}\" --working_space \"${WORKSPACE_DIR}\" \"${DOCKER_RUN_PARAMS}\" ",
+      "environment": {
+        "IMAGE_MOUNT_SOURCE": IMAGE_MOUNT_SOURCE,
+        "DOCKER_MOUNT_POINT": DOCKER_MOUNT_POINT,
+        "DOCKER_IMAGE": DOCKER_IMAGE,
+        "RELATIVE_WORKING_FOLDER": RELATIVE_WORKING_FOLDER + ONE_ENTRY["BASE_METADATA_NAME"],
+        "EXPERIMENT_METADATA_RELATIVE_PATH": EXPERIMENT_METADATA_RELATIVE_PATH,
+        "ADDITIONAL_METADATA": ONE_ENTRY["METADATA"],
+        "WORKSPACE_DIR": RELATIVE_WORKING_FOLDER + ONE_ENTRY["BASE_METADATA_NAME"] + "/" + WORKSPACE_DIR_NAME,
+        "DOCKER_RUN_PARAMS": ONE_ENTRY["PATH"]
+      },
+      "inputs": [
+        RELATIVE_WORKING_FOLDER + ONE_ENTRY["BASE_METADATA_NAME"] + "/" + WORKSPACE_DIR_NAME
+      ],
+     "outputs": [
+       RELATIVE_WORKING_FOLDER + ONE_ENTRY["BASE_METADATA_NAME"] + "/" + WORKSPACE_DIR_NAME + "/" + RESULT_FILENAME
+     ]
+    } for ONE_ENTRY in PROCESS_FILE_LIST,
+    {
+      "command": "echo Copying results \\\"${RUN_RESULTS}\\\" to \\\"${CACHE_DIR}\\\" && mkdir -p \"${CACHE_DIR}\/\" && cp \"${RUN_RESULTS}\" \"${CACHE_DIR}\/\" ",
+      "environment": {
+        "RUN_RESULTS": RELATIVE_WORKING_FOLDER + ONE_ENTRY["BASE_METADATA_NAME"] + "/" + WORKSPACE_DIR_NAME + "/" + RESULT_FILENAME,
+        "CACHE_DIR": CACHE_DIR + ONE_ENTRY["BASE_METADATA_NAME"]
+      },
+      "inputs": [
+        RELATIVE_WORKING_FOLDER + ONE_ENTRY["BASE_METADATA_NAME"] + "/" + WORKSPACE_DIR_NAME + "/" + RESULT_FILENAME
+      ],
+      "outputs": [
+        CACHE_DIR + ONE_ENTRY["BASE_METADATA_NAME"] + "/" + RESULT_FILENAME
+      ]
+    } for ONE_ENTRY in PROCESS_FILE_LIST,
+    {
+      "command": "echo Processing results && python3 \"${CACHE_RESULTS_SCRIPT}\" --extra_files \"${METADATA}\" \"${RUN_RESULTS}\" \"${CACHE_DIR}\" ",
+      "environment": {
+        "CACHE_RESULTS_SCRIPT": CACHE_RESULTS_SCRIPT,
+        "METADATA": EXPERIMENT_METADATA_RELATIVE_PATH,
+        "RUN_RESULTS": CACHE_DIR + ONE_ENTRY["BASE_METADATA_NAME"] + "/" + RESULT_FILENAME,
+        "CACHE_DIR": CACHE_DIR + ONE_ENTRY["BASE_METADATA_NAME"]
+      },
+      "inputs": [
+        CACHE_DIR + ONE_ENTRY["BASE_METADATA_NAME"] + "/" + RESULT_FILENAME
+      ],
+      "outputs": [
+        CACHE_DIR + ONE_ENTRY["BASE_METADATA_NAME"]
+      ]
+    } for ONE_ENTRY in PROCESS_FILE_LIST,
+    {
+      "command": "echo copying \\\"${CACHE_DIR}${FILE_NAME}\\\" \\\"${RESULTS_FILE_PATH}\\\" && mkdir -p \"${RESULTS_FILE_FOLDER}\" && cp \"${CACHE_DIR}${FILE_NAME}\" \"${RESULTS_FILE_PATH}\"",
+      "environment": {
+        "CACHE_DIR": CACHE_DIR + COPIES[0] + "/",
+        "FILE_NAME": COPIES[1],
+        "RESULTS_FILE_FOLDER": RESULTS_FILE_PATH + COPIES[0],
+        "RESULTS_FILE_PATH": RESULTS_FILE_PATH + COPIES[0] + "/"
+      },
+      "inputs": [
+        CACHE_DIR + COPIES[0]
+      ],
+      "outputs": [
+        RESULTS_FILE_PATH + COPIES[0] + "/" + COPIES[1]
+      ]
+    } for COPIES in [[ONE_ENTRY["BASE_METADATA_NAME"], FILE_NAME] for ONE_ENTRY in PROCESS_FILE_LIST for FILE_NAME in RESULTS_FILE_NAMES],
+    {
+      "command": "python3 join_cache_results.py "rgb_plot_betydb" ${FILE_LIST_JSON} ${CURRENT_STEP_CACHE_JSON} ",
+      "environment": {
+        "FILE_LIST_JSON": RESULTS_FILE_PATH + ONE_ENTRY["BASE_METADATA_NAME"] + "/" + WORKFLOW_STEP_CACHE_FILE_NAME,
+        "CURRENT_STEP_CACHE_JSON": CURRENT_STEP_CACHE_JSON
+      },
+      "inputs": [
+        RESULTS_FILE_PATH + ONE_ENTRY["BASE_METADATA_NAME"] + "/" + COPIES[1]
+      ],
+      "outputs": [
+        CURRENT_STEP_CACHE_JSON
+      ]
+    } for ONE_ENTRY in PROCESS_FILE_LIST,
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "define": {
+    "WORKSPACE_DIR_NAME": "workspace",
+    "RESULT_FILENAME": "result.json",
+    "WORKSPACE_DIR": RELATIVE_WORKING_FOLDER + WORKSPACE_DIR_NAME,
+    "RUN_RESULTS": WORKSPACE_DIR + "/" + RESULT_FILENAME,
+    "CACHE_RESULTS_SCRIPT": SCRIPT_FOLDER + "cache_results.py",
+    "DOCKER_MOUNT_POINT": "/mnt/",
+    "DOCKER_RUN_PARAMS": "stereoTop " + DATA_FOLDER_NAME + "/odm_orthophoto_mask.tif",
+    "PATH_MAPS": DOCKER_MOUNT_POINT + ":" + RELATIVE_WORKING_FOLDER,
+    "LOCAL_RESULT_FILE": CACHE_DIR + RESULT_FILENAME
+  },
+  "rules": [
+    {
+      "command": "echo Creating cache folder \\\"${CACHE_DIR}\\\" && mkdir -p \"${CACHE_DIR}\" ",
+      "environment": {
+        "CACHE_DIR": CACHE_DIR,
+      },
+      "inputs": [],
+      "output": [
+        CACHE_DIR
+      ]
+    },
+    {
+      "command": "echo Creating workspace \\\"${WORKSPACE_DIR}\\\" && mkdir -p \"${WORKSPACE_DIR}\" && chmod a+w \"${WORKSPACE_DIR}\" ",
+      "environment": {
+        "WORKSPACE_DIR": WORKSPACE_DIR
+      },
+      "inputs": [],
+      "outputs": [
+        WORKSPACE_DIR
+      ]
+    },
+    {
+      "command": "docker run --rm --name pc_transformer -v \"${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}\" -e \"BETYDB_URL=https://terraref.ncsa.illinois.edu/bety/\" -e \"BETYDB_KEY=9999999999999999999999999999999999999999\" ${DOCKER_IMAGE} -d --metadata \"${METADATA}\" --working_space \"${WORKSPACE_DIR}\" ${DOCKER_RUN_PARAMS}",
+      "environment": {
+        "IMAGE_MOUNT_SOURCE": IMAGE_MOUNT_SOURCE,
+        "DOCKER_MOUNT_POINT": DOCKER_MOUNT_POINT,
+        "DOCKER_IMAGE": DOCKER_IMAGE,
+        "METADATA": EXPERIMENT_METADATA_RELATIVE_PATH,
+        "WORKSPACE_DIR": WORKSPACE_DIR,
+        "DOCKER_RUN_PARAMS": DOCKER_RUN_PARAMS
+      },
+      "inputs": [
+        WORKSPACE_DIR
+      ],
+      "outputs": [
+        RUN_RESULTS
+      ]
+    },
+    {
+      "command": "echo Copying results \\\"${RUN_RESULTS}\\\" to \\\"${CACHE_DIR}\\\" && mkdir -p \"${CACHE_DIR}\/\" && cp \"${RUN_RESULTS}\" \"${CACHE_DIR}\/\" ",
+      "environment": {
+        "RUN_RESULTS": RUN_RESULTS,
+        "CACHE_DIR": CACHE_DIR
+      },
+      "inputs": [
+        RUN_RESULTS
+      ],
+      "outputs": [
+        LOCAL_RESULT_FILE
+      ]
+    },
+    {
+      "command": "echo Processing results && python3 \"${CACHE_RESULTS_SCRIPT}\" --maps \"${PATH_MAPS}\" --extra_files \"${METADATA}\" \"${RUN_RESULTS}\" \"${CACHE_DIR}\" ",
+      "environment": {
+        "CACHE_RESULTS_SCRIPT": CACHE_RESULTS_SCRIPT,
+        "PATH_MAPS": PATH_MAPS,
+        "METADATA": EXPERIMENT_METADATA_RELATIVE_PATH,
+        "RUN_RESULTS": RUN_RESULTS,
+        "CACHE_DIR": CACHE_DIR
+      },
+      "inputs": [
+        LOCAL_RESULT_FILE
+      ],
+      "outputs": [
+        CACHE_DIR + EXPERIMENT_METADATA_FILENAME
+      ]
+    },
+    {
+      "command": "echo copying \\\"${CACHE_DIR}${FILE_NAME}\\\" \\\"${RESULTS_FILE_PATH}\\\" && cp \"${CACHE_DIR}${FILE_NAME}\" \"${RESULTS_FILE_PATH}\"",
+      "environment": {
+        "CACHE_DIR": CACHE_DIR,
+        "FILE_NAME": FILE_NAME,
+        "RESULTS_FILE_PATH": RESULTS_FILE_PATH
+      },
+      "inputs": [
+        CACHE_DIR + EXPERIMENT_METADATA_FILENAME
+      ],
+      "outputs": [
+        RESULTS_FILE_PATH + FILE_NAME
+      ]
+    } for FILE_NAME in RESULTS_FILE_NAMES
+  ]
+}
