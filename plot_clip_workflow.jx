@@ -32,14 +32,16 @@
       ]
     },
     {
-      "command": "docker run --rm --name pc_transformer -v \"${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}\" -e \"BETYDB_URL=https://terraref.ncsa.illinois.edu/bety/\" -e \"BETYDB_KEY=9999999999999999999999999999999999999999\" ${DOCKER_IMAGE} -d --metadata \"${METADATA}\" --working_space \"${WORKSPACE_DIR}\" ${DOCKER_RUN_PARAMS}",
+      "command": "docker run --rm --name pc_transformer -v \"${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}\" -e \"BETYDB_URL=BETYDB_URL\" -e \"BETYDB_KEY=${BETYDB_KEY}\" ${DOCKER_IMAGE} -d --metadata \"${METADATA}\" --working_space \"${WORKSPACE_DIR}\" ${DOCKER_RUN_PARAMS}",
       "environment": {
         "IMAGE_MOUNT_SOURCE": IMAGE_MOUNT_SOURCE,
         "DOCKER_MOUNT_POINT": DOCKER_MOUNT_POINT,
         "DOCKER_IMAGE": DOCKER_IMAGE,
         "METADATA": EXPERIMENT_METADATA_RELATIVE_PATH,
         "WORKSPACE_DIR": WORKSPACE_DIR,
-        "DOCKER_RUN_PARAMS": DOCKER_RUN_PARAMS
+        "DOCKER_RUN_PARAMS": DOCKER_RUN_PARAMS,
+        "BETYDB_URL": BETYDB_URL,
+        "BETYDB_KEY": BETYDB_KEY
       },
       "inputs": [
         WORKSPACE_DIR

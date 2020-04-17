@@ -46,6 +46,10 @@ if 'configuration' in y:
     y['configuration']['source_data_folder_name'] = 'images'
     y['configuration']['cache_folder_name'] = 'cache'
     y['configuration']['script_folder'] = script_folder
+    if 'betydb_url' not in y['configuration']:
+        y['configuration']['betydb_url'] = ''
+    if 'betydb_key' not in y['configuration']:
+        y['configuration']['betydb_key'] = ''
 if 'workflow' in y:
     step_source_files = [None] * (len(y['workflow']) + 2)
     step_source_files[1] = '${SOURCES_DIR}'

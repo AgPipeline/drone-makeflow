@@ -10,7 +10,9 @@
     "SOURCE_DATA_FOLDER_NAME": configuration["source_data_folder_name"],
     "CACHE_FOLDER_NAME": configuration["cache_folder_name"],
     "WORKFLOW_STEP_CACHE_FILE_NAME": "cached_files_makeflow_list.json",
-    "SCRIPT_FOLDER": configuration["script_folder"]
+    "SCRIPT_FOLDER": configuration["script_folder"],
+    "BETYDB_URL": configuration["betydb_url"],
+    "BETYDB_KEY": configuration["betydb_key"]
    },
   "rules": [
     {
@@ -47,7 +49,9 @@
         "PREVSTEP_CACHE_JSON": ONE_STEP["sources_folder"] + WORKFLOW_STEP_CACHE_FILE_NAME,
         "NEXTSTEP_FOLDER": WORKING_SPACE + format("%d", ONE_STEP["next_step"]),
         "CURRENT_STEP_CACHE_JSON": WORKING_SPACE + ONE_STEP["step_folder"] + WORKFLOW_STEP_CACHE_FILE_NAME,
-        "SCRIPT_FOLDER": SCRIPT_FOLDER
+        "SCRIPT_FOLDER": SCRIPT_FOLDER,
+        "BETYDB_URL": BETYDB_URL,
+        "BETYDB_KEY": BETYDB_KEY
       },
       "inputs": [
         WORKING_SPACE + format("%d", ONE_STEP["execution_order"])
