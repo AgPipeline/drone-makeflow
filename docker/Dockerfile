@@ -1,103 +1,37 @@
-FROM ubuntu:18.04
-LABEL maintainer="Chris Schnaufer <schnaufer@email.arizona.edu>"
+FROM opendronemap/odm:0.9.1 as builder
+WORKDIR /
 
-# Build environment values
-ARG arg_cctools_url=https://github.com/cooperative-computing-lab/cctools.git
-ENV cctools_url=$arg_cctools_url
+FROM phusion/baseimage
+# Env variables
+ENV DEBIAN_FRONTEND noninteractive
+WORKDIR /
+COPY --from=builder /code /code
 
-ARG arg_cctools_branch=master
-ENV cctools_branch=$arg_cctools_branch
+#Install dependencies
+RUN apt-get update -y \
+    && apt-get install --no-install-recommends -y \
+    software-properties-common \
+    python3-pip \
+    wget \
+    && python3 -m pip install --upgrade pip \
+    && python3 -m pip install setuptools
 
-ENV DEBIAN_FRONTEND=noninteractive
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh \
+    && bash miniconda.sh -b
+RUN  ~/miniconda3/bin/conda update -n base -c defaults conda
 
-# Install any users
-RUN useradd -u 49044 workflow \
-    && mkdir /home/workflow
+RUN python3 -m pip install scif==0.0.81
 
-RUN chown -R workflow /home/workflow \
-    && chgrp -R workflow /home/workflow
+COPY transformer-soilmask/* /scif/apps/soilmask/src/
+COPY transformer-opendronemap/* /scif/apps/odm/src/
 
-COPY docker/requirements.txt docker/packages.txt /home/workflow/
+# Install the filesystems from the recipes
+RUN scif install /scif/apps/odm/src/recipe.scif
+RUN scif install /scif/apps/soilmask/src/recipe.scif
 
-# Package installation
-RUN [ -s /home/workflow/packages.txt ] && \
-    (echo 'Installing packages' && \
-        apt-get update && \
-        cat /home/workflow/packages.txt | xargs apt-get install -y --no-install-recommends && \
-        rm /home/workflow/packages.txt && \
-        apt-get autoremove -y && \
-        apt-get clean && \
-        rm -rf /var/lib/apt/lists/*) || \
-    (echo 'No packages to install' && \
-        rm /home/workflow/packages.txt)
+# Cleanup APT
+#RUN apt-get clean \
+#  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Python installation
-RUN [ -s /home/workflow/requirements.txt ] && \
-    (echo "Install python modules" && \
-    python3 -m pip install -U --no-cache-dir pip && \
-    python3 -m pip install --no-cache-dir setuptools && \
-    python3 -m pip install --no-cache-dir -r /home/workflow/requirements.txt && \
-    rm /home/workflow/requirements.txt) || \
-    (echo "No python modules to install" && \
-    rm /home/workflow/requirements.txt)
-
-# Install cctools from source
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        git \
-        gcc \
-        g++ \
-        make \
-        zlib1g-dev && \
-    git clone $cctools_url --branch $cctools_branch --single-branch "/home/workflow/cctools-source" && \
-    cd /home/workflow/cctools-source && \
-    ./configure --without-system-doc  --prefix /home/workflow/cctools && \
-    make && \
-    make install && \
-    rm -rf /home/workflow/cctools-source && \
-    chown -R workflow /home/workflow/cctools && \
-    apt-get remove -y \
-        git \
-        gcc \
-        g++ \
-        make \
-        zlib1g-dev && \
-    apt-get autoremove -y && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# Install Docker
-RUN apt-get update && \
-    apt-get install -y --reinstall systemd && \
-    apt-get remove -y docker docker-engine docker.io containerd runc && \
-    apt-get install -y --no-install-recommends \
-        apt-transport-https \
-        ca-certificates \
-        curl \
-        gnupg-agent \
-        software-properties-common && \
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
-    apt-key fingerprint 0EBFCD88 && \
-    add-apt-repository \
-        "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-        $(lsb_release -cs) \
-        stable" && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends \
-        docker-ce \
-        docker-ce-cli \
-        containerd.io && \
-    apt-get autoremove -y && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# Finish setting up
-WORKDIR /home/workflow
-COPY *.py *.jx *.sh docker/*.sh /home/workflow/
-RUN chown workflow /home/workflow/* && chmod a+x /home/workflow/*.sh
-
-USER workflow
-ENTRYPOINT ["/home/workflow/entrypoint.sh"]
-
-# Setup environment variables to be passed into the container.
-ENV PATH="/home/workflow/cctools/bin:${PATH}"
+# SciF Entrypoint
+ENTRYPOINT ["scif"]
