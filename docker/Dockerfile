@@ -22,12 +22,16 @@ RUN  ~/miniconda3/bin/conda update -n base -c defaults conda
 
 RUN python3 -m pip install scif==0.0.81
 
-COPY transformer-soilmask/* /scif/apps/soilmask/src/
-COPY transformer-opendronemap/* /scif/apps/odm/src/
-
 # Install the filesystems from the recipes
-RUN scif install /scif/apps/odm/src/recipe.scif
+
+COPY scif/makeflow/* /scif/apps/makeflow/src/
+RUN scif install /scif/apps/makeflow/src/recipe.scif
+
+COPY transformer-soilmask/* /scif/apps/soilmask/src/
 RUN scif install /scif/apps/soilmask/src/recipe.scif
+
+COPY transformer-opendronemap/* /scif/apps/odm/src/
+RUN scif install /scif/apps/odm/src/recipe.scif
 
 # Cleanup APT
 #RUN apt-get clean \
