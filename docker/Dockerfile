@@ -34,8 +34,8 @@ COPY transformer-opendronemap/* /scif/apps/odm/src/
 RUN scif install /scif/apps/odm/src/recipe.scif
 
 # Cleanup APT
-#RUN apt-get clean \
-#  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN apt-get clean \
+  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # SciF Entrypoint
 ENTRYPOINT ["scif"]
