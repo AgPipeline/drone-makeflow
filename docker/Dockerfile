@@ -13,6 +13,8 @@ RUN apt-get update -y \
     software-properties-common \
     python3-pip \
     wget \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     && python3 -m pip install --upgrade pip \
     && python3 -m pip install setuptools
 
