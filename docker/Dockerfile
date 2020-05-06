@@ -32,7 +32,7 @@ RUN scif install /scif/apps/makeflow/src/recipe.scif
 COPY transformer-soilmask/* /scif/apps/soilmask/src/
 RUN scif install /scif/apps/soilmask/src/recipe.scif
 
-COPY transformer-opendronemap/* /scif/apps/odm/src/
+COPY scif/odm/* /scif/apps/odm/src/
 RUN scif install /scif/apps/odm/src/recipe.scif
 
 # Cleanup APT
