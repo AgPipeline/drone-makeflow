@@ -3,6 +3,7 @@ WORKDIR /
 
 FROM phusion/baseimage
 # Env variables
+ENV DOCKER_IMAGE agpipeline/scif-drone-pipeline:1.1
 ENV DEBIAN_FRONTEND noninteractive
 WORKDIR /
 COPY --from=builder /code /code
@@ -27,6 +28,7 @@ RUN python3 -m pip install scif==0.0.81
 # Install the filesystems from the recipes
 
 COPY scif/makeflow/* /scif/apps/makeflow/src/
+COPY workflow.jx jx-args.json /scif/apps/makeflow/src/
 RUN scif install /scif/apps/makeflow/src/recipe.scif
 
 COPY transformer-soilmask/* /scif/apps/soilmask/src/
