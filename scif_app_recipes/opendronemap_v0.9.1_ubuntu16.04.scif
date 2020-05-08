@@ -18,13 +18,14 @@
     scif run odm
 
 %appinstall odm
-
-    python -m pip install --upgrade pip
-    python -m pip install setuptools
-    python -m pip install -r /code/requirements.txt
-    ln -s $(which python) /scif/apps/odm/bin/python
+    export PYTHONPATH="/code/SuperBuild/install/lib/python2.7/dist-packages:/code/SuperBuild/src/opensfm"
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/code/SuperBuild/install/lib"
+    /usr/bin/python -m pip install --upgrade pip
+    /usr/bin/python -m pip install setuptools
+    /usr/bin/python -m pip install -r /code/requirements.txt
+    ln -s /usr/bin/python /scif/apps/odm/bin/python
 
 %apprun odm
     export PYTHONPATH="/code/SuperBuild/install/lib/python2.7/dist-packages:/code/SuperBuild/src/opensfm"
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/code/SuperBuild/install/lib"
-    exec python /code/run.py ${SCIF_APPNAME_odm} --project-path ${SCIF_DATA} "${@}"
+    exec /usr/bin/python /code/run.py ${SCIF_APPNAME_odm} --project-path ${SCIF_DATA} "${@}"
