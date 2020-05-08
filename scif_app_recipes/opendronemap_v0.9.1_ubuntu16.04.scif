@@ -1,0 +1,30 @@
+%apphelp odm
+    This apps runs OpenDroneMap.
+
+    With Docker:
+
+    DATA_DIR=$(pwd)/test/data
+    rm -rf $DATA_DIR
+    mkdir -p "${DATA_DIR}"
+    mkdir -p "$DATA_DIR/odm/images"
+    cp $(pwd)/test/images/*.JPG "$DATA_DIR/odm/images/"
+    rm -r "${OUTPUT_DIR}/odm_*" "${OUTPUT_DIR}/opensfm"
+    docker run -it --rm \
+        -v "${DATA_DIR}:/scif/data" \
+        agpipeline/scif-drone-pipeline:1.0 run odm
+
+    Or directly with scif:
+
+    scif run odm
+
+%appinstall odm
+
+    python -m pip install --upgrade pip
+    python -m pip install setuptools
+    python -m pip install -r /code/requirements.txt
+    ln -s $(which python) /scif/apps/odm/bin/python
+
+%apprun odm
+    export PYTHONPATH="/code/SuperBuild/install/lib/python2.7/dist-packages:/code/SuperBuild/src/opensfm"
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/code/SuperBuild/install/lib"
+    exec python /code/run.py ${SCIF_APPNAME_odm} --project-path ${SCIF_DATA} "${@}"

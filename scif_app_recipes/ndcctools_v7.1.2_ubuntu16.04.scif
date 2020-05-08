@@ -1,13 +1,9 @@
 %appinstall makeflow
-    # Install conda packages:
-    ~/miniconda3/bin/conda env create --prefix "${PWD}/conda" -f src/environment.yml
-
-    # To regenerate src/environment.yml:
-    # ~/miniconda3/bin/conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
-    # ~/miniconda3/bin/conda env export --prefix "${PWD}/conda" > src/environment.yml
+    # Install Makeflow
+    conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
 
 %apprun makeflow
-    exec ~/miniconda3/bin/conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+    exec conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
         --jx-args="${SCIF_APPROOT}/src/jx-args.json" \
         --log-verbose \
@@ -24,7 +20,7 @@
     # Piggyback off the makeflow install
 
 %apprun jx2json
-    exec ~/miniconda3/bin/conda run --prefix "${SCIF_APPROOT_makeflow}/conda" jx2json \
+    exec conda run --prefix "${SCIF_APPROOT_makeflow}/conda" jx2json \
         --args "${SCIF_APPROOT_makeflow}/src/jx-args.json" \
         --pretty \
         "${SCIF_APPROOT_makeflow}/src/workflow.jx" > "${SCIF_APPDATA}/workflow.json" \

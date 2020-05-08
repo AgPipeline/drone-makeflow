@@ -1,9 +1,24 @@
 {
   "define": {
+     "SCIF_APPDATA_odm": "/scif/data/odm",
+     "SCIF_APPDATA_soilmask": "/scif/data/soilmask"
      "ORTHOMOSAIC_FILE": SCIF_APPDATA_odm + "/odm_orthophoto/odm_orthophoto.tif",
      "SOILMASK_FILE": SCIF_APPDATA_soilmask + "/soilmask-output.npz"
    },
   "rules": [
+     {
+       "command": "scif apps | xargs -L 1 -I % mkdir -p ${SCIF_DATA}/%",
+       "environment": {
+       },
+       "inputs": [
+       ],
+       "outputs": [
+          "/scif/data/odm",
+          "/scif/data/makeflow",
+          "/scif/data/soilmask",
+          "/scif/data/jx2json"
+       ]
+     },
      {
        "command": "scif run odm",
        "environment": {
