@@ -1,0 +1,5 @@
+{
+  "SCIF_DATA": "/scif/data",
+  "SCIF_APPDATA_odm": "/scif/data/odm",
+  "SCIF_APPDATA_soilmask": "/scif/data/soilmask"
+}
