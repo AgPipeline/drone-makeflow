@@ -7,12 +7,7 @@
     # ~/miniconda3/bin/conda env export --prefix "${PWD}/conda" > src/environment.yml
 
 %apprun makeflow
-    exec conda run --prefix "${SCIF_APPROOT}/conda" jx2json \
-        --args "${SCIF_APPROOT}/src/jx-args.json" \
-        --pretty \
-        "${SCIF_APPROOT}/src/workflow.jx" > "${SCIF_APPDATA}/workflow.json"
-
-    exec conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+    exec ~/miniconda3/bin/conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
         --jx-args="${SCIF_APPROOT}/src/jx-args.json" \
         --log-verbose \
@@ -24,3 +19,15 @@
 
 %apphelp makeflow
     This app provides an entrypoint to the makeflow tool
+
+%appinstall jx2json
+    # Piggyback off the makeflow install
+
+%apprun jx2json
+    exec ~/miniconda3/bin/conda run --prefix "${SCIF_APPROOT_makeflow}/conda" jx2json \
+        --args "${SCIF_APPROOT_makeflow}/src/jx-args.json" \
+        --pretty \
+        "${SCIF_APPROOT_makeflow}/src/workflow.jx" > "${SCIF_APPDATA}/workflow.json" \
+
+%apphelp jx2json
+    This app provides an entrypoint to the jx2json tool
