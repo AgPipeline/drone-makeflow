@@ -1,4 +1,0 @@
-[submodule "transformer-soilmask"]
-	path = transformer-soilmask
-	url = https://github.com/julianpistorius/transformer-soilmask.git
-	branch = scif
