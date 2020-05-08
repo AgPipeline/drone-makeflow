@@ -7,31 +7,6 @@
    },
   "rules": [
      {
-       "command": "scif apps | xargs -L 1 -I % mkdir -p ${SCIF_DATA}/%",
-       "environment": {
-       },
-       "inputs": [
-       ],
-       "outputs": [
-          "/scif/data/odm",
-          "/scif/data/makeflow",
-          "/scif/data/soilmask",
-          "/scif/data/jx2json"
-       ]
-     },
-     {
-       "command": "mkdir -p ${SCIF_APPDATA_odm}/images && wget -O ${SCIF_APPDATA_odm}/images.tar https://de.cyverse.org/dl/d/84A57A62-B6EB-4826-ADC4-337D4A0ABBEA/images.tar && tar xf ${SCIF_APPDATA_odm}/images.tar -C ${SCIF_APPDATA_odm}",
-       "environment": {
-       },
-       "inputs": [
-          "/scif/data/odm"
-       ],
-       "outputs": [
-          "/scif/data/odm/images",
-          "/scif/data/odm/images.tar"
-       ]
-     },
-     {
        "command": "scif run odm",
        "environment": {
        },
