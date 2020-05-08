@@ -97,16 +97,6 @@ COPY ./scif_app_recipes/opendronemap_v0.9.1_ubuntu16.04.scif  /opt/
 RUN scif install /opt/opendronemap_v0.9.1_ubuntu16.04.scif
 
 
-FROM base_scif as makeflow_scif
-COPY ./scif_app_recipes/ndcctools_v7.1.2_ubuntu16.04.scif  /opt/
-RUN scif install /opt/ndcctools_v7.1.2_ubuntu16.04.scif
-
-
-FROM base_scif as soilmask_scif
-COPY ./scif_app_recipes/soilmask_v0.0.1_ubuntu16.04.scif /opt/
-RUN scif install /opt/soilmask_v0.0.1_ubuntu16.04.scif
-
-
 FROM odm_scif as combined_scif
 COPY ./scif_app_recipes/ndcctools_v7.1.2_ubuntu16.04.scif  /opt/
 COPY ./scif_app_recipes/soilmask_v0.0.1_ubuntu16.04.scif /opt/
