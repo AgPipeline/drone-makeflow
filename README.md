@@ -4,7 +4,6 @@
 
 ```bash
 cp jx-args.json.example jx-args.json
-export DOCKER_BUILDKIT=1
 docker build --progress=plain -t agpipeline/scif-drone-pipeline:1.3 .
 ```
 
