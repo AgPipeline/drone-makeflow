@@ -1,7 +1,7 @@
 {
   "define": {
      "SCIF_APPDATA_odm": "/scif/data/odm",
-     "SCIF_APPDATA_soilmask": "/scif/data/soilmask"
+     "SCIF_APPDATA_soilmask": "/scif/data/soilmask",
      "ORTHOMOSAIC_FILE": SCIF_APPDATA_odm + "/odm_orthophoto/odm_orthophoto.tif",
      "SOILMASK_FILE": SCIF_APPDATA_soilmask + "/soilmask-output.npz"
    },
@@ -17,6 +17,18 @@
           "/scif/data/makeflow",
           "/scif/data/soilmask",
           "/scif/data/jx2json"
+       ]
+     },
+     {
+       "command": "mkdir -p ${SCIF_APPDATA_odm}/images && wget -O ${SCIF_APPDATA_odm}/images.tar https://de.cyverse.org/dl/d/84A57A62-B6EB-4826-ADC4-337D4A0ABBEA/images.tar && tar xf ${SCIF_APPDATA_odm}/images.tar -C ${SCIF_APPDATA_odm}",
+       "environment": {
+       },
+       "inputs": [
+          "/scif/data/odm"
+       ],
+       "outputs": [
+          "/scif/data/odm/images",
+          "/scif/data/odm/images.tar"
        ]
      },
      {
