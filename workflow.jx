@@ -47,7 +47,7 @@
          SOILMASK_FILE
        ],
        "outputs": [
-          PLOTCLIP_WORKING_FOLDER + "/results.json"
+          PLOTCLIP_WORKING_FOLDER + "/result.json"
        ]
      }
   ]
