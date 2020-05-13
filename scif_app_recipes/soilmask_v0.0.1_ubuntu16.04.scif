@@ -1,6 +1,6 @@
 %appinstall soilmask
     # Download soilmask code. In the future use pip/conda install.
-    wget -O soilmask.tar.gz https://github.com/julianpistorius/transformer-soilmask/archive/scif.tar.gz
+    wget -O soilmask.tar.gz https://github.com/Chris-Schnaufer/transformer-plotclip/files/4623783/soilmask.tar.gz
     tar xvzf soilmask.tar.gz
     mv transformer-soilmask-scif src
 

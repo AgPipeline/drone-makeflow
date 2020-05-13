@@ -78,6 +78,7 @@ RUN add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable \
          libxext-dev \
          python-dev \
          python-gdal \
+         python3-gdal \
          python-matplotlib \
          python-pip \
          python-software-properties \
@@ -87,10 +88,13 @@ RUN add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable \
          grass-core \
          libssl-dev \
          libpython2.7-dev \
+         python3.5-dev \
     && apt-get remove libdc1394-22-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+ENV CPLUS_INCLUDE_PATH /usr/include/gdal
+ENV C_INCLUDE_PATH /usr/include/gdal
 
 FROM odm_base as odm_scif
 COPY ./scif_app_recipes/opendronemap_v0.9.1_ubuntu16.04.scif  /opt/
@@ -103,6 +107,9 @@ COPY ./scif_app_recipes/soilmask_v0.0.1_ubuntu16.04.scif /opt/
 RUN scif install /opt/soilmask_v0.0.1_ubuntu16.04.scif
 RUN scif install /opt/ndcctools_v7.1.2_ubuntu16.04.scif
 
+FROM combined_scif as plotclip_scif
+COPY ./scif_app_recipes/plotclip_v0.0.1_ubuntu16.04.scif /opt/
+RUN scif install /opt/plotclip_v0.0.1_ubuntu16.04.scif
 
-FROM combined_scif as workflow
+FROM plotclip_scif as workflow
 COPY workflow.jx jx-args.json /scif/apps/makeflow/src/
