@@ -5,17 +5,19 @@
     mv transformer-plotclip src
 
     # Install packages needed
-    python3 -m pip install -r "${PWD}/src/requirements.txt"
-    python3 -m pip install pyyaml pygdal==2.2.2.3 piexif
+    python3 -m venv --system-site-packages .venv
+    .venv/bin/python3 -m pip install --upgrade --no-cache-dir pip
+    .venv/bin/python3 -m pip install --upgrade --no-cache-dir -r "${PWD}/src/requirements.txt"
+    .venv/bin/python3 -m pip install  --upgrade --no-cache-dir pyyaml pygdal==2.2.2.3 piexif
 
     # Add example Docker command to SCIF app help section
     test -z $DOCKER_IMAGE && DOCKER_IMAGE="agpipeline/plotclip:latest"
     echo "\n\nExample Docker command: docker run $DOCKER_IMAGE run plotclip\n" >> "${PWD}/scif/runscript.help"
 
     # Generate remainder of SCIF app help section by running: src/main.py --help
-    python3 src/entrypoint.py --help >> "${PWD}/scif/runscript.help"
+    .venv/bin/python3 src/entrypoint.py --help >> "${PWD}/scif/runscript.help"
 
 %apprun plotclip
-    python3 src/entrypoint.py "${@}"
+    .venv/bin/python3 src/entrypoint.py "${@}"
 %apphelp plotclip
     This app provides an entrypoint to the plotclip tool
