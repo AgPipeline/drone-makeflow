@@ -1,0 +1,25 @@
+{
+  "define": {
+     "SCIF_APPDATA_odm": "/scif/data/odm",
+     "SCIF_APPDATA_cache": "/scif/data/soilmask",
+     "SCIF_APPDATA_canopycover": SCIF_APPDATA_odm + "/images",
+     "CANOPYCOVER_METADATA_FILE": SCIF_APPDATA_canopycover + "/experiment.yaml",
+     "CANOPYCOVER_WORKING_FOLDER": SCIF_APPDATA_cache,
+   },
+  "rules": [
+    {
+       "command": "[  -f \"${FILE}\" ]; scif run canopycover --metadata \\\'\\\"\$\\\{METADATA_FILE\\\}\\\"\\\' --working_space \\\'\\\"\$\\\{WORKING_FOLDER\\\}\\\"\\\' \\\'\\\"\$\\\{INPUT_GEOTIFF\\\}\\\"\\\' ",
+       "environment": {
+         "INPUT_GEOTIFF": SOILMASK_INFO["FILE"],
+         "METADATA_FILE": CANOPYCOVER_METADATA_FILE,
+         "WORKING_FOLDER": SOILMASK_INFO["DIR"],
+       },
+       "inputs": [
+         SOILMASK_INFO["FILE"]
+       ],
+       "outputs": [
+          SOILMASK_INFO["DIR"] + "/canopycover.csv"
+       ]
+     } for SOILMASK_INFO in CANOPYCOVER_FILE_LIST
+  ]
+}

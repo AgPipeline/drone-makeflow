@@ -3,7 +3,7 @@
     conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
 
 %apprun makeflow
-    exec conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+    bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
         --jx-args="${SCIF_APPROOT}/src/jx-args.json" \
         --log-verbose \
@@ -11,7 +11,18 @@
         --change-directory="${SCIF_APPDATA}" \
         --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
         --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
-        "${SCIF_APPROOT}/src/workflow.jx"
+        "${SCIF_APPROOT}/src/workflow.jx" \
+    && [ ! -f "/scif/data/soilmask/canopycover_fileslist.json" ]; "${SCIF_APPROOT}/src/prep-canopy-cover.sh" \
+    && conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+        --jx \
+        --jx-args="${SCIF_APPROOT}/src/jx-args.json" \
+        --jx-args="/scif/data/soilmask/canopycover_fileslist.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/canopy-cover.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/canopy-cover.jx.batchlog" \
+        "${SCIF_APPROOT}/src/canopy-cover.jx"'
 
 %apphelp makeflow
     This app provides an entrypoint to the makeflow tool

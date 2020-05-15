@@ -111,5 +111,10 @@ FROM combined_scif as plotclip_scif
 COPY ./scif_app_recipes/plotclip_v0.0.1_ubuntu16.04.scif /opt/
 RUN scif install /opt/plotclip_v0.0.1_ubuntu16.04.scif
 
-FROM plotclip_scif as workflow
-COPY workflow.jx jx-args.json /scif/apps/makeflow/src/
+FROM plotclip_scif as canopycover_scif
+COPY ./scif_app_recipes/canopycover_v0.0.1_ubuntu16.04.scif /opt/
+RUN scif install /opt/canopycover_v0.0.1_ubuntu16.04.scif
+
+FROM canopycover_scif as workflow
+COPY workflow.jx canopy-cover.jx prep-canopy-cover.sh jx-args.json /scif/apps/makeflow/src/
+RUN chmod a+x /scif/apps/makeflow/src/*.sh
