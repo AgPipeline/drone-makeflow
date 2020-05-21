@@ -19,5 +19,6 @@
 
 %apprun plotclip
     .venv/bin/python3 src/entrypoint.py "${@}"
+
 %apphelp plotclip
     This app provides an entrypoint to the plotclip tool

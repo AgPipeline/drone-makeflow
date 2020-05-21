@@ -4,7 +4,9 @@
      "SCIF_APPDATA_soilmask": "/scif/data/soilmask",
      "SCIF_APPDATA_plotclip": SCIF_APPDATA_odm + "/images",
      "ORTHOMOSAIC_FILE": SCIF_APPDATA_odm + "/odm_orthophoto/odm_orthophoto.tif",
-     "SOILMASK_FILE": SCIF_APPDATA_soilmask + "/soilmask-output.tif",
+     "SOILMASK_METADATA_FILE": SCIF_APPDATA_odm + "/images/experiment.yaml",
+     "SOILMASK_WORKING_FOLDER": SCIF_APPDATA_soilmask,
+     "SOILMASK_FILE": SCIF_APPDATA_soilmask + "/odm_orthophoto_mask.tif",
      "PLOTCLIP_METADATA_FILE": SCIF_APPDATA_plotclip + "/experiment.yaml",
      "PLOTCLIP_WORKING_FOLDER": SCIF_APPDATA_soilmask,
    },
@@ -20,11 +22,11 @@
        ]
      },
      {
-       "command": "scif run soilmask ${INPUT_GEOTIFF} --output-file ${OUTPUT_FILE}",
+       "command": "scif run soilmask --metadata ${METADATA_FILE} --working_space ${WORKING_FOLDER} ${INPUT_GEOTIFF}",
        "environment": {
          "INPUT_GEOTIFF": ORTHOMOSAIC_FILE,
-         "OUTPUT_FILE": SOILMASK_FILE,
-         "X": "scif run soilmask /scif/data/odm/odm_orthophoto/odm_orthophoto.tif --output-file /scif/data/soilmask/soilmask-output.tif"
+         "METADATA_FILE": SOILMASK_METADATA_FILE,
+         "WORKING_FOLDER": SOILMASK_WORKING_FOLDER,
        },
        "inputs": [
          ORTHOMOSAIC_FILE

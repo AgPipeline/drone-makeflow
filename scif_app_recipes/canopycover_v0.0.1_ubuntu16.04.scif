@@ -19,5 +19,6 @@
 
 %apprun canopycover
     .venv/bin/python3 src/entrypoint.py "${@}"
+
 %apphelp canopycover
     This app provides an entrypoint to the canopycover tool
