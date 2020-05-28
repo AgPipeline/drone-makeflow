@@ -1,4 +1,4 @@
-FROM phusion/baseimage as base
+FROM ubuntu:18.04 as base
 ENV DOCKER_IMAGE agpipeline/scif-drone-pipeline:1.3
 ENV DEBIAN_FRONTEND noninteractive
 WORKDIR /
@@ -7,8 +7,44 @@ RUN apt-get update -y \
     && apt-get install --no-install-recommends -y \
     software-properties-common \
     wget \
+    python3-gdal \
+    gdal-bin   \
+    libgdal-dev \
+    gcc \
+    g++ \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
+    libglib2.0-0 \
+    liblas-bin \
+    docker.io \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Install Docker
+RUN apt-get update && \
+    apt-get install -y --reinstall systemd && \
+    apt-get remove -y docker docker-engine docker.io containerd runc && \
+    apt-get install -y --no-install-recommends \
+        apt-transport-https \
+        ca-certificates \
+        curl \
+        gnupg-agent \
+        software-properties-common && \
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
+    apt-key fingerprint 0EBFCD88 && \
+    add-apt-repository \
+        "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+        $(lsb_release -cs) \
+        stable" && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        docker-ce \
+        docker-ce-cli \
+        containerd.io && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 
 FROM base as download_miniconda
@@ -38,65 +74,66 @@ RUN pip install scif \
 ENTRYPOINT ["scif"]
 
 
-FROM base_scif as odm_base
-# Env variables
-COPY --from=opendronemap/odm:0.9.1 /code /code
-RUN add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable \
-    && apt-get update -y \
-    && apt-get install --no-install-recommends -y build-essential \
-         gdal-bin \
-         git \
-         libatlas-base-dev \
-         libavcodec-dev \
-         libavformat-dev \
-         libboost-date-time-dev \
-         libboost-filesystem-dev \
-         libboost-iostreams-dev \
-         libboost-log-dev \
-         libboost-python-dev \
-         libboost-regex-dev \
-         libboost-thread-dev \
-         libeigen3-dev \
-         libflann-dev \
-         libgdal-dev \
-         libgeotiff-dev \
-         libgoogle-glog-dev \
-         libgtk2.0-dev \
-         libjasper-dev \
-         libjpeg-dev \
-         libjsoncpp-dev \
-         liblapack-dev \
-         liblas-bin \
-         libpng-dev \
-         libproj-dev \
-         libsuitesparse-dev \
-         libswscale-dev \
-         libtbb2 \
-         libtbb-dev \
-         libtiff-dev \
-         libvtk6-dev \
-         libxext-dev \
-         python-dev \
-         python-gdal \
-         python3-gdal \
-         python-matplotlib \
-         python-pip \
-         python-software-properties \
-         python-wheel \
-         software-properties-common \
-         swig2.0 \
-         grass-core \
-         libssl-dev \
-         libpython2.7-dev \
-         python3.5-dev \
-    && apt-get remove libdc1394-22-dev \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+#FROM base_scif as odm_base
+## Env variables
+#COPY --from=opendronemap/odm:0.9.1 /code /code
+#RUN add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable \
+#    && apt-get update -y \
+#    && apt-get install --no-install-recommends -y build-essential \
+#         gdal-bin \
+#         git \
+#         libatlas-base-dev \
+#         libavcodec-dev \
+#         libavformat-dev \
+#         libboost-date-time-dev \
+#         libboost-filesystem-dev \
+#         libboost-iostreams-dev \
+#         libboost-log-dev \
+#         libboost-python-dev \
+#         libboost-regex-dev \
+#         libboost-thread-dev \
+#         libeigen3-dev \
+#         libflann-dev \
+#         libgdal-dev \
+#         libgeotiff-dev \
+#         libgoogle-glog-dev \
+#         libgtk2.0-dev \
+#         libjasper-dev \
+#         libjpeg-dev \
+#         libjsoncpp-dev \
+#         liblapack-dev \
+#         liblas-bin \
+#         libpng-dev \
+#         libproj-dev \
+#         libsuitesparse-dev \
+#         libswscale-dev \
+#         libtbb2 \
+#         libtbb-dev \
+#         libtiff-dev \
+#         libvtk6-dev \
+#         libxext-dev \
+#         python-dev \
+#         python-gdal \
+#         python3-gdal \
+#         python-matplotlib \
+#         python-pip \
+#         python-software-properties \
+#         python-wheel \
+#         software-properties-common \
+#         swig2.0 \
+#         grass-core \
+#         libssl-dev \
+#         libpython2.7-dev \
+#         python3.5-dev \
+#    && apt-get remove libdc1394-22-dev \
+#    && apt-get clean \
+#    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
 ENV C_INCLUDE_PATH /usr/include/gdal
 
-FROM odm_base as odm_scif
+#FROM odm_base as odm_scif
+FROM base_scif as odm_scif
 COPY ./scif_app_recipes/opendronemap_v0.9.1_ubuntu16.04.scif  /opt/
 RUN scif install /opt/opendronemap_v0.9.1_ubuntu16.04.scif
 

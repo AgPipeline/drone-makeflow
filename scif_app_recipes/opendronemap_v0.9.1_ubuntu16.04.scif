@@ -1,15 +1,7 @@
 %appinstall odm
-    export PYTHONPATH="/code/SuperBuild/install/lib/python2.7/dist-packages:/code/SuperBuild/src/opensfm"
-    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/code/SuperBuild/install/lib"
-    /usr/bin/python -m pip install --upgrade pip
-    /usr/bin/python -m pip install setuptools
-    /usr/bin/python -m pip install -r /code/requirements.txt
-    ln -s /usr/bin/python /scif/apps/odm/bin/python
 
 %apprun odm
-    export PYTHONPATH="/code/SuperBuild/install/lib/python2.7/dist-packages:/code/SuperBuild/src/opensfm"
-    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/code/SuperBuild/install/lib"
-    exec /usr/bin/python /code/run.py ${SCIF_APPNAME_odm} --project-path ${SCIF_DATA} "${@}"
+    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v scif_input:/scif_input/images -v scif_output:/scif_output --user root agdrone/transformer-opendronemap:2.2 "${@}"
 
 %apphelp odm
     This apps runs OpenDroneMap.

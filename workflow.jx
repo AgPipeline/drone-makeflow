@@ -1,9 +1,11 @@
 {
   "define": {
      "SCIF_APPDATA_odm": "/scif/data/odm",
+     "ODM_METADATA_FILE": SCIF_APPDATA_odm + "/images/experiment.yaml",
+     "ODM_WORKING_FOLDER": "/scif/data/odm",
      "SCIF_APPDATA_soilmask": "/scif/data/soilmask",
      "SCIF_APPDATA_plotclip": SCIF_APPDATA_odm + "/images",
-     "ORTHOMOSAIC_FILE": SCIF_APPDATA_odm + "/odm_orthophoto/odm_orthophoto.tif",
+     "ORTHOMOSAIC_FILE": SCIF_APPDATA_soilmask + "/odm_orthophoto/odm_orthophoto.tif",
      "SOILMASK_METADATA_FILE": SCIF_APPDATA_odm + "/images/experiment.yaml",
      "SOILMASK_WORKING_FOLDER": SCIF_APPDATA_soilmask,
      "SOILMASK_FILE": SCIF_APPDATA_soilmask + "/odm_orthophoto_mask.tif",
@@ -12,8 +14,11 @@
    },
   "rules": [
      {
-       "command": "scif run odm",
+       "command": "scif run odm --metadata \"${METADATA_FILE}\" --working_space \"${WORKING_FOLDER}\" ${DOCKER_RUN_PARAMS}",
        "environment": {
+         "DOCKER_RUN_PARAMS": "/scif_input/images",
+         "METADATA_FILE": "/scif_input/images/experiment.yaml",
+         "WORKING_FOLDER": "/scif_output",
        },
        "inputs": [
        ],
