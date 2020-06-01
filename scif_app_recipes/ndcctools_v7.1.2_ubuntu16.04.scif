@@ -27,6 +27,35 @@
 %apphelp makeflow
     This app provides an entrypoint to the makeflow tool
 
+%appinstall short_makeflow
+    # Install Makeflow
+    conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
+
+%apprun short_makeflow
+    bash -c 'conda run --prefix "/scif/apps/makeflow/conda" makeflow \
+        --jx \
+        --jx-args="/scif/apps/makeflow/src/jx-args.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
+        "/scif/apps/makeflow/src/short_workflow.jx" \
+    && [ ! -f "/scif/data/soilmask/canopycover_fileslist.json" ]; "/scif/apps/makeflow/src/prep-canopy-cover.sh" \
+    && conda run --prefix "/scif/apps/makeflow/conda" makeflow \
+        --jx \
+        --jx-args="/scif/apps/makeflow/src/jx-args.json" \
+        --jx-args="/scif/data/soilmask/canopycover_fileslist.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/canopy-cover.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/canopy-cover.jx.batchlog" \
+        "/scif/apps/makeflow/src/canopy-cover.jx"'
+
+%apphelp short_makeflow
+    This app provides an entrypoint to the non-ODM makeflow tool
+
 %appinstall jx2json
     # Piggyback off the makeflow install
 
