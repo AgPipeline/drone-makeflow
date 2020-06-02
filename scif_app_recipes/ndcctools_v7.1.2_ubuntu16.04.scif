@@ -3,7 +3,8 @@
     conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
 
 %apprun makeflow
-    bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+    bash -c 'cp -r /input/* /scif/data/odm/images/ \
+    && conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
         --jx-args="${SCIF_APPROOT}/src/jx-args.json" \
         --log-verbose \
@@ -22,7 +23,8 @@
         --change-directory="${SCIF_APPDATA}" \
         --makeflow-log="${SCIF_APPDATA}/canopy-cover.jx.makeflowlog" \
         --batch-log="${SCIF_APPDATA}/canopy-cover.jx.batchlog" \
-        "${SCIF_APPROOT}/src/canopy-cover.jx"'
+        "${SCIF_APPROOT}/src/canopy-cover.jx" \
+    && cp -r /scif/data/soilmask/* /output/'
 
 %apphelp makeflow
     This app provides an entrypoint to the makeflow tool

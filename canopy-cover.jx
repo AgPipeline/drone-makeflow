@@ -1,10 +1,7 @@
 {
   "define": {
      "SCIF_APPDATA_odm": "/scif/data/odm",
-     "SCIF_APPDATA_cache": "/scif/data/soilmask",
-     "SCIF_APPDATA_canopycover": SCIF_APPDATA_odm + "/images",
-     "CANOPYCOVER_METADATA_FILE": SCIF_APPDATA_canopycover + "/experiment.yaml",
-     "CANOPYCOVER_WORKING_FOLDER": SCIF_APPDATA_cache,
+     "CANOPYCOVER_METADATA_FILE": SCIF_APPDATA_odm + "/images/experiment.yaml",
    },
   "rules": [
     {
