@@ -58,6 +58,14 @@
 %apphelp short_makeflow
     This app provides an entrypoint to the non-ODM makeflow tool
 
+%appinstall clean
+
+%apprun clean
+    bash -c 'rm -r /scif/data/odm/images/* && rm -r /scif/data/soilmask/* && rm -r /output/*'
+
+%apphelp short_makeflow
+    This app removed all folder and files in the working folders - use with caution
+
 %appinstall jx2json
     # Piggyback off the makeflow install
 
