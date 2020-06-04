@@ -1,0 +1,24 @@
+%appinstall canopycover
+    # Download canopycover code. In the future use pip/conda install.
+    wget -O canopycover.tar.gz https://github.com/Chris-Schnaufer/transformer-plotclip/files/4635835/canopycover.tar.gz
+    tar xvf canopycover.tar.gz
+    mv transformer-canopycover src
+
+    # Install packages needed
+    python3 -m venv --system-site-packages .venv
+    .venv/bin/python3 -m pip install --upgrade --no-cache-dir pip
+    .venv/bin/python3 -m pip install --upgrade --no-cache-dir -r "${PWD}/src/requirements.txt"
+    .venv/bin/python3 -m pip install  --upgrade --no-cache-dir pyyaml pygdal==2.2.3.3 piexif python-dateutil
+
+    # Add example Docker command to SCIF app help section
+    test -z $DOCKER_IMAGE && DOCKER_IMAGE="agpipeline/canopycover:latest"
+    echo "\n\nExample Docker command: docker run $DOCKER_IMAGE run canopycover\n" >> "${PWD}/scif/runscript.help"
+
+    # Generate remainder of SCIF app help section by running: src/main.py --help
+    .venv/bin/python3 src/entrypoint.py --help >> "${PWD}/scif/runscript.help"
+
+%apprun canopycover
+    .venv/bin/python3 src/entrypoint.py "${@}"
+
+%apphelp canopycover
+    This app provides an entrypoint to the canopycover tool

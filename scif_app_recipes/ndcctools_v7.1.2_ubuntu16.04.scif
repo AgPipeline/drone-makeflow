@@ -1,0 +1,79 @@
+%appinstall makeflow
+    # Install Makeflow
+    conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
+
+%apprun makeflow
+    bash -c 'cp -r /input/* /scif/data/odm/images/ \
+    && conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+        --jx \
+        --jx-args="${SCIF_APPROOT}/src/jx-args.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
+        "${SCIF_APPROOT}/src/workflow.jx" \
+    && [ ! -f "/scif/data/soilmask/canopycover_fileslist.json" ]; "${SCIF_APPROOT}/src/prep-canopy-cover.sh" \
+    && conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+        --jx \
+        --jx-args="${SCIF_APPROOT}/src/jx-args.json" \
+        --jx-args="/scif/data/soilmask/canopycover_fileslist.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/canopy-cover.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/canopy-cover.jx.batchlog" \
+        "${SCIF_APPROOT}/src/canopy-cover.jx" \
+    && cp -r /scif/data/soilmask/* /output/'
+
+%apphelp makeflow
+    This app provides an entrypoint to the makeflow tool
+
+%appinstall short_makeflow
+    # Install Makeflow
+    conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
+
+%apprun short_makeflow
+    bash -c 'conda run --prefix "/scif/apps/makeflow/conda" makeflow \
+        --jx \
+        --jx-args="/scif/apps/makeflow/src/jx-args.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
+        "/scif/apps/makeflow/src/short_workflow.jx" \
+    && [ ! -f "/scif/data/soilmask/canopycover_fileslist.json" ]; "/scif/apps/makeflow/src/prep-canopy-cover.sh" \
+    && conda run --prefix "/scif/apps/makeflow/conda" makeflow \
+        --jx \
+        --jx-args="/scif/apps/makeflow/src/jx-args.json" \
+        --jx-args="/scif/data/soilmask/canopycover_fileslist.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/canopy-cover.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/canopy-cover.jx.batchlog" \
+        "/scif/apps/makeflow/src/canopy-cover.jx"'
+
+%apphelp short_makeflow
+    This app provides an entrypoint to the non-ODM makeflow tool
+
+%appinstall clean
+
+%apprun clean
+    bash -c 'rm -r /scif/data/odm/images/* && rm -r /scif/data/soilmask/* && rm -r /output/*'
+
+%apphelp short_makeflow
+    This app removed all folder and files in the working folders - use with caution
+
+%appinstall jx2json
+    # Piggyback off the makeflow install
+
+%apprun jx2json
+    exec conda run --prefix "${SCIF_APPROOT_makeflow}/conda" jx2json \
+        --args "${SCIF_APPROOT_makeflow}/src/jx-args.json" \
+        --pretty \
+        "${SCIF_APPROOT_makeflow}/src/workflow.jx" > "${SCIF_APPDATA}/workflow.json" \
+
+%apphelp jx2json
+    This app provides an entrypoint to the jx2json tool
