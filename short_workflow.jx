@@ -5,12 +5,13 @@
      "ODM_WORKING_FOLDER": "/scif/data/odm",
      "SCIF_APPDATA_soilmask": "/scif/data/soilmask",
      "SCIF_APPDATA_plotclip": SCIF_APPDATA_odm + "/images",
-     "ORTHOMOSAIC_FILE": SCIF_APPDATA_odm + "/images/odm_orthophoto.tif",
+     "ORTHOMOSAIC_FILE": SCIF_APPDATA_odm + "/images/orthomosaic.tif",
      "SOILMASK_METADATA_FILE": SCIF_APPDATA_odm + "/images/experiment.yaml",
      "SOILMASK_WORKING_FOLDER": SCIF_APPDATA_soilmask,
-     "SOILMASK_FILE": SCIF_APPDATA_soilmask + "/odm_orthophoto_mask.tif",
+     "SOILMASK_FILE": SCIF_APPDATA_soilmask + "/orthomosaic_mask.tif",
      "PLOTCLIP_METADATA_FILE": SCIF_APPDATA_plotclip + "/experiment.yaml",
      "PLOTCLIP_WORKING_FOLDER": SCIF_APPDATA_soilmask,
+     "PLOTCLIP_SHAPEFILE": SCIF_APPDATA_plotclip + "/Season5_wheat_1row_Subplots.shp"
    },
   "rules": [
      {
@@ -28,14 +29,14 @@
        ]
      },
      {
-       "command": "scif run plotclip --metadata ${METADATA_FILE} --working_space ${WORKING_FOLDER} stereoTop ${INPUT_GEOTIFF}",
+       "command": "scif run plotclip --metadata ${METADATA_FILE} --working_space ${WORKING_FOLDER} --shapefile ${SHAPEFILE_FILE} stereoTop ${INPUT_GEOTIFF}",
        "environment": {
          "INPUT_GEOTIFF": SOILMASK_FILE,
          "METADATA_FILE": PLOTCLIP_METADATA_FILE,
          "WORKING_FOLDER": PLOTCLIP_WORKING_FOLDER,
-         "BETYDB_KEY": "9999999999999999999999999999999999999999",
-         "BETYDB_URL": "https://terraref.ncsa.illinois.edu/bety/",
-         "X": "scif run plotclip --metadata /scif/data/odm/images/experiment.yaml --working_space /scif/data/soilmask stereoTop /scif/data/soilmask/soilmask-output.tif"
+         "SHAPEFILE_FILE": PLOTCLIP_SHAPEFILE,
+#         "BETYDB_KEY": "9999999999999999999999999999999999999999",
+#         "BETYDB_URL": "https://terraref.ncsa.illinois.edu/bety/",
        },
        "inputs": [
          SOILMASK_FILE
