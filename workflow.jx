@@ -11,6 +11,8 @@
      "SOILMASK_METADATA_FILE": ODM_METADATA_FILE,
      "SOILMASK_FILE": SCIF_APPDATA_soilmask + "/orthomosaic_mask.tif",
      "PLOTCLIP_METADATA_FILE": ODM_METADATA_FILE,
+     "PLOTCLIP_WORKING_FOLDER": SCIF_APPDATA_soilmask,
+     "PLOTCLIP_SHAPEFILE": SCIF_APPDATA_plotclip + "/" + SHAPEFILE_NAME + ".shp"
    },
   "rules": [
      {
@@ -56,19 +58,20 @@
        ]
      },
      {
-       "command": "scif run plotclip --metadata ${METADATA_FILE} --working_space ${WORKING_FOLDER} stereoTop ${INPUT_GEOTIFF}",
+       "command": "scif run plotclip --metadata ${METADATA_FILE} --working_space ${WORKING_FOLDER} --shapefile ${SHAPEFILE_FILE} stereoTop ${INPUT_GEOTIFF}",
        "environment": {
          "INPUT_GEOTIFF": SOILMASK_FILE,
          "METADATA_FILE": PLOTCLIP_METADATA_FILE,
-         "WORKING_FOLDER": SCIF_APPDATA_soilmask,
-         "BETYDB_KEY": "9999999999999999999999999999999999999999",
-         "BETYDB_URL": "https://terraref.ncsa.illinois.edu/bety/",
+         "WORKING_FOLDER": PLOTCLIP_WORKING_FOLDER,
+         "SHAPEFILE_FILE": PLOTCLIP_SHAPEFILE,
+         "BETYDB_URL": BETYDB_URL,
+         "BETYDB_KEY": BETYDB_KEY,
        },
        "inputs": [
          SOILMASK_FILE
        ],
        "outputs": [
-          SCIF_APPDATA_plotclip + "/result.json"
+          PLOTCLIP_WORKING_FOLDER + "/result.json"
        ]
      }
   ]

@@ -153,5 +153,5 @@ COPY ./scif_app_recipes/canopycover_v0.0.1_ubuntu16.04.scif /opt/
 RUN scif install /opt/canopycover_v0.0.1_ubuntu16.04.scif
 
 FROM canopycover_scif as workflow
-COPY workflow.jx short_workflow.jx canopy-cover.jx prep-canopy-cover.sh jx-args.json /scif/apps/makeflow/src/
-RUN chmod a+x /scif/apps/makeflow/src/*.sh
+COPY workflow.jx short_workflow.jx canopy-cover.jx prep-canopy-cover.sh jx-args.json /scif/apps/odm_workflow/src/
+RUN chmod a+x /scif/apps/odm_workflow/src/*.sh
