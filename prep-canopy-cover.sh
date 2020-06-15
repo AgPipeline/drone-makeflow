@@ -1,4 +1,6 @@
 #/bin/bash
+ORTHOMOSAIC_NAME="${1}_mask.tif"
+echo "Orthomosaic name to look for: ${ORTHOMOSAIC_NAME}"
 clips=( "/scif/data/soilmask/*" )
 echo ${clips}
 
@@ -7,7 +9,7 @@ echo "{\"CANOPYCOVER_FILE_LIST\": [" >> "/scif/data/soilmask/canopycover_filesli
 sep=""
 for entry in ${clips[@]}
 do
-  possible="${entry}/orthomosaic_mask.tif"
+  possible="${entry}/${ORTHOMOSAIC_NAME}"
   echo "Checking possible ${possible}"
   if [ -f "${possible}" ]; then
     echo "${sep}{\"FILE\": \"${possible}\"," >> "/scif/data/soilmask/canopycover_fileslist.json"

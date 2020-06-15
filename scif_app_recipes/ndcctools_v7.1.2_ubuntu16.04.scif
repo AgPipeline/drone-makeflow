@@ -1,20 +1,22 @@
-%appinstall makeflow
+%appinstall odm_workflow
     # Install Makeflow
     conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
 
-%apprun makeflow
-    bash -c 'cp -r /input/* /scif/data/odm/images/ \
-    && conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+%apprun odm_workflow
+    bash -c 'cp -r /input/* /scif/data/odm/images/'
+    echo "{\"ORTHOMOSAIC_NAME\": \"${1}\",\"SHAPEFILE_NAME\": \"${2}\", \"BETYDB_URL\": \"${BETYDB_URL}\", \"BETYDB_KEY\": \"${BETYDB_KEY}\"}" > ${SCIF_APPDATA}/jx-params.json
+    bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
         --jx-args="${SCIF_APPROOT}/src/jx-args.json" \
+        --jx-args="${SCIF_APPDATA}/jx-params.json" \
         --log-verbose \
         --retry-count=1 \
         --change-directory="${SCIF_APPDATA}" \
         --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
         --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
-        "${SCIF_APPROOT}/src/workflow.jx" \
-    && [ ! -f "/scif/data/soilmask/canopycover_fileslist.json" ]; "${SCIF_APPROOT}/src/prep-canopy-cover.sh" \
-    && conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+        "${SCIF_APPROOT}/src/workflow.jx"'
+    [ ! -f "/scif/data/soilmask/canopycover_fileslist.json" ]; /scif/apps/makeflow/src/prep-canopy-cover.sh "${1}"
+    bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
         --jx-args="${SCIF_APPROOT}/src/jx-args.json" \
         --jx-args="/scif/data/soilmask/canopycover_fileslist.json" \
@@ -23,28 +25,30 @@
         --change-directory="${SCIF_APPDATA}" \
         --makeflow-log="${SCIF_APPDATA}/canopy-cover.jx.makeflowlog" \
         --batch-log="${SCIF_APPDATA}/canopy-cover.jx.batchlog" \
-        "${SCIF_APPROOT}/src/canopy-cover.jx" \
-    && cp -r /scif/data/soilmask/* /output/'
+        "${SCIF_APPROOT}/src/canopy-cover.jx"'
+    cp -r /scif/data/soilmask/* /output/
 
-%apphelp makeflow
+%apphelp odm_workflow
     This app provides an entrypoint to the makeflow tool
 
-%appinstall short_makeflow
+%appinstall short_workflow
     # Install Makeflow
     conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
 
-%apprun short_makeflow
-    bash -c 'conda run --prefix "/scif/apps/makeflow/conda" makeflow \
+%apprun short_workflow
+    echo "{\"ORTHOMOSAIC_NAME\": \"${1}\",\"SHAPEFILE_NAME\": \"${2}\", \"BETYDB_URL\": \"${BETYDB_URL}\", \"BETYDB_KEY\": \"${BETYDB_KEY}\"}" > ${SCIF_APPDATA}/jx-params.json
+    bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
         --jx-args="/scif/apps/makeflow/src/jx-args.json" \
+        --jx-args="${SCIF_APPDATA}/jx-params.json" \
         --log-verbose \
         --retry-count=1 \
         --change-directory="${SCIF_APPDATA}" \
         --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
         --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
-        "/scif/apps/makeflow/src/short_workflow.jx" \
-    && [ ! -f "/scif/data/soilmask/canopycover_fileslist.json" ]; "/scif/apps/makeflow/src/prep-canopy-cover.sh" \
-    && conda run --prefix "/scif/apps/makeflow/conda" makeflow \
+        "/scif/apps/makeflow/src/short_workflow.jx"'
+    [ ! -f "/scif/data/soilmask/canopycover_fileslist.json" ]; /scif/apps/makeflow/src/prep-canopy-cover.sh "${1}"
+    bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
         --jx-args="/scif/apps/makeflow/src/jx-args.json" \
         --jx-args="/scif/data/soilmask/canopycover_fileslist.json" \
@@ -55,15 +59,21 @@
         --batch-log="${SCIF_APPDATA}/canopy-cover.jx.batchlog" \
         "/scif/apps/makeflow/src/canopy-cover.jx"'
 
-%apphelp short_makeflow
-    This app provides an entrypoint to the non-ODM makeflow tool
+%apphelp short_workflow
+    This app provides an entrypoint to the non-ODM makeflow tool. Specify the TIFF orthomosaic file name
+    without its extension, followed by an optional name of the plot boundary shapefile, also without its
+    extension.
+    If a shapefile is not specified, be sure to define the BETYDB_URL and BETYDB_KEY environment variables
+    to point to the instance of BETYdb to use.
 
 %appinstall clean
 
 %apprun clean
-    bash -c 'rm -r /scif/data/odm/images/* && rm -r /scif/data/soilmask/* && rm -r /output/*'
+    bash -c 'rm -r /scif/data/soilmask/*'
+    bash -c 'if [ -d /input ]; then "rm -r /scif/data/odm/images/*"; fi;'
+    bash -c 'if [ -d /output ]; then "rm -r /output/*"; fi;'
 
-%apphelp short_makeflow
+%apphelp clean
     This app removed all folder and files in the working folders - use with caution
 
 %appinstall jx2json
