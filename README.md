@@ -29,8 +29,8 @@ In this example we're going to assume that the source image is named `orthomosai
 Step 1 involves copying the source files into a folder:
 ```bash
 mkdir ~/inputs
-cp my_ortho.tif ~/inputs
-cp my_shapefile.* ~/inputs
+cp orthomosaic.tif ~/inputs
+cp plot_shapes.* ~/inputs
 ```
 
 In step 2 we create an folder to hold the output of our processing:
