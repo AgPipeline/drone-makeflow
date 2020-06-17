@@ -32,7 +32,7 @@
       ]
     },
     {
-      "command": "docker run --rm --name odm_transformer -v \"${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}\" ${DOCKER_IMAGE} -d --metadata \"${METADATA}\" --working_space \"${WORKSPACE_DIR}\" ${DOCKER_RUN_PARAMS}",
+      "command": "docker run --rm -v \"${IMAGE_MOUNT_SOURCE}:${DOCKER_MOUNT_POINT}\" ${DOCKER_IMAGE} -d --metadata \"${METADATA}\" --working_space \"${WORKSPACE_DIR}\" ${DOCKER_RUN_PARAMS}",
       "environment": {
         "IMAGE_MOUNT_SOURCE": IMAGE_MOUNT_SOURCE,
         "DOCKER_MOUNT_POINT": DOCKER_MOUNT_POINT,

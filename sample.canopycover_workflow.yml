@@ -3,10 +3,11 @@
 configuration: {
   # Top level workflow folder
   working_space: /mnt/test/,
-  docker: {
-    # Named volume to use when running inside a docker container
-    volume: testing
-  },
+  # Named volume to use when running inside a docker container
+  docker_volume: testing,
+  # BETYdb information
+  betydb_url: 'http://mymachine:8000/',
+  betydb_key: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
 }
 
 # The workflow steps
