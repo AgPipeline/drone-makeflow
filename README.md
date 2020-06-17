@@ -26,11 +26,25 @@ _NOTE_: that the orthomosaic and shapefile names are file names without their ex
 
 In this example we're going to assume that the source image is named `orthomosaic.tif` and that the shapefile is named `plot_shapes.shp`.
 
+We will need one other file for this example, the `experiment.yaml` file containing some additional information.
+Copy the following content into the experiment.yaml file:
+```text
+%YAML 1.1
+---
+pipeline:
+    studyName: 'S7_20181011'
+    season: 'S7_20181011'
+    germplasmName: Sorghum bicolor
+    collectingSite: Maricopa
+    observationTimeStamp: '2018-10-11T13:01:02-08:00'
+```
+
 Step 1 involves copying the source files into a folder:
 ```bash
 mkdir ~/inputs
 cp orthomosaic.tif ~/inputs
 cp plot_shapes.* ~/inputs
+cp experiment.yaml ~/inputs
 ```
 
 In step 2 we create an folder to hold the output of our processing:
