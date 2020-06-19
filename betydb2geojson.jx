@@ -1,0 +1,20 @@
+{
+  "define": {
+     "SCIF_APPDATA_output": "/scif/data/soilmask"
+   },
+  "rules": [
+    {
+       "command": "betydb2geojson.py --betydb_url \"${BETYDB_URL}\" --betydb_key \"${BETYDB_KEY}\" --output_file \"${DEST_FILE}\"",
+       "environment": {
+         "BETYDB_URL": BETYDB_URL,
+         "BETYDB_KEY": BETYDB_KEY,
+         "DEST_FILE": SCIF_APPDATA_output + "/plots.json"
+       },
+       "inputs": [
+       ],
+       "outputs": [
+          SCIF_APPDATA_output + "/plots.json"
+       ]
+     }
+  ]
+}
