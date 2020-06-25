@@ -1,6 +1,6 @@
 {
   "define": {
-     "SCIF_APPDATA_odm": "/scif/data/odm",
+     "SCIF_APPDATA_odm": "/scif/data/odm_workflow",
      "CANOPYCOVER_METADATA_FILE": SCIF_APPDATA_odm + "/images/experiment.yaml",
    },
   "rules": [

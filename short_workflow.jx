@@ -1,8 +1,8 @@
 {
   "define": {
-     "SCIF_APPDATA_odm": "/scif/data/odm",
+     "SCIF_APPDATA_odm": "/scif/data/odm_workflow",
      "ODM_METADATA_FILE": SCIF_APPDATA_odm + "/images/experiment.yaml",
-     "ODM_WORKING_FOLDER": "/scif/data/odm",
+     "ODM_WORKING_FOLDER": "/scif/data/odm_workflow",
      "SCIF_APPDATA_soilmask": "/scif/data/soilmask",
      "SCIF_APPDATA_plotclip": SCIF_APPDATA_odm + "/images",
      "ORTHOMOSAIC_FILE": SCIF_APPDATA_odm + "/images/" + ORTHOMOSAIC_NAME + ".tif",
@@ -11,7 +11,7 @@
      "SOILMASK_FILE": SCIF_APPDATA_soilmask + "/" + ORTHOMOSAIC_NAME + "_mask.tif",
      "PLOTCLIP_METADATA_FILE": SCIF_APPDATA_plotclip + "/experiment.yaml",
      "PLOTCLIP_WORKING_FOLDER": SCIF_APPDATA_soilmask,
-     "PLOTCLIP_SHAPEFILE": SCIF_APPDATA_plotclip + "/" + SHAPEFILE_NAME + ".shp"
+     "PLOTCLIP_PLOTGEOMETRY_FILE": SCIF_APPDATA_soilmask + "/plots.json"
    },
   "rules": [
      {
@@ -29,17 +29,16 @@
        ]
      },
      {
-       "command": "scif run plotclip --metadata ${METADATA_FILE} --working_space ${WORKING_FOLDER} --shapefile ${SHAPEFILE_FILE} stereoTop ${INPUT_GEOTIFF}",
+       "command": "scif run plotclip --metadata ${METADATA_FILE} --working_space ${WORKING_FOLDER} stereoTop ${PLOTGEOMETRY_FILE} ${INPUT_GEOTIFF}",
        "environment": {
          "INPUT_GEOTIFF": SOILMASK_FILE,
          "METADATA_FILE": PLOTCLIP_METADATA_FILE,
          "WORKING_FOLDER": PLOTCLIP_WORKING_FOLDER,
-         "SHAPEFILE_FILE": PLOTCLIP_SHAPEFILE,
-         "BETYDB_URL": BETYDB_URL,
-         "BETYDB_KEY": BETYDB_KEY,
+         "PLOTGEOMETRY_FILE": PLOTCLIP_PLOTGEOMETRY_FILE
        },
        "inputs": [
-         SOILMASK_FILE
+         SOILMASK_FILE,
+         PLOTCLIP_PLOTGEOMETRY_FILE
        ],
        "outputs": [
           PLOTCLIP_WORKING_FOLDER + "/result.json"

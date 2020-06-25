@@ -1,6 +1,6 @@
 {
   "define": {
-     "SCIF_APPDATA_odm": "/scif/data/odm",
+     "SCIF_APPDATA_odm": "/scif/data/odm_workflow",
      "SCIF_APPDATA_soilmask": "/scif/data/soilmask",
      "SCIF_APPDATA_plotclip": "/scif/data/plotclip",
      "ODM_IMAGES_FOLDER": SCIF_APPDATA_odm + "/images",

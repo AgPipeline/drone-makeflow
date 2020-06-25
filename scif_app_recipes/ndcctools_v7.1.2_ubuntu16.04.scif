@@ -4,17 +4,17 @@
 
 %apprun odm_workflow
     bash -c 'cp -r /input/* /scif/data/odm/images/'
-    echo "{\"ORTHOMOSAIC_NAME\": \"${1}\",\"SHAPEFILE_NAME\": \"${2}\", \"BETYDB_URL\": \"${BETYDB_URL}\", \"BETYDB_KEY\": \"${BETYDB_KEY}\"}" > ${SCIF_APPDATA}/jx-params.json
+    echo "{\"ORTHOMOSAIC_NAME\": \"${1}\" }" > ${SCIF_APPDATA}/jx-params.json
     bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
-        --jx-args="${SCIF_APPROOT}/src/jx-args.json" \
+        --jx-args="/scif/apps/odm_workflow/src/jx-args.json" \
         --jx-args="${SCIF_APPDATA}/jx-params.json" \
         --log-verbose \
         --retry-count=1 \
         --change-directory="${SCIF_APPDATA}" \
         --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
         --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
-        "${SCIF_APPROOT}/src/workflow.jx"'
+        "/scif/apps/odm_workflow/src/short_workflow.jx"'
     [ ! -f "/scif/data/soilmask/canopycover_fileslist.json" ]; /scif/apps/makeflow/src/prep-canopy-cover.sh "${1}"
     bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
@@ -36,7 +36,8 @@
     conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
 
 %apprun short_workflow
-    echo "{\"ORTHOMOSAIC_NAME\": \"${1}\",\"SHAPEFILE_NAME\": \"${2}\", \"BETYDB_URL\": \"${BETYDB_URL}\", \"BETYDB_KEY\": \"${BETYDB_KEY}\"}" > ${SCIF_APPDATA}/jx-params.json
+    echo "{\"ORTHOMOSAIC_NAME\": \"${1}\" }" > ${SCIF_APPDATA}/jx-params.json
+    ${SCIF_APPROOT_odm_workflow}/src/generate_geojson.sh "${2}"
     bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
         --jx-args="/scif/apps/odm_workflow/src/jx-args.json" \
@@ -83,7 +84,28 @@
     exec conda run --prefix "${SCIF_APPROOT_makeflow}/conda" jx2json \
         --args "${SCIF_APPROOT_makeflow}/src/jx-args.json" \
         --pretty \
-        "${SCIF_APPROOT_makeflow}/src/workflow.jx" > "${SCIF_APPDATA}/workflow.json" \
+        "${SCIF_APPROOT_odm_workflow}/src/workflow.jx" > "${SCIF_APPDATA}/workflow.json" \
 
 %apphelp jx2json
     This app provides an entrypoint to the jx2json tool
+
+%appinstall betydb2geojson
+    # We install a virtual environment so we can get the versions we need
+    python3 -m venv --system-site-packages .venv
+    .venv/bin/python3 -m pip install --upgrade --no-cache-dir pip
+    .venv/bin/python3 -m pip install  --upgrade --no-cache-dir pygdal==2.2.3.3
+
+%apprun betydb2geojson
+    .venv/bin/python3 ${SCIF_APPROOT_odm_workflow}/src/betydb2geojson.py --betydb_url "${1}" ${SCIF_APPDATA_soilmask}/plots.json
+
+%apphelp betydb2geojson
+    This app provides a conversion from BETYdb site data to GeoJSON plot geometries
+
+%appinstall shp2geojson
+    # Use the main environment
+
+%apprun shp2geojson
+    ogr2ogr -f GeoJSON ${SCIF_APPDATA_soilmask}/plots.json "${SCIF_APPDATA_odm_workflow}/images/${1}"
+
+%apphelp shp2geojson
+    This app provides a conversion from a shapefile to GeoJSON plot geometries

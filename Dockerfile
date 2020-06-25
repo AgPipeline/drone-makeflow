@@ -2,6 +2,7 @@ FROM ubuntu:18.04 as base
 ENV DOCKER_IMAGE agpipeline/scif-drone-pipeline:1.3
 ENV DEBIAN_FRONTEND noninteractive
 WORKDIR /
+
 #Install dependencies
 RUN apt-get update -y \
     && apt-get install --no-install-recommends -y \
@@ -69,8 +70,10 @@ WORKDIR /
 
 
 FROM install_miniconda as base_scif
-RUN pip install scif \
-    && echo "Finished install scif"
+RUN pip install --upgrade --no-cache-dir scif \
+    && echo "Finished install of scif" \
+    && pip install --upgrade --no-cache-dir pygdal==2.2.3.5 \
+    && echo "Finished install of pygdal"
 ENTRYPOINT ["scif"]
 
 
@@ -153,5 +156,7 @@ COPY ./scif_app_recipes/canopycover_v0.0.1_ubuntu16.04.scif /opt/
 RUN scif install /opt/canopycover_v0.0.1_ubuntu16.04.scif
 
 FROM canopycover_scif as workflow
-COPY workflow.jx short_workflow.jx canopy-cover.jx prep-canopy-cover.sh jx-args.json /scif/apps/odm_workflow/src/
+COPY workflow.jx short_workflow.jx canopy-cover.jx betydb2geojson.py generate_geojson.sh prep-canopy-cover.sh jx-args.json /scif/apps/odm_workflow/src/
 RUN chmod a+x /scif/apps/odm_workflow/src/*.sh
+RUN chmod a+x /scif/apps/odm_workflow/src/generate_geojson.sh
+RUN chmod a+x /scif/apps/odm_workflow/src/betydb2geojson.py

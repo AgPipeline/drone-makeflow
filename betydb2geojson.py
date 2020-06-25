@@ -4,13 +4,11 @@
 
 import os
 import argparse
-import logging
 import json
 import requests
 from osgeo import ogr
 
 ENV_BETYDB_URL_NAME = 'BETYDB_URL'
-ENV_BETYDB_KEY_NAME = 'BETYDB_KEY'
 
 
 def add_arguments(parser: argparse.ArgumentParser) -> None:
@@ -20,20 +18,18 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     Return:
         No return is defined
     """
-    parser.add_argument("--betydb_url", help='the URL of BETYdb instance to query (defaults to ' + ENV_BETYDB_URL_NAME +\
+    parser.add_argument('--betydb_url', help='the URL of BETYdb instance to query (defaults to ' + ENV_BETYDB_URL_NAME +\
                                              ' environment variable)')
-    parser.add_argument("--betydb_key", help='the BETYdb key to use when querying (defaults to ' + ENV_BETYDB_KEY_NAME +\
-                                             ' environment variable)')
+    parser.add_argument('--filter', help='partial or full string filter for sitename values returned')
     parser.add_argument("output_file", help='the output file to write GeoJSON to')
 
 
-def query_betydb_experiments(betydb_url: str = None, betydb_key: str = None) -> str:
+def query_betydb_experiments(betydb_url: str = None) -> dict:
     """Queries BETYdb for experiment information
     Arguments:
         betydb_url: the url to query
-        betydb_key: the key to use when querying
     Return:
-        The JSON containing the names of the found plots as the keys with their associated geometry in WKT format as the value
+        The dict containing the names of the found plots as the keys with their associated geometry
     Exceptions:
         A RuntimeError is raised if the needed BETYdb access information is not available.
         Other exceptions may be thrown by the requests.get() or requests.raise_for_status() call
@@ -44,26 +40,25 @@ def query_betydb_experiments(betydb_url: str = None, betydb_key: str = None) -> 
     # Fill in missing values if we can
     if not betydb_url:
         betydb_url = os.getenv(ENV_BETYDB_URL_NAME, None)
-    if not betydb_key:
-        betydb_key = os.getenv(ENV_BETYDB_KEY_NAME, None)
-    if not betydb_url or not betydb_key:
-        raise RuntimeError("Unable to resolve BETYdb URL and key. Please ensure they're defined and try again.")
+    if not betydb_url:
+        raise RuntimeError("Unable to resolve BETYdb URL. Please ensure it's defined and try again.")
 
     # Make the call to get the experiment data
     url = betydb_url.rstrip('/') + '/api/v1/experiments'
-    params = {'key': betydb_key, 'associations_mode': 'full_info', 'limit': 'none'}
+    params = {'associations_mode': 'full_info', 'limit': 'none'}
 
-    req = requests.get(url, params=params, validate=False)
+    req = requests.get(url, params=params)
     req.raise_for_status()
     return req.json()
 
 
-def get_experiment_site_geometries(experiments_json: str) -> dict:
+def get_experiment_site_geometries(experiments_json: dict, site_filter: str = None) -> dict:
     """Returns all the found sites by name with their associated geometries as Well Known Text (WKT)
     Arguments:
         experiments_json: the JSON containing the experiment data retrieved from BETYdb
+        site_filter: optional filter string to apply on sitenames
     Return:
-        A dict with the found site names (plot names) as the keys with the WKT geometry as the values
+        A dict with the found site names (plot names) as the keys with the geometry as the values
     Exceptions:
         Raises RuntimeError if an expected key is not found in the passed in JSON
         Other exceptions can be raised by misconfigured JSON
@@ -71,16 +66,17 @@ def get_experiment_site_geometries(experiments_json: str) -> dict:
     plots = {}
 
     # Try loading the JSON
-    all_json = json.loads(experiments_json)
-    if 'data' not in all_json:
-        raise RuntimeError('Missing top-level "data" key from JSON: "%s"' % experiments_json)
+    if 'data' not in experiments_json:
+        raise RuntimeError('Missing top-level "data" key from JSON: "%s"' % str(experiments_json))
 
     # Find all the sites in all the returned experiments
-    for one_exp in all_json['data']:
+    for one_exp in experiments_json['data']:
         if 'experiment' in one_exp and 'sites' in one_exp['experiment']:
             for one_site in one_exp['experiment']['sites']:
                 if 'site' in one_site and 'geometry' in one_site['site'] and 'sitename' in one_site['site']:
-                    plots[one_site['site']['sitename']] = one_site['site']['geometry']
+                    # Check if there's a filter
+                    if not site_filter or site_filter in one_site['site']['sitename']:
+                        plots[one_site['site']['sitename']] = one_site['site']['geometry']
 
     return plots
 
@@ -115,10 +111,25 @@ def write_geojson(out_file, geojson_plots: dict) -> None:
     """
     preamble = '{"type": "FeatureCollection","name": "BETYdb Sites","features": ['
     postfix = ']}'
+    entry = {'type': 'Feature',
+             'properties': {
+                 'id': '',
+                 'observationUnitName': ''
+                },
+             'geometry': None
+             }
 
+    # Loop through the plots and write them out
+    separator = ''
+    plot_idx = 1
     out_file.write(preamble)
     for plot_name in geojson_plots:
-        out_file.write()
+        entry['properties']['id'] = str(plot_idx)
+        entry['properties']['observationUnitName'] = plot_name
+        entry['geometry'] = geojson_plots[plot_name]
+        out_file.write(separator + json.dumps(entry))
+        separator = ','
+        plot_idx += 1
     out_file.write(postfix)
 
 
@@ -136,8 +147,8 @@ def convert() -> None:
         raise RuntimeError("An output file must be specified to receive the GeoJSON plot information")
 
     # Get the list of sites (plots) from the JSON returned
-    experiments_json = query_betydb_experiments(args.betydb_url, args.betydb_key)
-    sites = get_experiment_site_geometries(experiments_json)
+    experiments_json = query_betydb_experiments(args.betydb_url)
+    sites = get_experiment_site_geometries(experiments_json, args.filter)
     if not sites:
         raise RuntimeError("No plots were found in the data returned from BETYdb")
 
@@ -145,7 +156,7 @@ def convert() -> None:
     geojson_plots = sites_to_geojson(sites)
 
     # Write out the GeoJSON
-    with open(args.output_file,'w') as out_file:
+    with open(args.output_file, 'w') as out_file:
         write_geojson(out_file, geojson_plots)
 
 
