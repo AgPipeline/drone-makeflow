@@ -5,7 +5,7 @@
    },
   "rules": [
     {
-       "command": "[  -f \"${FILE}\" ]; scif run canopycover --metadata \\\'\\\"\$\\\{METADATA_FILE\\\}\\\"\\\' --working_space \\\'\\\"\$\\\{WORKING_FOLDER\\\}\\\"\\\' \\\'\\\"\$\\\{INPUT_GEOTIFF\\\}\\\"\\\' ",
+       "command": "scif run canopycover --metadata \\\'\\\"\$\\\{METADATA_FILE\\\}\\\"\\\' --working_space \\\'\\\"\$\\\{WORKING_FOLDER\\\}\\\"\\\' \\\'\\\"\$\\\{INPUT_GEOTIFF\\\}\\\"\\\' ",
        "environment": {
          "INPUT_GEOTIFF": SOILMASK_INFO["FILE"],
          "METADATA_FILE": CANOPYCOVER_METADATA_FILE,
