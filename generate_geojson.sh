@@ -7,7 +7,7 @@ if [[ ${FILE_PARAM} == http* ]]; then
 elif [[ ${FILE_PARAM} == *.shp ]]; then
   scif run shp2geojson "${FILE_PARAM}"
 elif [[ ${FILE_PARAM} == *.json ]]; then
-  cp "${FILE_PARAM}" "${SCIF_APPDATA_soilmask}/plots.json"
+  cp "${FILE_PARAM}" "/output/plots.json"
 else
   echo "Unknown plot geometries file specified: \"${FILE_PARAM}\""
   exit -1

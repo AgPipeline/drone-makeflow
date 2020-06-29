@@ -7,11 +7,11 @@
      "SCIF_APPDATA_plotclip": SCIF_APPDATA_odm + "/images",
      "ORTHOMOSAIC_FILE": SCIF_APPDATA_odm + "/images/" + ORTHOMOSAIC_NAME + ".tif",
      "SOILMASK_METADATA_FILE": SCIF_APPDATA_odm + "/images/experiment.yaml",
-     "SOILMASK_WORKING_FOLDER": SCIF_APPDATA_soilmask,
-     "SOILMASK_FILE": SCIF_APPDATA_soilmask + "/" + ORTHOMOSAIC_NAME + "_mask.tif",
+     "SOILMASK_WORKING_FOLDER": OUTPUT_FOLDER,
+     "SOILMASK_OUTPUT_FILE": OUTPUT_FOLDER + "/" + ORTHOMOSAIC_NAME + "_mask.tif",
      "PLOTCLIP_METADATA_FILE": SCIF_APPDATA_plotclip + "/experiment.yaml",
-     "PLOTCLIP_WORKING_FOLDER": SCIF_APPDATA_soilmask,
-     "PLOTCLIP_PLOTGEOMETRY_FILE": SCIF_APPDATA_soilmask + "/plots.json"
+     "PLOTCLIP_WORKING_FOLDER": OUTPUT_FOLDER,
+     "PLOTCLIP_PLOTGEOMETRY_FILE": OUTPUT_FOLDER + "/plots.json"
    },
   "rules": [
      {
@@ -25,19 +25,19 @@
          ORTHOMOSAIC_FILE
        ],
        "outputs": [
-          SOILMASK_FILE
+          SOILMASK_OUTPUT_FILE
        ]
      },
      {
        "command": "scif run plotclip --metadata ${METADATA_FILE} --working_space ${WORKING_FOLDER} stereoTop ${PLOTGEOMETRY_FILE} ${INPUT_GEOTIFF}",
        "environment": {
-         "INPUT_GEOTIFF": SOILMASK_FILE,
+         "INPUT_GEOTIFF": SOILMASK_OUTPUT_FILE,
          "METADATA_FILE": PLOTCLIP_METADATA_FILE,
          "WORKING_FOLDER": PLOTCLIP_WORKING_FOLDER,
          "PLOTGEOMETRY_FILE": PLOTCLIP_PLOTGEOMETRY_FILE
        },
        "inputs": [
-         SOILMASK_FILE,
+         SOILMASK_OUTPUT_FILE,
          PLOTCLIP_PLOTGEOMETRY_FILE
        ],
        "outputs": [

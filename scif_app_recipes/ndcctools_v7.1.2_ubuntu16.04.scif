@@ -4,39 +4,7 @@
 
 %apprun odm_workflow
     bash -c 'cp -r /input/* /scif/data/odm/images/'
-    echo "{\"ORTHOMOSAIC_NAME\": \"${1}\" }" > ${SCIF_APPDATA}/jx-params.json
-    bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
-        --jx \
-        --jx-args="/scif/apps/odm_workflow/src/jx-args.json" \
-        --jx-args="${SCIF_APPDATA}/jx-params.json" \
-        --log-verbose \
-        --retry-count=1 \
-        --change-directory="${SCIF_APPDATA}" \
-        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
-        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
-        "/scif/apps/odm_workflow/src/short_workflow.jx"'
-    [ ! -f "/scif/data/soilmask/canopycover_fileslist.json" ]; /scif/apps/makeflow/src/prep-canopy-cover.sh "${1}"
-    bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
-        --jx \
-        --jx-args="${SCIF_APPROOT}/src/jx-args.json" \
-        --jx-args="/scif/data/soilmask/canopycover_fileslist.json" \
-        --log-verbose \
-        --retry-count=1 \
-        --change-directory="${SCIF_APPDATA}" \
-        --makeflow-log="${SCIF_APPDATA}/canopy-cover.jx.makeflowlog" \
-        --batch-log="${SCIF_APPDATA}/canopy-cover.jx.batchlog" \
-        "${SCIF_APPROOT}/src/canopy-cover.jx"'
-    cp -r /scif/data/soilmask/* /output/
-
-%apphelp odm_workflow
-    This app provides an entrypoint to the makeflow tool
-
-%appinstall short_workflow
-    # Install Makeflow
-    conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
-
-%apprun short_workflow
-    echo "{\"ORTHOMOSAIC_NAME\": \"${1}\" }" > ${SCIF_APPDATA}/jx-params.json
+    echo "{\"ORTHOMOSAIC_NAME\": \"${1}\", \"OUTPUT_#FOLDER\": \"/output\" }" > ${SCIF_APPDATA}/jx-params.json
     ${SCIF_APPROOT_odm_workflow}/src/generate_geojson.sh "${2}"
     bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
@@ -48,11 +16,44 @@
         --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
         --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
         "/scif/apps/odm_workflow/src/short_workflow.jx"'
-    [ ! -f "/scif/data/soilmask/canopycover_fileslist.json" ]; /scif/apps/odm_workflow/src/prep-canopy-cover.sh "${1}"
+    [ ! -f "/output/canopycover_fileslist.json" ]; /scif/apps/makeflow/src/prep-canopy-cover.sh "${1}"
+    bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+        --jx \
+        --jx-args="${SCIF_APPROOT}/src/jx-args.json" \
+        --jx-args="/output/canopycover_fileslist.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/canopy-cover.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/canopy-cover.jx.batchlog" \
+        "${SCIF_APPROOT}/src/canopy-cover.jx"'
+    cp -r /output/* /output/
+
+%apphelp odm_workflow
+    This app provides an entrypoint to the makeflow tool
+
+%appinstall short_workflow
+    # Install Makeflow
+    conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
+
+%apprun short_workflow
+    echo "{\"ORTHOMOSAIC_NAME\": \"${1}\", \"OUTPUT_FOLDER\": \"/output\"  }" > ${SCIF_APPDATA}/jx-params.json
+    ${SCIF_APPROOT_odm_workflow}/src/generate_geojson.sh "${2}"
     bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
         --jx-args="/scif/apps/odm_workflow/src/jx-args.json" \
-        --jx-args="/scif/data/soilmask/canopycover_fileslist.json" \
+        --jx-args="${SCIF_APPDATA}/jx-params.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
+        "/scif/apps/odm_workflow/src/short_workflow.jx"'
+    [ ! -f "/output/canopycover_fileslist.json" ]; /scif/apps/odm_workflow/src/prep-canopy-cover.sh "${1}"
+    bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+        --jx \
+        --jx-args="/scif/apps/odm_workflow/src/jx-args.json" \
+        --jx-args="/output/canopycover_fileslist.json" \
         --log-verbose \
         --retry-count=1 \
         --change-directory="${SCIF_APPDATA}" \
@@ -61,18 +62,15 @@
         "/scif/apps/odm_workflow/src/canopy-cover.jx"'
 
 %apphelp short_workflow
-    This app provides an entrypoint to the non-ODM makeflow tool. Specify the TIFF orthomosaic file name
-    without its extension, followed by an optional name of the plot boundary shapefile, also without its
-    extension.
-    If a shapefile is not specified, be sure to define the BETYDB_URL and BETYDB_KEY environment variables
-    to point to the instance of BETYdb to use.
+    This app provides an entrypoint to the non-ODM (OpenDroneMap) makeflow app. Specify the TIFF orthomosaic file name
+    without its extension, followed by a plot boundary shapefile, BETYDB_URL, or GeoJSON file.
 
 %appinstall clean
 
 %apprun clean
-    bash -c 'rm -r /scif/data/soilmask/*'
+    bash -c 'rm -r /output/*'
     bash -c 'if [ -d /input ]; then "rm -r /scif/data/odm/images/*"; fi;'
-    bash -c 'if [ -d /output ]; then "rm -r /output/*"; fi;'
+    #bash -c 'if [ -d /output ]; then "rm -r /output/*"; fi;'
 
 %apphelp clean
     This app removed all folder and files in the working folders - use with caution
@@ -96,7 +94,7 @@
     .venv/bin/python3 -m pip install  --upgrade --no-cache-dir pygdal==2.2.3.3
 
 %apprun betydb2geojson
-    .venv/bin/python3 ${SCIF_APPROOT_odm_workflow}/src/betydb2geojson.py --betydb_url "${1}" ${SCIF_APPDATA_soilmask}/plots.json
+    .venv/bin/python3 ${SCIF_APPROOT_odm_workflow}/src/betydb2geojson.py --betydb_url "${1}" /output/plots.json
 
 %apphelp betydb2geojson
     This app provides a conversion from BETYdb site data to GeoJSON plot geometries
@@ -105,7 +103,7 @@
     # Use the main environment
 
 %apprun shp2geojson
-    ogr2ogr -f GeoJSON ${SCIF_APPDATA_soilmask}/plots.json "${SCIF_APPDATA_odm_workflow}/images/${1}"
+    ogr2ogr -f GeoJSON /output/plots.json "${SCIF_APPDATA_odm_workflow}/images/${1}"
 
 %apphelp shp2geojson
     This app provides a conversion from a shapefile to GeoJSON plot geometries
