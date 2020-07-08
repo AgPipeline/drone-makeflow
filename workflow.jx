@@ -23,6 +23,8 @@
          "DOCKER_RUN_PARAMS": "/scif_input/images",
          "METADATA_FILE": "/scif_input/images/experiment.yaml",
          "WORKING_FOLDER": "/scif_output",
+         "INPUT_VOLUME": INPUT_VOLUME,
+         "OUTPUT_VOLUME": OUTPUT_VOLUME,
        },
        "inputs": [
        ],

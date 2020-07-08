@@ -4,7 +4,7 @@
 
 %apprun odm_workflow
     bash -c 'cp -r /input/* /scif/data/odm/images/'
-    echo "{\"ORTHOMOSAIC_NAME\": \"${1}\", \"OUTPUT_#FOLDER\": \"/output\" }" > ${SCIF_APPDATA}/jx-params.json
+    echo "{\"ORTHOMOSAIC_NAME\": \"${1}\", \"OUTPUT_FOLDER\": \"/output\", \"INPUT_VOLUME\": \"${3}. \"OUTPUT_VOLUME\": \"${4}\" }" > ${SCIF_APPDATA}/jx-params.json
     ${SCIF_APPROOT_odm_workflow}/src/generate_geojson.sh "${2}"
     bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
@@ -31,6 +31,9 @@
 
 %apphelp odm_workflow
     This app provides an entrypoint to the makeflow tool
+
+    Prepare files:
+    docker run --rm -v `pwd`/test/images:/images -v scif_input:/input --entrypoint bash test -c 'cp /images/* /input'
 
 %appinstall short_workflow
     # Install Makeflow
