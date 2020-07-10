@@ -3,9 +3,8 @@
     conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
 
 %apprun odm_workflow
-    bash -c 'cp -r /input/* /scif/data/odm/images/'
-    echo "{\"ORTHOMOSAIC_NAME\": \"${1}\", \"OUTPUT_FOLDER\": \"/output\", \"INPUT_VOLUME\": \"${3}. \"OUTPUT_VOLUME\": \"${4}\" }" > ${SCIF_APPDATA}/jx-params.json
-    ${SCIF_APPROOT_odm_workflow}/src/generate_geojson.sh "${2}"
+    echo "{\"INPUT_IMAGE_FOLDER\": \"${INPUT_IMAGE_FOLDER}\", \"OUTPUT_FOLDER\": \"/output\", \"INPUT_VOLUME\": \"${2}\", \"OUTPUT_VOLUME\": \"${3}\" }" > ${SCIF_APPDATA}/jx-params.json
+    ${SCIF_APPROOT_odm_workflow}/src/generate_geojson.sh "${1}" "${SCIF_APPDATA_odm_workflow}/plots.json"
     bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
         --jx-args="/scif/apps/odm_workflow/src/jx-args.json" \
@@ -15,8 +14,8 @@
         --change-directory="${SCIF_APPDATA}" \
         --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
         --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
-        "/scif/apps/odm_workflow/src/short_workflow.jx"'
-    [ ! -f "/output/canopycover_fileslist.json" ]; /scif/apps/makeflow/src/prep-canopy-cover.sh "${1}"
+        "/scif/apps/odm_workflow/src/workflow.jx"'
+    [ ! -f "/output/canopycover_fileslist.json" ]; /scif/apps/odm_workflow/src/prep-canopy-cover.sh "orthomosaic"
     bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
         --jx-args="${SCIF_APPROOT}/src/jx-args.json" \
@@ -97,7 +96,7 @@
     .venv/bin/python3 -m pip install  --upgrade --no-cache-dir pygdal==2.2.3.3
 
 %apprun betydb2geojson
-    .venv/bin/python3 ${SCIF_APPROOT_odm_workflow}/src/betydb2geojson.py --betydb_url "${1}" /output/plots.json
+    .venv/bin/python3 ${SCIF_APPROOT_odm_workflow}/src/betydb2geojson.py --betydb_url "${1}" "${2}"
 
 %apphelp betydb2geojson
     This app provides a conversion from BETYdb site data to GeoJSON plot geometries
@@ -106,7 +105,7 @@
     # Use the main environment
 
 %apprun shp2geojson
-    ogr2ogr -f GeoJSON /output/plots.json "${SCIF_APPDATA_odm_workflow}/images/${1}"
+    ogr2ogr -f GeoJSON "${2}" "${SCIF_APPDATA_odm_workflow}/images/${1}"
 
 %apphelp shp2geojson
     This app provides a conversion from a shapefile to GeoJSON plot geometries
