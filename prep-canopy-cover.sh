@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 ORTHOMOSAIC_NAME="${1}_mask.tif"
 OUTPUT_FOLDER="/output"
 echo "Orthomosaic name to look for: ${ORTHOMOSAIC_NAME}"
