@@ -16,10 +16,18 @@ PLOT_SHAPE=""
 for ONE_FILE in `find "${WORKING_DIR}" -type f`
 do
   case "${ONE_FILE: -4}" in
-  ".tif" | ".tiff")
+  ".tif")
     SOURCE_IMAGE="${ONE_FILE}"
     ;;
-  ".shp" | ".json")
+  ".shp")
+    PLOT_SHAPE=${ONE_FILE#"$(dirname ${ONE_FILE})/"}
+    ;;
+  esac
+  case "${ONE_FILE: -5}" in
+  ".tiff")
+    SOURCE_IMAGE="${ONE_FILE}"
+    ;;
+  ".json")
     PLOT_SHAPE=${ONE_FILE#"$(dirname ${ONE_FILE})/"}
     ;;
   esac
