@@ -10,5 +10,5 @@ elif [[ ${FILE_PARAM} == *.json ]]; then
   cp "${FILE_PARAM}" "/output/plots.json"
 else
   echo "Unknown plot geometries file specified: \"${FILE_PARAM}\""
-  exit -1
+  exit 1
 fi
