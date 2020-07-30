@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 FILE_PARAM="${1}"
 
