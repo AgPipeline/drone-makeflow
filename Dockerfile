@@ -23,7 +23,7 @@ RUN apt-get update -y \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install Docker
-RUN apt-get update && \
+RUN apt-get update -y && \
     apt-get install -y --reinstall systemd && \
     apt-get remove -y docker docker-engine docker.io containerd runc && \
     apt-get install -y --no-install-recommends \
