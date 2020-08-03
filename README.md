@@ -15,7 +15,7 @@ It can be used in the processing pipeline as a source of plot geometry for clipp
 This is the default format for specifying plot geometries.
 
 * Scientific Filesystem <a name="scif" />
-We use the [Scientific Filesystem](https://sci-f.github.io/) to organize our applications, provide ease of execution, and to assist in reproducability.
+We use the [Scientific Filesystem](https://sci-f.github.io/) to organize our applications, provide ease of execution, and to assist in reproducibility.
 
 * Shapefile <a name="shapefile_def" />
 In this document we use the term "shapefile" to refer to all the files ending in `.shp`, `.shx`, `.dbf`, and `.prj` that have the same name.
@@ -32,7 +32,9 @@ We will first present the steps and then provide an example.
 
 _NOTE_: that the orthomosaic must be the file name without any extensions; in other words, leave off the `.tif` when specifying it on the Docker command line.
 
-#### For example: <a name="om_can_shp_example" />
+**For example:**
+
+The files mentioned in this section can be [downloaded](https://drive.google.com/file/d/1U-P4J2OcrNOkaLi6xCUblXOFet7V6raf/view?usp=sharing)
 
 In this example we're going to assume that the source image is named `orthomosaic.tif` and that we're using a shapefile named `plot_shapes.shp`.
 

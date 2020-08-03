@@ -15,5 +15,5 @@ elif [[ ${FILE_PARAM} == *.json ]]; then
   cp "${SCIF_APPDATA_odm_workflow}/images/${FILE_PARAM}" "${DESTINATION_FILE}"
 else
   echo "Unknown plot geometries file specified: \"${FILE_PARAM}\""
-  exit -1
+  exit 1
 fi
