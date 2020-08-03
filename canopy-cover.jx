@@ -1,22 +1,22 @@
 {
   "define": {
-     "SCIF_APPDATA_odm": "/scif/data/odm",
+     "SCIF_APPDATA_odm": "/scif/data/odm_workflow",
      "CANOPYCOVER_METADATA_FILE": SCIF_APPDATA_odm + "/images/experiment.yaml",
    },
   "rules": [
     {
-       "command": "[  -f \"${FILE}\" ]; scif run canopycover --metadata \\\'\\\"\$\\\{METADATA_FILE\\\}\\\"\\\' --working_space \\\'\\\"\$\\\{WORKING_FOLDER\\\}\\\"\\\' \\\'\\\"\$\\\{INPUT_GEOTIFF\\\}\\\"\\\' ",
+       "command": "scif run canopycover --metadata \\\'\\\"\$\\\{METADATA_FILE\\\}\\\"\\\' --working_space \\\'\\\"\$\\\{WORKING_FOLDER\\\}\\\"\\\' \\\'\\\"\$\\\{INPUT_GEOTIFF\\\}\\\"\\\' ",
        "environment": {
-         "INPUT_GEOTIFF": SOILMASK_INFO["FILE"],
+         "INPUT_GEOTIFF": PLOT_INFO["FILE"],
          "METADATA_FILE": CANOPYCOVER_METADATA_FILE,
-         "WORKING_FOLDER": SOILMASK_INFO["DIR"],
+         "WORKING_FOLDER": PLOT_INFO["DIR"],
        },
        "inputs": [
-         SOILMASK_INFO["FILE"]
+         PLOT_INFO["FILE"]
        ],
        "outputs": [
-          SOILMASK_INFO["DIR"] + "/canopycover.csv"
+          PLOT_INFO["DIR"] + "/canopycover.csv"
        ]
-     } for SOILMASK_INFO in CANOPYCOVER_FILE_LIST
+     } for PLOT_INFO in CANOPYCOVER_FILE_LIST
   ]
 }

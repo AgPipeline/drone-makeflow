@@ -1,6 +1,6 @@
 %appinstall plotclip
     # Download plotclip code. In the future use pip/conda install.
-    wget -O plotclip.tar.gz https://github.com/Chris-Schnaufer/transformer-plotclip/files/4618308/plotclip.tar.gz
+    wget -O plotclip.tar.gz https://github.com/Chris-Schnaufer/transformer-plotclip/files/4839597/plotclip.tar.gz
     tar xvf plotclip.tar.gz
     mv transformer-plotclip src
 
@@ -10,15 +10,18 @@
     .venv/bin/python3 -m pip install --upgrade --no-cache-dir -r "${PWD}/src/requirements.txt"
     .venv/bin/python3 -m pip install  --upgrade --no-cache-dir pyyaml pygdal==2.2.3.3 piexif
 
+    .venv/bin/python3 -m pip install  --upgrade --no-cache-dir laspy influxdb utm pygdal==2.2.3.5 matplotlib Pillow
+    .venv/bin/python3 -m pip install -i https://test.pypi.org/simple/ --upgrade --no-cache-dir agpypeline
+
     # Add example Docker command to SCIF app help section
     test -z $DOCKER_IMAGE && DOCKER_IMAGE="agpipeline/plotclip:latest"
     echo "\n\nExample Docker command: docker run $DOCKER_IMAGE run plotclip\n" >> "${PWD}/scif/runscript.help"
 
-    # Generate remainder of SCIF app help section by running: src/main.py --help
-    .venv/bin/python3 src/entrypoint.py --help >> "${PWD}/scif/runscript.help"
+    # Generate remainder of SCIF app help section by running main script
+    .venv/bin/python3 src/plotclip.py --help >> "${PWD}/scif/runscript.help"
 
 %apprun plotclip
-    .venv/bin/python3 src/entrypoint.py "${@}"
+    .venv/bin/python3 src/plotclip.py "${@}"
 
 %apphelp plotclip
     This app provides an entrypoint to the plotclip tool

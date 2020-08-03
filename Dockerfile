@@ -2,6 +2,7 @@ FROM ubuntu:18.04 as base
 ENV DOCKER_IMAGE agpipeline/scif-drone-pipeline:1.3
 ENV DEBIAN_FRONTEND noninteractive
 WORKDIR /
+
 #Install dependencies
 RUN apt-get update -y \
     && apt-get install --no-install-recommends -y \
@@ -47,9 +48,9 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 
+# Install base for running workflows
 FROM base as download_miniconda
 RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /root/miniconda.sh
-
 
 FROM base as install_miniconda
 WORKDIR /root
@@ -69,74 +70,19 @@ WORKDIR /
 
 
 FROM install_miniconda as base_scif
-RUN pip install scif \
-    && echo "Finished install scif"
+RUN pip install --upgrade --no-cache-dir scif \
+    && echo "Finished install of scif" \
+    && pip install --upgrade --no-cache-dir pygdal==2.2.3.5 \
+    && echo "Finished install of pygdal"
 ENTRYPOINT ["scif"]
-
-
-#FROM base_scif as odm_base
-## Env variables
-#COPY --from=opendronemap/odm:0.9.1 /code /code
-#RUN add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable \
-#    && apt-get update -y \
-#    && apt-get install --no-install-recommends -y build-essential \
-#         gdal-bin \
-#         git \
-#         libatlas-base-dev \
-#         libavcodec-dev \
-#         libavformat-dev \
-#         libboost-date-time-dev \
-#         libboost-filesystem-dev \
-#         libboost-iostreams-dev \
-#         libboost-log-dev \
-#         libboost-python-dev \
-#         libboost-regex-dev \
-#         libboost-thread-dev \
-#         libeigen3-dev \
-#         libflann-dev \
-#         libgdal-dev \
-#         libgeotiff-dev \
-#         libgoogle-glog-dev \
-#         libgtk2.0-dev \
-#         libjasper-dev \
-#         libjpeg-dev \
-#         libjsoncpp-dev \
-#         liblapack-dev \
-#         liblas-bin \
-#         libpng-dev \
-#         libproj-dev \
-#         libsuitesparse-dev \
-#         libswscale-dev \
-#         libtbb2 \
-#         libtbb-dev \
-#         libtiff-dev \
-#         libvtk6-dev \
-#         libxext-dev \
-#         python-dev \
-#         python-gdal \
-#         python3-gdal \
-#         python-matplotlib \
-#         python-pip \
-#         python-software-properties \
-#         python-wheel \
-#         software-properties-common \
-#         swig2.0 \
-#         grass-core \
-#         libssl-dev \
-#         libpython2.7-dev \
-#         python3.5-dev \
-#    && apt-get remove libdc1394-22-dev \
-#    && apt-get clean \
-#    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
 ENV C_INCLUDE_PATH /usr/include/gdal
 
-#FROM odm_base as odm_scif
+# Install the apps
 FROM base_scif as odm_scif
 COPY ./scif_app_recipes/opendronemap_v0.9.1_ubuntu16.04.scif  /opt/
 RUN scif install /opt/opendronemap_v0.9.1_ubuntu16.04.scif
-
 
 FROM odm_scif as combined_scif
 COPY ./scif_app_recipes/ndcctools_v7.1.2_ubuntu16.04.scif  /opt/
@@ -153,5 +99,7 @@ COPY ./scif_app_recipes/canopycover_v0.0.1_ubuntu16.04.scif /opt/
 RUN scif install /opt/canopycover_v0.0.1_ubuntu16.04.scif
 
 FROM canopycover_scif as workflow
-COPY workflow.jx short_workflow.jx canopy-cover.jx prep-canopy-cover.sh jx-args.json /scif/apps/makeflow/src/
-RUN chmod a+x /scif/apps/makeflow/src/*.sh
+COPY workflow.jx short_workflow.jx canopy-cover.jx betydb2geojson.py generate_geojson.sh prep-canopy-cover.sh /scif/apps/odm_workflow/src/
+RUN chmod a+x /scif/apps/odm_workflow/src/*.sh
+RUN chmod a+x /scif/apps/odm_workflow/src/generate_geojson.sh
+RUN chmod a+x /scif/apps/odm_workflow/src/betydb2geojson.py
