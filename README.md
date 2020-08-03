@@ -79,6 +79,7 @@ The CSV files both contain much of the same information.
 The file with "geostreams" in its name can be uploaded to TERRAREF's Geostreams database.  
 
 ### Canopy Cover: OpenDroneMap and plot boundaries <a name="opendm_can_shp" />
+
 The following steps are used when wanting to use OpenDroneMap (ODM) to create the Orthomosaic image that's then used to create the canopy cover values.
 As with the [previous example](#om_can_shp) we will be listing the steps and then providing an example.
 
