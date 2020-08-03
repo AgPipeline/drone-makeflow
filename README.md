@@ -33,6 +33,7 @@ We will first present the steps and then provide an example.
 _NOTE_: that the orthomosaic must be the file name without any extensions; in other words, leave off the `.tif` when specifying it on the Docker command line.
 
 **For example:**
+The files mentioned in this section can be [downloaded](https://drive.google.com/file/d/1U-P4J2OcrNOkaLi6xCUblXOFet7V6raf/view?usp=sharing)
 
 The files mentioned in this section can be [downloaded](https://drive.google.com/file/d/1U-P4J2OcrNOkaLi6xCUblXOFet7V6raf/view?usp=sharing)
 
