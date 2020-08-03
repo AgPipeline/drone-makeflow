@@ -1,9 +1,11 @@
 # Makeflow for Drone Processing Pipeline
 
 ## Running the container
+
 This section contains different ways of executing an existing container.
 
 ### Terms
+
 Here are the definition of some of the terms we use with links to additional information
 
 * BETYdb <a name="betydb" />
@@ -22,6 +24,7 @@ In this document we use the term "shapefile" to refer to all the files ending in
 It can be used to specify geographic information and shapes associated with plot geometries.
 
 ### Canopy Cover: Orthomosaic and plot boundaries <a name="om_can_shp" />
+
 The following steps are used to generate plot-level canopy cover values for a georeferenced orthomosaic image and plot boundaries using geographic information.
 We will first present the steps and then provide an example.
 
@@ -83,8 +86,8 @@ The file with "geostreams" in its name can be uploaded to TERRAREF's Geostreams 
 The following steps are used when wanting to use OpenDroneMap (ODM) to create the Orthomosaic image that's then used to create the canopy cover values.
 As with the [previous example](#om_can_shp) we will be listing the steps and then providing an example.
 
-_NOTE_: the SciF Docker image uses _Docker siblings_ to run the OpenDroneMap application.
-If you are not comfortable with this approach, you shouldn't use this workflow.
+_NOTE_: the SciF Docker image uses Docker sibling containers to run the OpenDroneMap application.
+Please read our section on [Docker Sibling Containers](#docker_sibling_containers) below to be informed of potential risks with this approach.
 
 1. Create two named Docker volumes to use for processing data; one for input files and one for output files - the same volume can be used for both if desired
 2. Copy the source drone images into a folder
@@ -164,6 +167,7 @@ docker run --rm -v my_input:/input -v my_output:/output --entrypoint bash agdron
 ```
 
 ### Clean
+
 By executing the [scif](#scif) app named `clean` it's possible to clean up the output folder and other generated files.
 It's recommended, but not necessary, to run the clean app between processing runs by either running this command or through other means.
 
@@ -175,6 +179,7 @@ docker run --rm -v ~/inputs:/scif/data/odm/images -v ~/outputs:/scif/data/soilma
 ```
 
 ## Build the container
+
 This section describes how the Docker container could be built.
 Please refer to the [Docker](https://www.docker.com/) documentation for more information on building Docker containers.
 
@@ -182,3 +187,18 @@ Please refer to the [Docker](https://www.docker.com/) documentation for more inf
 cp jx-args.json.example jx-args.json
 docker build --progress=plain -t agdrone/canopycover-shape-workflow:latest .
 ```
+
+## Docker Sibling Containers
+
+Sibling containers is a technique for having one Docker container start another Docker container to perform some work.
+There are a variety of instances where using sibling containers can be desirable, but typically it's used when there's an existing Docker image available and a determination has been made that using other approaches is not desirable or, perhaps, possible.
+
+The following links provide additional information on sibling containers:
+* https://medium.com/@andreacolangelo/sibling-docker-container-2e664858f87a
+* https://www.develves.net/blogs/asd/2016-05-27-alternative-to-docker-in-docker/
+
+**Security Risk**
+
+One of the consequences of using sibling containers is that the second container needs to be started with the `root` user due to technical considerations.
+Because of this need, using sibling containers can be considered a security risk.
+The severity of this risk dependent upon the execution environment and what systems the siblings have access to.
