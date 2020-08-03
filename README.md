@@ -35,7 +35,6 @@ _NOTE_: that the orthomosaic must be the file name without any extensions; in ot
 **For example:**
 The files mentioned in this section can be [downloaded](https://drive.google.com/file/d/1U-P4J2OcrNOkaLi6xCUblXOFet7V6raf/view?usp=sharing)
 
-The files mentioned in this section can be [downloaded](https://drive.google.com/file/d/1U-P4J2OcrNOkaLi6xCUblXOFet7V6raf/view?usp=sharing)
 
 In this example we're going to assume that the source image is named `orthomosaic.tif` and that we're using a shapefile named `plot_shapes.shp`.
 
