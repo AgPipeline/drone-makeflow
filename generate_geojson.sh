@@ -12,7 +12,7 @@ if [[ ${FILE_PARAM} == http* ]]; then
 elif [[ ${FILE_PARAM} == *.shp ]]; then
   scif run shp2geojson "${FILE_PARAM}" "${DESTINATION_FILE}"
 elif [[ ${FILE_PARAM} == *.json ]]; then
-  cp "${FILE_PARAM}" "${DESTINATION_FILE}"
+  cp "${SCIF_APPDATA_odm_workflow}/images/${FILE_PARAM}" "${DESTINATION_FILE}"
 else
   echo "Unknown plot geometries file specified: \"${FILE_PARAM}\""
   exit -1
