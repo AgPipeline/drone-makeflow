@@ -101,7 +101,8 @@ Please read our section on [Docker Sibling Containers](#docker_sibling_container
 
 #### For example: <a name="opendm_can_shp_example" />
 
-In this example we're going to assume that we're using a shapefile named `plot_shapes.shp`, and that we have our drone images in a folder named `~/IMG`.
+In this example we're going to assume that we're using a shapefile named `plot_shapes.shp`, and that we have our drone images in a folder named `/IMG`.
+You can download a sample dataset of files with names corresponding to those listed here from [Google Drive](https://drive.google.com/file/d/1kCoi84HWWUNQPFYMkd0Ob-ByAh6YGo5d/view?usp=sharing).
 
 We will need one other file for this example, the `experiment.yaml` file containing some additional information.
 Copy the following content into the experiment.yaml file:
@@ -125,41 +126,41 @@ docker volume create my_output
 
 Step 2 involves copying the drone images into a folder:
 ```bash
-mkdir -p ~/input
-cp ~/IMG/* ~/input/
+mkdir -p /inputs
+cp ~/IMG/* /inputs/
 ```
 
 Step 3 copies the optional shapefile files into the same folder as the drone images:
 ```bash
-cp ~/plot_shapes.* ~/input/
+cp ~/plot_shapes.* /inputs/
 ``` 
 
 In step 4 we copy the experiment.yaml file into the same folder as the drone images:
 ```bash
-cp experiment.yaml ~/input/
+cp experiment.yaml /inputs/
 ``` 
 
 In step 5 we copy the source files onto the input named volume:
 ```bash
-docker run --rm -v ~/inputs:/sources -v my_input:/input --entrypoint bash agdrone/canopycover-workflow:latest -c 'cp /sources/* /input/'
+docker run --rm -v /inputs:/sources -v my_input:/input --entrypoint bash agdrone/canopycover-workflow:latest -c 'cp /sources/* /input/'
 ``` 
 
 In step 6 we create a local folder to hold the output from processing:
 ```bash
-mkdir -p ~/output
+mkdir -p /output
 ```
 
 In step 7 we run the workflow to generate the orothomosaic image using ODM (OrthoDroneMap) and calculate plot-level canopy cover:
 ```bash
-docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v ~/inputs:/scif/data/odm/images -v scif_output:/output -e INPUT_VOLUME=my_input -e OUTPUT_VOLUME=my_output -e "INPUT_IMAGE_FOLDER=/images" -e "OUTPUT_FOLDER=/output" agdrone/canopycover-workflow:latest plot_shapes.shp my_input my_output
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v /inputs:/scif/data/odm/images -v scif_output:/output -e INPUT_VOLUME=my_input -e OUTPUT_VOLUME=my_output -e "INPUT_IMAGE_FOLDER=/images" -e "OUTPUT_FOLDER=/output" agdrone/canopycover-workflow:latest run odm_workflow plot_shapes.shp my_input my_output
 ```
 and we wait until it's finished.
 
 In step 8 we copy the results off the named output volume to our local folder:
 ```bash
-docker run --rm -v ~/output:/results -v my_output:/output --entrypoint bash agdrone/canopycover-workflow:latest -c 'cp -r /output/* /results/'
+docker run --rm -v /output:/results -v my_output:/output --entrypoint bash agdrone/canopycover-workflow:latest -c 'cp -r /output/* /results/'
 ```
-The results of the processing are now in the `~/output` folder.
+The results of the processing are now in the `/output` folder.
 
 Finally, in step 9 we clean up the named volumes by deleting everything on them:
 ```bash
