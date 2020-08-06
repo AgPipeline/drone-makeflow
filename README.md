@@ -101,8 +101,14 @@ Please read our section on [Docker Sibling Containers](#docker_sibling_container
 
 #### For example: <a name="opendm_can_shp_example" />
 
+You can download a sample dataset of files (archived) with names corresponding to those listed here from CyVerse using the following command.
+Be sure to replace **<username** and **<password>** with your CyVerse username and password.
+```bash
+curl -X GET -u '<username>:<password>>' https://data.cyverse.org/dav/iplant/projects/aes/cct/diag/sample-data/scif_odm_test_data.tar.gz
+```
+
+
 In this example we're going to assume that we're using a shapefile named `plot_shapes.shp`, and that we have our drone images in a folder named `/IMG`.
-You can download a sample dataset of files with names corresponding to those listed here from [Google Drive](https://drive.google.com/file/d/1kCoi84HWWUNQPFYMkd0Ob-ByAh6YGo5d/view?usp=sharing).
 
 We will need one other file for this example, the `experiment.yaml` file containing some additional information.
 Copy the following content into the experiment.yaml file:
