@@ -104,7 +104,9 @@ Please read our section on [Docker Sibling Containers](#docker_sibling_container
 You can download a sample dataset of files (archived) with names corresponding to those listed here from CyVerse using the following command.
 Be sure to replace **<username** and **<password>** with your CyVerse username and password.
 ```bash
-curl -X GET -u '<username>:<password>>' https://data.cyverse.org/dav/iplant/projects/aes/cct/diag/sample-data/scif_odm_test_data.tar.gz
+curl -X GET -u '<username>:<password>>' https://data.cyverse.org/dav/iplant/projects/aes/cct/diag/sample-data/scif_odm_test_data.tar.gz > scif_odm_test_data.tar.gz
+gunzip scif_odm_test_data.tar.gz
+tar -xf scif_odm_test_data.tar
 ```
 
 
