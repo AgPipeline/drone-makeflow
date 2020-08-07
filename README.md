@@ -77,7 +77,7 @@ mkdir /output
 
 Finally we run the container mounting our source and destination folders, as well as indicating the name of the orthomosaic file and the name of the shapefile.
 ```bash
-docker run --rm -v    d/inputs:/scif/data/odm/images -v /outputs:/output agdrone/canopycover-workflow:latest run short_workflow orthomosaic plot_shapes.shp
+docker run --rm -v /inputs:/scif/data/odm/images -v /outputs:/output agdrone/canopycover-workflow:latest run short_workflow orthomosaic plot_shapes.shp
 ```
 Please refer to the [Docker](https://www.docker.com/) documentation for more information on running Docker containers.
 
