@@ -35,8 +35,16 @@ We will first present the steps and then provide an example.
 
 _NOTE_: that the orthomosaic must be the file name without any extensions; in other words, leave off the `.tif` when specifying it on the Docker command line.
 
-**For example:**
-The files mentioned in this section can be [downloaded](https://drive.google.com/file/d/1U-P4J2OcrNOkaLi6xCUblXOFet7V6raf/view?usp=sharing)
+
+#### For example: <a name="can_shp_example" />
+
+You can download a sample dataset of files (archived) with names corresponding to those listed here from CyVerse using the following command.
+Be sure to replace **<username** and **<password>** with your CyVerse username and password.
+```bash
+curl -X GET -u '<username>:<password>>' https://data.cyverse.org/dav/iplant/projects/aes/cct/diag/sample-data/scif_test_data.tar.gz > scif_test_data.tar.gz
+gunzip scif_test_data.tar.gz
+tar -xf scif_test_data.tar
+```
 
 
 In this example we're going to assume that the source image is named `orthomosaic.tif` and that we're using a shapefile named `plot_shapes.shp`.
@@ -56,15 +64,15 @@ pipeline:
 
 First we copy all the source files into a folder:
 ```bash
-mkdir ~/inputs
-cp orthomosaic.tif ~/inputs
-cp plot_shapes.* ~/inputs
-cp experiment.yaml ~/inputs
+mkdir /inputs
+cp orthomosaic.tif /inputs
+cp plot_shapes.* /inputs
+cp experiment.yaml /inputs
 ```
 
 Next we create an folder to hold the output of our processing:
 ```bash
-mkdir ~/output
+mkdir /output
 ``` 
 
 Finally we run the container mounting our source and destination folders, as well as indicating the name of the orthomosaic file and the name of the shapefile.
@@ -101,8 +109,15 @@ Please read our section on [Docker Sibling Containers](#docker_sibling_container
 
 #### For example: <a name="opendm_can_shp_example" />
 
+You can download a sample dataset of files (archived) with names corresponding to those listed here from CyVerse using the following command.
+Be sure to replace **<username** and **<password>** with your CyVerse username and password.
+```bash
+curl -X GET -u '<username>:<password>>' https://data.cyverse.org/dav/iplant/projects/aes/cct/diag/sample-data/scif_odm_test_data.tar.gz > scif_odm_test_data.tar.gz
+gunzip scif_odm_test_data.tar.gz
+tar -xf scif_odm_test_data.tar
+```
+
 In this example we're going to assume that we're using a shapefile named `plot_shapes.shp`, and that we have our drone images in a folder named `/IMG`.
-You can download a sample dataset of files with names corresponding to those listed here from [Google Drive](https://drive.google.com/file/d/1kCoi84HWWUNQPFYMkd0Ob-ByAh6YGo5d/view?usp=sharing).
 
 We will need one other file for this example, the `experiment.yaml` file containing some additional information.
 Copy the following content into the experiment.yaml file:
@@ -127,12 +142,12 @@ docker volume create my_output
 Step 2 involves copying the drone images into a folder:
 ```bash
 mkdir -p /inputs
-cp ~/IMG/* /inputs/
+cp /IMG/* /inputs/
 ```
 
 Step 3 copies the optional shapefile files into the same folder as the drone images:
 ```bash
-cp ~/plot_shapes.* /inputs/
+cp /plot_shapes.* /inputs/
 ``` 
 
 In step 4 we copy the experiment.yaml file into the same folder as the drone images:
@@ -176,7 +191,7 @@ It's recommended, but not necessary, to run the clean app between processing run
 
 This docker command line will clean up the output files generated using the [Canopy Cover: Orthomosaic and Shapefile](#om_can_shp) example above.
 ```bash
-docker run --rm -v ~/inputs:/scif/data/odm/images -v ~/outputs:/scif/data/soilmask agdrone/canopycover-shape-workflow:latest run clean
+docker run --rm -v /inputs:/scif/data/odm/images -v /outputs:/scif/data/soilmask agdrone/canopycover-shape-workflow:latest run clean
 ```
 
 ## Build the container
