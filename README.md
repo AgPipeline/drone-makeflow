@@ -71,16 +71,16 @@ cp experiment.yaml /inputs
 ```
 
 Next we create an folder to hold the output of our processing.
-The `artifacts` folder will contain the generated workflow checkpoint data allowing easy recovery from an error and helps prevent re-running an already completed workflow.
+The `checkpoints` folder will contain the generated workflow checkpoint data allowing easy recovery from an error and helps prevent re-running an already completed workflow.
 Removing the workflow checkpoint files will enable a complete re-run of the workflow:
 ```bash
 mkdir /output
-mkdir /artifacts
+mkdir /checkpoints
 ``` 
 
 Finally we run the container mounting our source and destination folders, as well as indicating the name of the orthomosaic file and the name of the shapefile.
 ```bash
-docker run --rm -v /inputs:/scif/data/odm/images -v /outputs:/output -v /artifacts:/scif/data/short_workflow agdrone/canopycover-workflow:latest run short_workflow orthomosaic plot_shapes.shp
+docker run --rm -v /inputs:/scif/data/odm/images -v /outputs:/output -v /checkpoints:/scif/data/short_workflow agdrone/canopycover-workflow:latest run short_workflow orthomosaic plot_shapes.shp
 ```
 Please refer to the [Docker](https://www.docker.com/) documentation for more information on running Docker containers.
 
@@ -164,16 +164,16 @@ docker run --rm -v /inputs:/sources -v my_input:/input --entrypoint bash agdrone
 ``` 
 
 In step 6 we create local folders to hold the output from processing:
-The `artifacts` folder will contain the generated workflow checkpoint data allowing easy recovery from an error and helps prevent re-running an already completed workflow.
+The `checkpoints` folder will contain the generated workflow checkpoint data allowing easy recovery from an error and helps prevent re-running an already completed workflow.
 Removing the workflow checkpoint files will enable a complete re-run of the workflow:
 ```bash
 mkdir -p /output
-mkdir -p /artifacts
+mkdir -p /checkpoints
 ```
 
 In step 7 we run the workflow to generate the orothomosaic image using ODM (OrthoDroneMap) and calculate plot-level canopy cover:
 ```bash
-docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v /inputs:/scif/data/odm/images -v scif_output:/output -v /artifacts:/scif/data/odm_workflow -e INPUT_VOLUME=my_input -e OUTPUT_VOLUME=my_output -e "INPUT_IMAGE_FOLDER=/images" -e "OUTPUT_FOLDER=/output" agdrone/canopycover-workflow:latest run odm_workflow plot_shapes.shp my_input my_output
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v /inputs:/scif/data/odm/images -v scif_output:/output -v /checkpoints:/scif/data/odm_workflow -e INPUT_VOLUME=my_input -e OUTPUT_VOLUME=my_output -e "INPUT_IMAGE_FOLDER=/images" -e "OUTPUT_FOLDER=/output" agdrone/canopycover-workflow:latest run odm_workflow plot_shapes.shp my_input my_output
 ```
 and we wait until it's finished.
 
