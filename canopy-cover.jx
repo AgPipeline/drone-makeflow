@@ -15,7 +15,9 @@
          PLOT_INFO["FILE"]
        ],
        "outputs": [
-          PLOT_INFO["DIR"] + "/canopycover.csv"
+         PLOT_INFO["DIR"],
+         PLOT_INFO["DIR"] + "/canopycover.csv",
+         PLOT_INFO["DIR"] + "/result.json"
        ]
      } for PLOT_INFO in CANOPYCOVER_FILE_LIST
   ]
