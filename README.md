@@ -190,15 +190,18 @@ docker run --rm -v my_input:/input -v my_output:/output --entrypoint bash agdron
 
 ### Clean
 
-By executing the [scif](#scif) app named `clean` it's possible to clean up the output folder and other generated files.
-It's recommended, but not necessary, to run the clean app between processing runs by either running this command or through other means.
+Cleaning up a workflow run will delete workflow generated files and folders.
+Be sure to copy the data you want to a safe place before cleaning.
+
+By adding the `--clean` flag to the end of the command line used to execute the workflow, the artifacts of a previous run will be cleaned up.
 
 **Example:**
 
-This docker command line will clean up the output files generated using the [Canopy Cover: Orthomosaic and Shapefile](#om_can_shp) example above.
+The following docker command line will clean up the files generated using the [Canopy Cover: Orthomosaic and Shapefile](#om_can_shp) example above.
 ```bash
-docker run --rm -v /inputs:/scif/data/odm/images -v /outputs:/scif/data/soilmask agdrone/canopycover-shape-workflow:latest run clean
+docker run --rm -v /inputs:/scif/data/odm/images -v /outputs:/output -v /checkpoints:/scif/data/short_workflow agdrone/canopycover-workflow:latest run short_workflow orthomosaic plot_shapes.shp --clean
 ```
+Notice the additional parameter at the end of the command line (--clean).
 
 ## Build the container
 
