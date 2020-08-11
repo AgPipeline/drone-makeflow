@@ -115,7 +115,7 @@ def write_geojson(out_file, geojson_plots: dict) -> None:
              'properties': {
                  'id': '',
                  'observationUnitName': ''
-                },
+             },
              'geometry': None
              }
 

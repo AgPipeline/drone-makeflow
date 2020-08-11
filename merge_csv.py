@@ -4,7 +4,7 @@
 
 import argparse
 import os
-import shutil
+import sys
 
 
 def _merge_csv(source_path: str, target_path: str, has_headers: bool = True, header_count: int = 1) -> None:
@@ -110,4 +110,4 @@ def merge():
 
 if __name__ == "__main__":
     merge()
-    exit()
+    sys.exit()

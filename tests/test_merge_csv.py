@@ -4,12 +4,10 @@ Author : Chris Schnaufer <schnaufer@arizona.edu
 Notes:
     This file assumes it's in a subfolder off the main folder
 """
-import argparse
 import errno
 import os
 import re
 from subprocess import getstatusoutput
-import pytest
 
 # The name of the source file to test and it's path
 SOURCE_FILE = 'merge_csv.py'
@@ -29,7 +27,6 @@ def test_exists():
 
 def test_usage():
     """Program prints a "usage" statement when requested"""
-
     for flag in ['-h', '--help']:
         cmd = f'{SOURCE_PATH} {flag}'
         ret_val, out = getstatusoutput(cmd)
