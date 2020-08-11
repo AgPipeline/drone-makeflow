@@ -4,7 +4,6 @@ on:
     branches:
       - master
       - develop
-      - add_testing
   pull_request:
     branches:
       - master
@@ -39,7 +38,7 @@ jobs:
       - name: Update apt-get
         run: sudo apt-get update
       - name: Fetch/update pylint and pytest
-        run: python3 -m pip install --upgrade --no-cache-dir pylint pytest
+        run: python3 -m pip install --upgrade --no-cache-dir pylint
         id: pylint-install
       - name: Fetch source code
         uses: actions/checkout@v2
