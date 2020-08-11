@@ -5,6 +5,7 @@
 import os
 import argparse
 import json
+import sys
 import requests
 from osgeo import ogr
 
@@ -162,4 +163,4 @@ def convert() -> None:
 
 if __name__ == "__main__":
     convert()
-    exit()
+    sys.exit()
