@@ -15,8 +15,10 @@ def _merge_csv(source_path: str, target_path: str, has_headers: bool = True, hea
         has_headers: source files have headers when set to True, otherwise there's no headers
         header_count: the number of header lines in the source file
     """
+    have_dest_file = os.path.exists(target_path)
+    skip_lines = header_count if has_headers and have_dest_file else 0
+
     # Read in the lines and append to the output file
-    skip_lines = header_count if has_headers else 0
     with open(target_path, 'a') as out_file:
         with open(source_path, 'r') as infile:
             # Read in a line, return if everything was read and skip over headers
