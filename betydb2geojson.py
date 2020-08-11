@@ -162,3 +162,4 @@ def convert() -> None:
 
 if __name__ == "__main__":
     convert()
+    exit()

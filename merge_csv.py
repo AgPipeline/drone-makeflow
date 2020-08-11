@@ -15,20 +15,17 @@ def _merge_csv(source_path: str, target_path: str, has_headers: bool = True, hea
         has_headers: source files have headers when set to True, otherwise there's no headers
         header_count: the number of header lines in the source file
     """
-    # If the target file doesn't exist or is empty, just copy the source file
-    if not os.path.exists(target_path) or (os.path.getsize(target_path) <= 0):
-        shutil.copyfile(source_path, target_path)
-        return
-
     # Read in the lines and append to the output file
     skip_lines = header_count if has_headers else 0
-    with open(target_path, 'w') as out_file:
+    with open(target_path, 'a') as out_file:
         with open(source_path, 'r') as infile:
             # Read in a line, return if everything was read and skip over headers
             one_line = infile.readline()
             while one_line:
                 if skip_lines <= 0:
                     # Write to the output file
+                    if not one_line.endswith('\n'):
+                        one_line = one_line + '\n'
                     out_file.write(one_line)
                 else:
                     skip_lines -= 1
@@ -37,10 +34,10 @@ def _merge_csv(source_path: str, target_path: str, has_headers: bool = True, hea
                 one_line = infile.readline()
 
 
-def parse_arguments() -> argparse.Namespace:
-    """Parses command line arguments using argparse
+def get_arg_parser() -> argparse.ArgumentParser:
+    """Prepares the command line argument parser
     Return:
-        Returns the parsed arguments
+        Returns the argument parser instance
     """
     def dir_type(dir_path: str) -> str:
         """Checks if the path is a folder
@@ -59,19 +56,19 @@ def parse_arguments() -> argparse.Namespace:
 
     parser.add_argument('--no_header', '-n', action='store_const', default=False, const=True,
                         help='source CSV files do not have a header')
-    parser.add_argument('--header_count', '-h', type=int, default=1, help='number of header lines in files')
+    parser.add_argument('--header_count', '-c', type=int, default=1, help='number of header lines in files')
     parser.add_argument('--filter', '-f', help='comma separated list of files to filter in')
     parser.add_argument('--ignore', '-i', help='comma separated list of files to ignore')
     parser.add_argument('source_folder', type=dir_type, help='the folder to search in')
     parser.add_argument('target_folder', type=dir_type, help='folder for combined CSV files')
 
-    return parser.parse_args()
+    return parser
 
 
 def merge():
     """Discovers and merges CSV files
     """
-    args = parse_arguments()
+    args = get_arg_parser().parse_args()
 
     # Prepare any filters for inclusion or exclusion
     have_headers = not args.no_header
@@ -80,7 +77,7 @@ def merge():
 
     # Loop through the folders until we run out of folders to process
     # This list only contains complete paths
-    check_dirs = [os.path.realpath(args['source_folder'])]
+    check_dirs = [os.path.realpath(args.source_folder)]
     while check_dirs:
         next_dir = check_dirs.pop(0)
         for one_file in os.listdir(next_dir):
@@ -113,3 +110,4 @@ def merge():
 
 if __name__ == "__main__":
     merge()
+    exit()
