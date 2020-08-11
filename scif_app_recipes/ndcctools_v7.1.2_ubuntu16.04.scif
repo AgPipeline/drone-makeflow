@@ -98,3 +98,8 @@
 
     Sample command - repalce <shapefile> with the name of the shapefile and <out filename> with the target file name:
         scif run shp2geojson <shapefile> <out filename>
+
+%appinstall merge_csv
+
+%apprun merge_csv
+    /scif/apps/odm_workflow/src/merge_csv.py "${1}" "${2}"
