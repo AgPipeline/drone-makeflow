@@ -39,9 +39,9 @@ _NOTE_: that the orthomosaic must be the file name without any extensions; in ot
 #### For example: <a name="can_shp_example" />
 
 You can download a sample dataset of files (archived) with names corresponding to those listed here from CyVerse using the following command.
-Be sure to replace **<username** and **<password>** with your CyVerse username and password.
+Be sure to replace **<username>** and **<password>** with your CyVerse username and password.
 ```bash
-curl -X GET -u '<username>:<password>>' https://data.cyverse.org/dav/iplant/projects/aes/cct/diag/sample-data/scif_test_data.tar.gz > scif_test_data.tar.gz
+curl -X GET -u '<username>:<password>' https://data.cyverse.org/dav/iplant/projects/aes/cct/diag/sample-data/scif_test_data.tar.gz > scif_test_data.tar.gz
 gunzip scif_test_data.tar.gz
 tar -xf scif_test_data.tar
 ```
@@ -113,9 +113,9 @@ Please read our section on [Docker Sibling Containers](#docker_sibling_container
 #### For example: <a name="opendm_can_shp_example" />
 
 You can download a sample dataset of files (archived) with names corresponding to those listed here from CyVerse using the following command.
-Be sure to replace **<username** and **<password>** with your CyVerse username and password.
+Be sure to replace **<username>** and **<password>** with your CyVerse username and password.
 ```bash
-curl -X GET -u '<username>:<password>>' https://data.cyverse.org/dav/iplant/projects/aes/cct/diag/sample-data/scif_odm_test_data.tar.gz > scif_odm_test_data.tar.gz
+curl -X GET -u '<username>:<password>' https://data.cyverse.org/dav/iplant/projects/aes/cct/diag/sample-data/scif_odm_test_data.tar.gz > scif_odm_test_data.tar.gz
 gunzip scif_odm_test_data.tar.gz
 tar -xf scif_odm_test_data.tar
 ```
@@ -210,7 +210,7 @@ Please refer to the [Docker](https://www.docker.com/) documentation for more inf
 
 ```bash
 cp jx-args.json.example jx-args.json
-docker build --progress=plain -t agdrone/canopycover-shape-workflow:latest .
+docker build --progress=plain -t agdrone/canopycover-workflow:latest .
 ```
 
 ## Docker Sibling Containers
@@ -219,8 +219,8 @@ Sibling containers is a technique for having one Docker container start another 
 There are a variety of instances where using sibling containers can be desirable, but typically it's used when there's an existing Docker image available and a determination has been made that using other approaches is not desirable or, perhaps, possible.
 
 The following links provide additional information on sibling containers:
-* https://medium.com/@andreacolangelo/sibling-docker-container-2e664858f87a
-* https://www.develves.net/blogs/asd/2016-05-27-alternative-to-docker-in-docker/
+* <https://medium.com/@andreacolangelo/sibling-docker-container-2e664858f87a>
+* <https://www.develves.net/blogs/asd/2016-05-27-alternative-to-docker-in-docker/>
 
 **Security Risk**
 

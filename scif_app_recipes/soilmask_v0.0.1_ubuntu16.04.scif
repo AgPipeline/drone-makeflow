@@ -9,6 +9,7 @@
     .venv/bin/python3 -m pip install --upgrade --no-cache-dir pip
     .venv/bin/python3 -m pip install --upgrade --no-cache-dir -r "${PWD}/src/requirements.txt"
     .venv/bin/python3 -m pip install --upgrade --no-cache-dir pyyaml pygdal==2.2.3.3 piexif python-dateutil
+
     .venv/bin/python3 -m pip install --upgrade --no-cache-dir laspy influxdb utm pygdal==2.2.3.5 opencv-python
     .venv/bin/python3 -m pip install --upgrade --no-cache-dir agpypeline
 
