@@ -19,6 +19,7 @@ RUN apt-get update -y \
     libglib2.0-0 \
     liblas-bin \
     docker.io \
+    libgl1-mesa-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
