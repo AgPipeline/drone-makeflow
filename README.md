@@ -125,39 +125,30 @@ docker volume create my_input
 docker volume create my_output
 ``` 
 
-Step 2 involves copying the drone images into a folder:
+Step 2 involves copying the drone images to the top location in the folder and remove the empty folder:
 ```bash
-cp /IMG/* "${PWD}/inputs/"
+mv "${PWD}/inputs/IMG/*" "${PWD}/inputs/"
+rmdir "${PWD}/inputs/IMG"
 ```
 
-Step 3 copies the optional shapefile files into the same folder as the drone images:
-```bash
-cp /plot_shapes.* "${PWD}/inputs/"
-``` 
-
-In step 4 we copy the experiment.yaml file into the same folder as the drone images:
-```bash
-cp experiment.yaml "${PWD}/inputs/"
-``` 
-
-In step 5 we copy the source files onto the input named volume:
+In step 3 we copy the source files onto the input named volume:
 ```bash
 docker run --rm -v "${PWD}/inputs:/sources" -v my_input:/input --entrypoint bash agdrone/canopycover-workflow:latest -c 'cp /sources/* /input/'
 ``` 
 
-In step 6 we run the workflow to generate the orothomosaic image using ODM (OrthoDroneMap) and calculate plot-level canopy cover:
+In step 4 we run the workflow to generate the orothomosaic image using ODM (OrthoDroneMap) and calculate plot-level canopy cover:
 ```bash
 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "${PWD}/inputs:/scif/data"/odm_workflow/images -v my_output:/output -e INPUT_VOLUME=my_input -e OUTPUT_VOLUME=my_output -e "INPUT_IMAGE_FOLDER=/images" -e "OUTPUT_FOLDER=/output" agdrone/canopycover-workflow:latest run odm_workflow plot_shapes.shp my_input my_output
 ```
 and we wait until it's finished.
 
-In step 7 we copy the results off the named output volume to our local folder:
+In step 5 we copy the results off the named output volume to our local folder:
 ```bash
 docker run --rm -v "${PWD}/outputs:/results" -v my_output:/output --entrypoint bash agdrone/canopycover-workflow:latest -c 'cp -r /output/* /results/'
 ```
 The results of the processing are now in the `${PWD}/outputs` folder.
 
-Finally, in step 8 we clean up the named volumes by deleting everything on them:
+Finally, in step 6 we clean up the named volumes by deleting everything on them:
 ```bash
 docker run --rm -v my_input:/input -v my_output:/output --entrypoint bash agdrone/canopycover-workflow:latest -c 'rm -r /input/* && rm -r /output/*'
 ```
