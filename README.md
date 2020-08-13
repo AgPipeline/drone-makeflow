@@ -115,7 +115,7 @@ curl -X GET https://de.cyverse.org/dl/d/7D28E988-67A2-498A-B18C-E0D884FD0C83/sci
 tar xvzf scif_test_data.tar.gz -C ${PWD}/inputs
 ```
 
-In this example we're going to assume that we're using a shapefile named `plot_shapes.shp`, that we have our drone images in a folder named `${PWD}/IMG`, and additional data in the `experiment.yaml` file.
+In this example we're going to assume that we're using a shapefile named `plot_shapes.shp`, that we have our drone images in a folder named `${PWD}/inputs/IMG`, and additional data in the `experiment.yaml` file.
 
 Step 1 requires creating two named Docker volumes to use when processing.
 If you already have one or more empty named volumes you can skip this step.
@@ -125,7 +125,7 @@ docker volume create my_input
 docker volume create my_output
 ``` 
 
-Step 2 involves copying the drone images to the top location in the folder and remove the empty folder:
+Step 2 involves moving the drone images to the top location in the folder and then removing the empty folder:
 ```bash
 mv "${PWD}/inputs/IMG/*" "${PWD}/inputs/"
 rmdir "${PWD}/inputs/IMG"
