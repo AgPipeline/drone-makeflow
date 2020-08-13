@@ -90,7 +90,11 @@ _NOTE_: the above `docker` command line contains the oprthomosaic file without i
 **Results:**
 Upon a successful run the output will contain one sub-folder for each plot.
 In the sub-folders for plots that intersected with the orthomosaic, there will be the clipped `.tif` file and two `.csv` files.
-The CSV files both contain much of the same information.
+This will generate one directory per plot in the `outputs/` folder.
+Each plot will contain two key outputs of interest:
+1. `orthomosaic_mask.tif`
+2. `canopycover.csv` with the canopy cover calculated from the mask file
+   * [In the future](https://github.com/AgPipeline/issues-and-projects/issues/210), these CSV files will be aggregated into a single file for each run.
 The file with "geostreams" in its name can be uploaded to TERRAREF's Geostreams database.  
 
 ### Canopy Cover: OpenDroneMap and plot boundaries <a name="opendm_can_shp" />
