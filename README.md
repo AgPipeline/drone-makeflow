@@ -64,21 +64,13 @@ _NOTE_: that the orthomosaic must be the file name without any extensions; in ot
 You can download a sample dataset of files (archived) with names corresponding to those listed here from CyVerse using the following command.
 ```bash
 curl -X GET https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz > scif_test_data.tar.gz
-gunzip scif_test_data.tar.gz
-tar -xf scif_test_data.tar
+tar xvzf scif_test_data.tar.gz -C inputs
 ```
 
 
 In this example we're going to assume that the source image is named `orthomosaic.tif`, that we're using a shapefile named `plot_shapes.shp`, and we have an `experiment.yaml` file.
 
-First we copy all the source files into the `inputs` folder:
-```bash
-cp orthomosaic.tif "${PWD}/inputs"
-cp plot_shapes.* "${PWD}/inputs"
-cp experiment.yaml "${PWD}/inputs"
-```
-
-Finally we run the container mounting our source and destination folders, as well as indicating the name of the orthomosaic file and the name of the shapefile.
+Now we can run the container mounting our source and destination folders, as well as indicating the name of the orthomosaic file and the name of the shapefile.
 You will need to have Docker running at this point.
 ```bash
 docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/output" agdrone/canopycover-workflow:latest run short_workflow orthomosaic plot_shapes.shp
@@ -116,8 +108,7 @@ Please read our section on [Docker Sibling Containers](#docker_sibling_container
 You can download a sample dataset of files (archived) with names corresponding to those listed here from CyVerse using the following command.
 ```bash
 curl -X GET https://de.cyverse.org/dl/d/7D28E988-67A2-498A-B18C-E0D884FD0C83/scif_odm_test_data.tar.gz > scif_odm_test_data.tar.gz
-gunzip scif_odm_test_data.tar.gz
-tar -xf scif_odm_test_data.tar
+tar xvzf scif_test_data.tar.gz -C ${PWD}/inputs
 ```
 
 In this example we're going to assume that we're using a shapefile named `plot_shapes.shp`, that we have our drone images in a folder named `${PWD}/IMG`, and additional data in the `experiment.yaml` file.
