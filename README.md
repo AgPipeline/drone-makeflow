@@ -69,6 +69,7 @@ cp experiment.yaml "${PWD}/inputs"
 ```
 
 Finally we run the container mounting our source and destination folders, as well as indicating the name of the orthomosaic file and the name of the shapefile.
+You will need to have Docker running at this point.
 ```bash
 docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/output" agdrone/canopycover-workflow:latest run short_workflow orthomosaic plot_shapes.shp
 ```
@@ -110,10 +111,11 @@ gunzip scif_odm_test_data.tar.gz
 tar -xf scif_odm_test_data.tar
 ```
 
-In this example we're going to assume that we're using a shapefile named `plot_shapes.shp`, that we have our drone images in a folder named `/IMG`, and additional data in the `experiment.yaml` file.
+In this example we're going to assume that we're using a shapefile named `plot_shapes.shp`, that we have our drone images in a folder named `${PWD}/IMG`, and additional data in the `experiment.yaml` file.
 
 Step 1 requires creating two named Docker volumes to use when processing.
 If you already have one or more empty named volumes you can skip this step.
+You will need to have Docker running at this point.
 ```bash
 docker volume create my_input
 docker volume create my_output
