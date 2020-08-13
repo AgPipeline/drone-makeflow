@@ -11,6 +11,7 @@ RUN apt-get update -y \
     python3-gdal \
     gdal-bin   \
     libgdal-dev \
+    libgl1-mesa-dev \
     gcc \
     g++ \
     libsm6 \
@@ -19,11 +20,12 @@ RUN apt-get update -y \
     libglib2.0-0 \
     liblas-bin \
     docker.io \
+    libgl1-mesa-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install Docker
-RUN apt-get update && \
+RUN apt-get update -y && \
     apt-get install -y --reinstall systemd && \
     apt-get remove -y docker docker-engine docker.io containerd runc && \
     apt-get install -y --no-install-recommends \
@@ -99,7 +101,6 @@ COPY ./scif_app_recipes/canopycover_v0.0.1_ubuntu16.04.scif /opt/
 RUN scif install /opt/canopycover_v0.0.1_ubuntu16.04.scif
 
 FROM canopycover_scif as workflow
-COPY workflow.jx short_workflow.jx canopy-cover.jx betydb2geojson.py generate_geojson.sh prep-canopy-cover.sh /scif/apps/odm_workflow/src/
+COPY workflow.jx short_workflow.jx canopy-cover.jx betydb2geojson.py cyverse_short_workflow.sh generate_geojson.sh prep-canopy-cover.sh jx-args.json /scif/apps/odm_workflow/src/
 RUN chmod a+x /scif/apps/odm_workflow/src/*.sh
-RUN chmod a+x /scif/apps/odm_workflow/src/generate_geojson.sh
 RUN chmod a+x /scif/apps/odm_workflow/src/betydb2geojson.py

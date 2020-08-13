@@ -1,7 +1,7 @@
 %appinstall odm
 
 %apprun odm
-    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v scif_input:/scif_input/images -v scif_output:/scif_output --user root agdrone/transformer-opendronemap:2.2 "${@}"
+    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v ${INPUT_VOLUME}:${INPUT_IMAGE_FOLDER} -v ${OUTPUT_VOLUME}:${OUTPUT_FOLDER} --user root agdrone/transformer-opendronemap:2.2 "${@}"
 
 %apphelp odm
     This apps runs OpenDroneMap.
