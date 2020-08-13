@@ -1,10 +1,10 @@
 # Makeflow for Drone Processing Pipeline
 
-## Running the container
+## Running the workflow
 
-This section contains different ways of executing an existing container.
+This section contains different ways of executing an existing Docker workflow container.
 
-### Terms
+### Terms used
 
 Here are the definition of some of the terms we use with links to additional information
 
@@ -22,6 +22,18 @@ We use the [Scientific Filesystem](https://sci-f.github.io/) to organize our app
 * Shapefile <a name="shapefile_def" />
 In this document we use the term "shapefile" to refer to all the files ending in `.shp`, `.shx`, `.dbf`, and `.prj` that have the same name.
 It can be used to specify geographic information and shapes associated with plot geometries.
+
+### Prerequisites
+
+- Docker needs to be installed to run the workflows. [Get Docker](https://docs.docker.com/get-docker/)
+- Create an `inputs` folder in the current working directory (or other folder of your choice)
+```bash
+mkdir -p "${PWD}/inputs"
+```
+- Create an `outputs` folder in the current working directory (or other folder of your choice)
+```bash
+mkdir -p "${PWD}/outputs"
+```
 
 ### Canopy Cover: Orthomosaic and plot boundaries <a name="om_can_shp" />
 
@@ -47,37 +59,18 @@ tar -xf scif_test_data.tar
 ```
 
 
-In this example we're going to assume that the source image is named `orthomosaic.tif` and that we're using a shapefile named `plot_shapes.shp`.
+In this example we're going to assume that the source image is named `orthomosaic.tif`, that we're using a shapefile named `plot_shapes.shp`, and we have an `experiment.yaml` file.
 
-We will need one other file for this example, the `experiment.yaml` file containing some additional information.
-Copy the following content into the experiment.yaml file:
-```text
-%YAML 1.1
----
-pipeline:
-    studyName: 'S7_20181011'
-    season: 'S7_20181011'
-    germplasmName: Sorghum bicolor
-    collectingSite: Maricopa
-    observationTimeStamp: '2018-10-11T13:01:02-08:00'
-```
-
-First we copy all the source files into a folder:
+First we copy all the source files into the `inputs` folder:
 ```bash
-mkdir /inputs
-cp orthomosaic.tif /inputs
-cp plot_shapes.* /inputs
-cp experiment.yaml /inputs
+cp orthomosaic.tif "${PWD}/inputs"
+cp plot_shapes.* "${PWD}/inputs"
+cp experiment.yaml "${PWD}/inputs"
 ```
-
-Next we create an folder to hold the output of our processing:
-```bash
-mkdir /output
-``` 
 
 Finally we run the container mounting our source and destination folders, as well as indicating the name of the orthomosaic file and the name of the shapefile.
 ```bash
-docker run --rm -v /inputs:/scif/data/odm_workflow/images -v /outputs:/output agdrone/canopycover-workflow:latest run short_workflow orthomosaic plot_shapes.shp
+docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/output" agdrone/canopycover-workflow:latest run short_workflow orthomosaic plot_shapes.shp
 ```
 Please refer to the [Docker](https://www.docker.com/) documentation for more information on running Docker containers.
 
@@ -117,20 +110,7 @@ gunzip scif_odm_test_data.tar.gz
 tar -xf scif_odm_test_data.tar
 ```
 
-In this example we're going to assume that we're using a shapefile named `plot_shapes.shp`, and that we have our drone images in a folder named `/IMG`.
-
-We will need one other file for this example, the `experiment.yaml` file containing some additional information.
-Copy the following content into the experiment.yaml file:
-```text
-%YAML 1.1
----
-pipeline:
-    studyName: 'S7_20181011'
-    season: 'S7_20181011'
-    germplasmName: Sorghum bicolor
-    collectingSite: Maricopa
-    observationTimeStamp: '2018-10-11T13:01:02-08:00'
-```
+In this example we're going to assume that we're using a shapefile named `plot_shapes.shp`, that we have our drone images in a folder named `/IMG`, and additional data in the `experiment.yaml` file.
 
 Step 1 requires creating two named Docker volumes to use when processing.
 If you already have one or more empty named volumes you can skip this step.
@@ -141,43 +121,37 @@ docker volume create my_output
 
 Step 2 involves copying the drone images into a folder:
 ```bash
-mkdir -p /inputs
-cp /IMG/* /inputs/
+cp /IMG/* "${PWD}/inputs/"
 ```
 
 Step 3 copies the optional shapefile files into the same folder as the drone images:
 ```bash
-cp /plot_shapes.* /inputs/
+cp /plot_shapes.* "${PWD}/inputs/"
 ``` 
 
 In step 4 we copy the experiment.yaml file into the same folder as the drone images:
 ```bash
-cp experiment.yaml /inputs/
+cp experiment.yaml "${PWD}/inputs/"
 ``` 
 
 In step 5 we copy the source files onto the input named volume:
 ```bash
-docker run --rm -v /inputs:/sources -v my_input:/input --entrypoint bash agdrone/canopycover-workflow:latest -c 'cp /sources/* /input/'
+docker run --rm -v "${PWD}/inputs:/sources" -v my_input:/input --entrypoint bash agdrone/canopycover-workflow:latest -c 'cp /sources/* /input/'
 ``` 
 
-In step 6 we create a local folder to hold the output from processing:
+In step 6 we run the workflow to generate the orothomosaic image using ODM (OrthoDroneMap) and calculate plot-level canopy cover:
 ```bash
-mkdir -p /output
-```
-
-In step 7 we run the workflow to generate the orothomosaic image using ODM (OrthoDroneMap) and calculate plot-level canopy cover:
-```bash
-docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v /inputs:/scif/data/odm_workflow/images -v my_output:/output -e INPUT_VOLUME=my_input -e OUTPUT_VOLUME=my_output -e "INPUT_IMAGE_FOLDER=/images" -e "OUTPUT_FOLDER=/output" agdrone/canopycover-workflow:latest run odm_workflow plot_shapes.shp my_input my_output
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "${PWD}/inputs:/scif/data"/odm_workflow/images -v my_output:/output -e INPUT_VOLUME=my_input -e OUTPUT_VOLUME=my_output -e "INPUT_IMAGE_FOLDER=/images" -e "OUTPUT_FOLDER=/output" agdrone/canopycover-workflow:latest run odm_workflow plot_shapes.shp my_input my_output
 ```
 and we wait until it's finished.
 
-In step 8 we copy the results off the named output volume to our local folder:
+In step 7 we copy the results off the named output volume to our local folder:
 ```bash
-docker run --rm -v /output:/results -v my_output:/output --entrypoint bash agdrone/canopycover-workflow:latest -c 'cp -r /output/* /results/'
+docker run --rm -v "${PWD}/outputs:/results" -v my_output:/output --entrypoint bash agdrone/canopycover-workflow:latest -c 'cp -r /output/* /results/'
 ```
-The results of the processing are now in the `/output` folder.
+The results of the processing are now in the `${PWD}/outputs` folder.
 
-Finally, in step 9 we clean up the named volumes by deleting everything on them:
+Finally, in step 8 we clean up the named volumes by deleting everything on them:
 ```bash
 docker run --rm -v my_input:/input -v my_output:/output --entrypoint bash agdrone/canopycover-workflow:latest -c 'rm -r /input/* && rm -r /output/*'
 ```
@@ -191,7 +165,7 @@ It's recommended, but not necessary, to run the clean app between processing run
 
 This docker command line will clean up the output files generated using the [Canopy Cover: Orthomosaic and Shapefile](#om_can_shp) example above.
 ```bash
-docker run --rm -v /inputs:/scif/data/odm_workflow/images -v /outputs:/scif/data/soilmask agdrone/canopycover-workflow:latest run clean
+docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/scif/data"/soilmask agdrone/canopycover-workflow:latest run clean
 ```
 
 ## Build the container
