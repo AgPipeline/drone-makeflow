@@ -1,5 +1,16 @@
 # Makeflow for Drone Processing Pipeline
 
+There are two main workflows in the Docker image built from this repository.
+
+The shorter workflow uses an orthomosaic file, a plot geometry file, and an experiment context file and calculates the canopy cover for each of the plots which is saved into CSV file(s).
+
+The longer workflow is the `odm_workflow`.
+It uses image files captured by a drone, a plot geometry file, and an experiment context file and processes the drone image files using OpenDroneMap (ODM).
+After ODM has created the orthomosaic, the file is processed to produce plot-level canopy cover CSV file(s).
+
+The [Scientific Filesystem](https://sci-f.github.io/) is used as to provide the entry points for the different tasks available (known as "apps" with the Scientific Filesystem).
+These apps are used by the above workflows and can be used to create custom workflows outside of what's provided.
+
 ## Running the workflow
 
 This section contains different ways of executing an existing Docker workflow container.
@@ -180,7 +191,7 @@ cp jx-args.json.example jx-args.json
 docker build --progress=plain -t agdrone/canopycover-workflow:latest .
 ```
 
-## Docker Sibling Containers
+## A Note On Docker Sibling Containers
 
 Sibling containers is a technique for having one Docker container start another Docker container to perform some work.
 There are a variety of instances where using sibling containers can be desirable, but typically it's used when there's an existing Docker image available and a determination has been made that using other approaches is not desirable or, perhaps, possible.
