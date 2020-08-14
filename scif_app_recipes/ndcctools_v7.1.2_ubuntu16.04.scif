@@ -1,0 +1,111 @@
+%appinstall odm_workflow
+    # Install Makeflow
+    conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
+
+%apprun odm_workflow
+    echo "{\"INPUT_IMAGE_FOLDER\": \"${INPUT_IMAGE_FOLDER}\", \"OUTPUT_FOLDER\": \"/output\", \"INPUT_VOLUME\": \"${2}\", \"OUTPUT_VOLUME\": \"${3}\" }" > ${SCIF_APPDATA}/jx-params.json
+    ${SCIF_APPROOT_odm_workflow}/src/generate_geojson.sh "${1}" "${SCIF_APPDATA_odm_workflow}/plots.json"
+    bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+        --jx \
+        --jx-args="/scif/apps/odm_workflow/src/jx-args.json" \
+        --jx-args="${SCIF_APPDATA}/jx-params.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
+        "/scif/apps/odm_workflow/src/workflow.jx"'
+    [ ! -f "/output/canopycover_fileslist.json" ]; /scif/apps/odm_workflow/src/prep-canopy-cover.sh "orthomosaic"
+    bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+        --jx \
+        --jx-args="${SCIF_APPROOT}/src/jx-args.json" \
+        --jx-args="/output/canopycover_fileslist.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/canopy-cover.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/canopy-cover.jx.batchlog" \
+        "${SCIF_APPROOT}/src/canopy-cover.jx"'
+    cp -r /output/* /output/
+
+%apphelp odm_workflow
+    This app provides an entrypoint to the makeflow tool
+
+    Prepare files:
+    docker run --rm -v `pwd`/test/images:/images -v scif_input:/input --entrypoint bash test -c 'cp /images/* /input'
+
+%appinstall short_workflow
+    # Install Makeflow
+    conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
+
+%apprun short_workflow
+    echo "{\"ORTHOMOSAIC_NAME\": \"${1}\", \"OUTPUT_FOLDER\": \"/output\"  }" > ${SCIF_APPDATA}/jx-params.json
+    ${SCIF_APPROOT_odm_workflow}/src/generate_geojson.sh "${2}"
+    bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+        --jx \
+        --jx-args="/scif/apps/odm_workflow/src/jx-args.json" \
+        --jx-args="${SCIF_APPDATA}/jx-params.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
+        "/scif/apps/odm_workflow/src/short_workflow.jx"'
+    [ ! -f "/output/canopycover_fileslist.json" ]; /scif/apps/odm_workflow/src/prep-canopy-cover.sh "${1}"
+    bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+        --jx \
+        --jx-args="/scif/apps/odm_workflow/src/jx-args.json" \
+        --jx-args="/output/canopycover_fileslist.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/canopy-cover.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/canopy-cover.jx.batchlog" \
+        "/scif/apps/odm_workflow/src/canopy-cover.jx"'
+
+%apphelp short_workflow
+    This app provides an entrypoint to the non-ODM (OpenDroneMap) makeflow app. Specify the TIFF orthomosaic file name
+    without its extension, followed by a plot boundary shapefile, BETYDB_URL, or GeoJSON file.
+
+%appinstall clean
+
+%apprun clean
+    bash -c 'rm -r /output/*'
+    bash -c 'if [ -d /input ]; then "rm -r /scif/data/odm/images/*"; fi;'
+    #bash -c 'if [ -d /output ]; then "rm -r /output/*"; fi;'
+
+%apphelp clean
+    This app removed all folder and files in the working folders - use with caution
+
+%appinstall jx2json
+    # Piggyback off the makeflow install
+
+%apprun jx2json
+    exec conda run --prefix "${SCIF_APPROOT_makeflow}/conda" jx2json \
+        --args "${SCIF_APPROOT_makeflow}/src/jx-args.json" \
+        --pretty \
+        "${SCIF_APPROOT_odm_workflow}/src/workflow.jx" > "${SCIF_APPDATA}/workflow.json" \
+
+%apphelp jx2json
+    This app provides an entrypoint to the jx2json tool
+
+%appinstall betydb2geojson
+    # We install a virtual environment so we can get the versions we need
+    python3 -m venv --system-site-packages .venv
+    .venv/bin/python3 -m pip install --upgrade --no-cache-dir pip
+    .venv/bin/python3 -m pip install  --upgrade --no-cache-dir pygdal==2.2.3.3
+
+%apprun betydb2geojson
+    .venv/bin/python3 ${SCIF_APPROOT_odm_workflow}/src/betydb2geojson.py --betydb_url "${1}" "${2}"
+
+%apphelp betydb2geojson
+    This app provides a conversion from BETYdb site data to GeoJSON plot geometries
+
+%appinstall shp2geojson
+    # Use the main environment
+
+%apprun shp2geojson
+    ogr2ogr -f GeoJSON "${2}" "${SCIF_APPDATA_odm_workflow}/images/${1}"
+
+%apphelp shp2geojson
+    This app provides a conversion from a shapefile to GeoJSON plot geometries
