@@ -125,7 +125,7 @@ docker volume create my_output
 ``` 
 
 Step 2 involves moving the drone images to the top location in the folder and then removing the empty folder:
-```
+``
 mv "${PWD}/inputs/IMG/*" "${PWD}/inputs/"
 rmdir "${PWD}/inputs/IMG"
 ```
