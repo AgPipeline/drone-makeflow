@@ -1,0 +1,84 @@
+{
+  "define": {
+     "SCIF_APPDATA_odm_workflow": "/scif/data/odm_workflow",
+     "SCIF_APPDATA_soilmask": "/scif/data/soilmask",
+     "SCIF_APPDATA_plotclip": "/scif/data/plotclip",
+     "ODM_METADATA_FILE": INPUT_IMAGE_FOLDER + "/experiment.yaml",
+     "ODM_ORTHOMOSAIC_FILE": OUTPUT_FOLDER + "/odm_orthophoto/odm_orthophoto.tif",
+     "INTERMEDIATE_ORTHOMOSAIC_FILE": "/scif/data/orthomosaic.tif",
+     "OUTPUT_ORTHOMOSAIC_FILE": OUTPUT_FOLDER + "/orthomosaic.tif",
+     "SOILMASK_METADATA_FILE": SCIF_APPDATA_odm_workflow + "/images/experiment.yaml",
+     "SOILMASK_WORKING_FOLDER": OUTPUT_FOLDER,
+     "SOILMASK_OUTPUT_FILE": OUTPUT_FOLDER + "/orthomosaic_mask.tif",
+     "PLOTCLIP_METADATA_FILE": SCIF_APPDATA_odm_workflow + "/images/experiment.yaml",
+     "PLOTCLIP_WORKING_FOLDER": OUTPUT_FOLDER,
+     "PLOTCLIP_PLOTGEOMETRY_FILE": OUTPUT_FOLDER + "/plots.json"
+   },
+  "rules": [
+     {
+       "command": "scif run odm --metadata \"${METADATA_FILE}\" --working_space \"${WORKING_FOLDER}\" ${DOCKER_RUN_PARAMS}",
+       "environment": {
+         "DOCKER_RUN_PARAMS": INPUT_IMAGE_FOLDER,
+         "METADATA_FILE": ODM_METADATA_FILE,
+         "WORKING_FOLDER": OUTPUT_FOLDER,
+         "INPUT_VOLUME": INPUT_VOLUME,
+         "OUTPUT_VOLUME": OUTPUT_VOLUME,
+         "INPUT_IMAGE_FOLDER": INPUT_IMAGE_FOLDER,
+         "OUTPUT_FOLDER": OUTPUT_FOLDER,
+       },
+       "inputs": [
+       ],
+       "outputs": [
+          ODM_ORTHOMOSAIC_FILE
+       ]
+     },
+     {
+       "command": "cp \"${ODM_ORTHOMOSAIC_FILE}\" \"${INTERMEDIATE_ORTHOMOSAIC_FILE}\" && rm -r \"${ODM_OUTPUT_FOLDER}\"/* && mv \"${INTERMEDIATE_ORTHOMOSAIC_FILE}\" \"${OUTPUT_ORTHOMOSAIC_FILE}\" && cp \"${SOURCE_PLOTS_FILE}\" \"${PLOTCLIP_PLOTGEOMETRY_FILE}\"",
+       "environment": {
+         "ODM_ORTHOMOSAIC_FILE": ODM_ORTHOMOSAIC_FILE,
+         "INTERMEDIATE_ORTHOMOSAIC_FILE": INTERMEDIATE_ORTHOMOSAIC_FILE,
+         "ODM_OUTPUT_FOLDER": OUTPUT_FOLDER,
+         "OUTPUT_ORTHOMOSAIC_FILE": OUTPUT_ORTHOMOSAIC_FILE,
+         "SOURCE_PLOTS_FILE": SCIF_APPDATA_odm_workflow + "/plots.json",
+         "PLOTCLIP_PLOTGEOMETRY_FILE": PLOTCLIP_PLOTGEOMETRY_FILE,
+       },
+       "inputs": [
+        ODM_ORTHOMOSAIC_FILE,
+        SCIF_APPDATA_odm_workflow + "/plots.json"
+       ],
+       "outputs": [
+        OUTPUT_ORTHOMOSAIC_FILE,
+        PLOTCLIP_PLOTGEOMETRY_FILE
+       ]
+     },
+     {
+       "command": "scif run soilmask --metadata ${METADATA_FILE} --working_space ${WORKING_FOLDER} ${INPUT_GEOTIFF}",
+       "environment": {
+         "INPUT_GEOTIFF": OUTPUT_ORTHOMOSAIC_FILE,
+         "METADATA_FILE": SOILMASK_METADATA_FILE,
+         "WORKING_FOLDER": SOILMASK_WORKING_FOLDER,
+       },
+       "inputs": [
+         OUTPUT_ORTHOMOSAIC_FILE
+       ],
+       "outputs": [
+          SOILMASK_OUTPUT_FILE
+       ]
+     },
+     {
+       "command": "scif run plotclip --metadata ${METADATA_FILE} --working_space ${WORKING_FOLDER} stereoTop ${PLOTGEOMETRY_FILE} ${INPUT_GEOTIFF}",
+       "environment": {
+         "INPUT_GEOTIFF": SOILMASK_OUTPUT_FILE,
+         "METADATA_FILE": PLOTCLIP_METADATA_FILE,
+         "WORKING_FOLDER": PLOTCLIP_WORKING_FOLDER,
+         "PLOTGEOMETRY_FILE": PLOTCLIP_PLOTGEOMETRY_FILE,
+       },
+       "inputs": [
+         SOILMASK_OUTPUT_FILE
+       ],
+       "outputs": [
+          PLOTCLIP_WORKING_FOLDER + "/result.json"
+       ]
+     }
+  ]
+}

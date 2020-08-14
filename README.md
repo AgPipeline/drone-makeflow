@@ -1,85 +1,178 @@
 # Makeflow for Drone Processing Pipeline
-<img src="https://github.com/az-digitalag/Drone-Processing-Pipeline/raw/07b1edc34a1faea501c80f583beb07f9d6b290bb/resources/drone-pipeline.png" width="100" />
 
-This repository contains the files used to run containers in the [Makeflow](https://cctools.readthedocs.io/en/latest/makeflow) environment.
+There are two main workflows in the Docker image built from this repository.
 
-## Overview
-Each container to be run has its own [.jx](https://cctools.readthedocs.io/en/latest/jx/jx/) file containing everything needed to run the image and locally cache the results.
-The basic flow in each of these .jx files is to create needed folders, run the docker container, and cache the results.
+The shorter workflow uses an orthomosaic file, a plot geometry file, and an experiment context file and calculates the canopy cover for each of the plots which is saved into CSV file(s).
 
-Coordination of these smaller workflows is done through the simple `run_makeflow.sh` script.
+The longer workflow is the `odm_workflow`.
+It uses image files captured by a drone, a plot geometry file, and an experiment context file and processes the drone image files using OpenDroneMap (ODM).
+After ODM has created the orthomosaic, the file is processed to produce plot-level canopy cover CSV file(s).
 
-The sequence of the overall workflow is: `odm_workflow -> soil_mask_workflow -> plot_clip_workflow -> canopy_cover_workflow`.
+The [Scientific Filesystem](https://sci-f.github.io/) is used as to provide the entry points for the different tasks available (known as "apps" with the Scientific Filesystem).
+These apps are used by the above workflows and can be used to create custom workflows outside of what's provided.
 
-## YAML file
-A simple YAML file is used to define the workflow steps along with any other run-specific information, such as the location of a file containing the experiment information.
+## Running the workflow
 
-A sample YAML file used to process calculate canopy cover from captured images looks like the following:
+This section contains different ways of executing an existing Docker workflow container.
+
+### Terms used
+
+Here are the definition of some of the terms we use with links to additional information
+
+* BETYdb <a name="betydb" />
+[BETYdb](https://www.betydb.org/) is a database that can be used to store trait and yield data.
+It can be used in the processing pipeline as a source of plot geometry for clipping.
+
+* GeoJSON <a name="geojson" />
+[GeoJSON](https://datatracker.ietf.org/doc/rfc7946/) is a JSON format for specifying geographic shape information.
+This is the default format for specifying plot geometries.
+
+* Scientific Filesystem <a name="scif" />
+We use the [Scientific Filesystem](https://sci-f.github.io/) to organize our applications, provide ease of execution, and to assist in reproducibility.
+
+* Shapefile <a name="shapefile_def" />
+In this document we use the term "shapefile" to refer to all the files ending in `.shp`, `.shx`, `.dbf`, and `.prj` that have the same name.
+It can be used to specify geographic information and shapes associated with plot geometries.
+
+### Prerequisites
+
+- Docker needs to be installed to run the workflows. [Get Docker](https://docs.docker.com/get-docker/)
+- Create an `inputs` folder in the current working directory (or other folder of your choice)
+```bash
+mkdir -p "${PWD}/inputs"
 ```
-# Runtime environment settings
-configuration: {
-  # Top level workflow folder
-  working_space: /mnt/working_space/,
-  # Named volume to use when running inside a docker container
-  docker_volume: my_data
-}
-
-# The workflow steps
-workflow:
-  - name: OpenDroneMap                                     # Name of the workflow step
-    makeflow_file: odm_workflow.jx                         # The makeflow file to use
-    docker_image: agdrone/transformer-opendronemap:2.0     # The docker image to use
-    execution_order: 1                                     # Order of execution
-  - name: Soil Mask                                        # Name of the workflow step
-    makeflow_file: soil_mask_workflow.jx                   # The makeflow file to use
-    docker_image: agdrone/transformer-soilmask:2.0         # The docker image to use
-    execution_order: 2                                     # Order of execution
-  - name: Plot Clip                                        # Name of the workflow step
-    makeflow_file: plot_clip_workflow.jx                   # The makeflow file to use
-    docker_image: agdrone/transformer-plotclip:2.0         # The docker image to use
-    execution_order: 3                                     # Order of execution
-  - name: Canopy Cover                                     # Name of the workflow step
-    makeflow_file: canopy_cover_workflow.jx                # The makeflow file to use
-    docker_image: agdrone/transformer-canopycover:1.0      # The docker image to use
-    execution_order: 4                                     # Order of execution}
+- Create an `outputs` folder in the current working directory (or other folder of your choice)
+```bash
+mkdir -p "${PWD}/outputs"
 ```
 
-### Configuration
-The `configuration` key indicates the start of configuration information.
+### Canopy Cover: Orthomosaic and plot boundaries <a name="om_can_shp" />
 
-The following sub-keys are supported:
-* _working_space_: the path to where the scratch workspace is located
-* _docker_volume_: the named Docker volume that's used when running Docker containers for each workflow step
+The following steps are used to generate plot-level canopy cover values for a georeferenced orthomosaic image and plot boundaries using geographic information.
+We will first present the steps and then provide an example.
 
-### Workflow Steps
-The `workflow` key indicates the definition of the workflow.
-A workflow consists of a series of steps that are run sequentially.
-Each workflow can have multiple workers handling its processing.
+1. Create a folder and copy the orthomosaic into it
+2. If using a [shapefile](#shapefile) or [GeoJSON](#geojson) file, copy those into the same folder as the orthomosaic image
+3. Create another folder for the output folders and files
+4. Run the docker container's `short_workflow` app specifying the name of the orthomosaic and either the name of the shapefile or geojson file, or the URL of they [BETYdb](#betydb) instance to query for plot boundaries
 
-Each workflow step has the following keys:
-- _name_: the human readable name of workflow step
-- _makeflow_file_: the name of the Makeflow file that this step uses
-- _docker_image_: the docker image to run for the workflow step
-- _execution_order_: the order of execution of the current step starting at 1 and incrementing in sequence
+_NOTE_: the orthomosaic must be the file name without any extensions; in other words, leave off the `.tif` when specifying it on the Docker command line.
 
-## Main Script
-The `run_workflow.sh` script converts the configuration YAML to Makeflow-compatible JSON while enhancing the JSON to assist processing.
-It also calls the Makeflow entry point and cleans up any changes that it made to the file system.
 
-## Main JX Files <a name="main_jx" />
-There are two main `.jx` files used to run workflows are:
-* _run_workflow.jx_: is the entry point for running the workflow steps; its role is to run the steps in the correct order
-*_sub_workflow.jx_: is called for each workstep; its role is to prepare for running docker containers and ensure things are setup for the next step
+#### For example: <a name="can_shp_example" />
 
-## Workflow Step JX Files
-Each of the workflow steps has its own .jx file that contain the specific commands needed for it to run.
-The [main JX files](#main_jx) prepare the environment for the workflow step so that each workflow step has minimal configuration to concern itself with.
+You can download a sample dataset of files (archived) with names corresponding to those listed here from CyVerse using the following command.
+```bash
+curl -X GET https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz > scif_test_data.tar.gz
+tar xvzf scif_test_data.tar.gz -C "${PWD}/inputs"
+```
 
-## Supporting Scripts
-There `cache_results.py` script is used to move the meaningful outputs as returned from each workflow step into a cache folder.
-The files stored in the cache are considered to be the final output of each processing step.
-After the files are cached, it's possible to remove the  workspace folders.
-If copies of the input files are used for processing, it's also possible to remove the input used by each workflow step after the outputs are cached; cleaning up the input files should not be done if they are the only copy!
- 
-## Docker
-Refer to the Docker specifc README.md on creating and running a Docker image.
+
+In this example we're going to assume that the source image is named `orthomosaic.tif`, that we're using a shapefile named `plot_shapes.shp`, and we have an `experiment.yaml` file.
+
+Now we can run the container mounting our source and destination folders, as well as indicating the name of the orthomosaic file and the name of the shapefile.
+You will need to have Docker running at this point.
+```bash
+docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/output" agdrone/canopycover-workflow:latest run short_workflow orthomosaic plot_shapes.shp
+```
+Please refer to the [Docker](https://www.docker.com/) documentation for more information on running Docker containers.
+
+_NOTE_: the above `docker` command line contains the oprthomosaic file without its extension (`orthomosaic`).
+
+**Results:**
+Upon a successful run the output will contain one sub-folder for each plot.
+In the sub-folders for plots that intersected with the orthomosaic, there will be the clipped `.tif` file and two `.csv` files.
+This will generate one directory per plot in the `outputs/` folder.
+Each plot will contain two key outputs of interest:
+1. `orthomosaic_mask.tif`
+2. `canopycover.csv` with the canopy cover calculated from the mask file
+   * [In the future](https://github.com/AgPipeline/issues-and-projects/issues/210), these CSV files will be aggregated into a single file for each run.
+The file with "geostreams" in its name can be uploaded to TERRAREF's Geostreams database.  
+
+### Canopy Cover: OpenDroneMap and plot boundaries <a name="opendm_can_shp" />
+
+The following steps are used when wanting to use OpenDroneMap (ODM) to create the Orthomosaic image that's then used to create the canopy cover values.
+As with the [previous example](#om_can_shp) we will be listing the steps and then providing an example.
+
+_NOTE_: the SciF Docker image uses Docker sibling containers to run the OpenDroneMap application.
+Please read our section on [Docker Sibling Containers](#docker_sibling_containers) below to learn more about this approach.
+
+1. Create two named Docker volumes to use for processing data; one for input files and one for output files - the same volume can be used for both if desired
+2. Copy the source drone images into a folder
+3. If using a [shapefile](#shapefile) or [GeoJSON](#geojson) file, copy those into the same folder as the drone images
+4. Copy the experiment metadata file into the same folder as the drone images
+5. Copy the folder contents of the drone images folder that was just prepared onto the input named volume
+6. Create another folder for the output folders and files
+7. Run the docker container's `odm_workflow` app specifying  either the name of the shapefile or geojson file, or the URL of they [BETYdb](#betydb) instance to query for plot boundaries, and the two named volumes
+8. Copy the resulting files off the output named volume to the local folder
+9. Clean up the named volumes
+
+#### For example: <a name="opendm_can_shp_example" />
+
+You can download a sample dataset of files (archived) with names corresponding to those listed here from CyVerse using the following command.
+```bash
+curl -X GET https://de.cyverse.org/dl/d/7D28E988-67A2-498A-B18C-E0D884FD0C83/scif_odm_test_data.tar.gz > scif_odm_test_data.tar.gz
+tar xvzf scif_test_data.tar.gz -C ${PWD}/inputs
+```
+
+In this example we're going to assume that we're using a shapefile named `plot_shapes.shp`, that we have our drone images in a folder named `${PWD}/inputs/IMG`, and additional data in the `experiment.yaml` file.
+
+Step 1 requires creating two named Docker volumes to use when processing.
+If you already have one or more empty named volumes you can skip this step.
+You will need to have Docker running at this point.
+```bash
+docker volume create my_input
+docker volume create my_output
+``` 
+
+Step 2 involves moving the drone images to the top location in the folder and then removing the empty folder:
+mv "${PWD}/inputs/IMG/*" "${PWD}/inputs/"
+rmdir "${PWD}/inputs/IMG"
+
+In step 3 we copy the source files onto the input named volume:
+```bash
+docker run --rm -v "${PWD}/inputs:/sources" -v my_input:/input --entrypoint bash agdrone/canopycover-workflow:latest -c 'cp /sources/* /input/'
+``` 
+
+In step 4 we run the workflow to generate the orothomosaic image using ODM (OrthoDroneMap) and calculate plot-level canopy cover:
+```bash
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "${PWD}/inputs:/scif/data"/odm_workflow/images -v my_output:/output -e INPUT_VOLUME=my_input -e OUTPUT_VOLUME=my_output -e "INPUT_IMAGE_FOLDER=/images" -e "OUTPUT_FOLDER=/output" agdrone/canopycover-workflow:latest run odm_workflow plot_shapes.shp my_input my_output
+```
+and we wait until it's finished.
+
+In step 5 we copy the results off the named output volume to our local folder:
+```bash
+docker run --rm -v "${PWD}/outputs:/results" -v my_output:/output --entrypoint bash agdrone/canopycover-workflow:latest -c 'cp -r /output/* /results/'
+```
+The results of the processing are now in the `${PWD}/outputs` folder.
+
+Finally, in step 6 we clean up the named volumes by deleting everything on them:
+```bash
+docker run --rm -v my_input:/input -v my_output:/output --entrypoint bash agdrone/canopycover-workflow:latest -c 'rm -r /input/* && rm -r /output/*'
+```
+
+### Clean
+
+By executing the [scif](#scif) app named `clean` it's possible to clean up the output folder and other generated files.
+It's recommended, but not necessary, to run the clean app between processing runs by either running this command or through other means.
+
+**Example:**
+
+This docker command line will clean up the output files generated using the [Canopy Cover: Orthomosaic and Shapefile](#om_can_shp) example above.
+```bash
+docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/scif/data"/soilmask agdrone/canopycover-workflow:latest run clean
+```
+
+## Build the container
+
+This section describes how the Docker container could be built.
+Please refer to the [Docker](https://www.docker.com/) documentation for more information on building Docker containers.
+
+```bash
+cp jx-args.json.example jx-args.json
+docker build --progress=plain -t agdrone/canopycover-workflow:latest .
+```
+
+## A Note On Docker Sibling Containers
+
+The OpenDroneMap workflow uses sibling containers. This is a technique for having one Docker container start another Docker container to perform some work. We plan to find a secure alternative for future releases (see [AgPipeline/issues-and-projects#240](https://github.com/AgPipeline/issues-and-projects/issues/240)), primarily because of a potential security risk that makes this approach not suitable for shared cluster computing environments (it is also a concern for containers such as websites and databases that are exposed to the internet, but that is not the case here). You can just as safely run these workflows on your own computer as you can any trusted Docker container. However, with sibling containers the second container requires adminstrator ("root") privleges - please see [Docker documentation](https://docs.docker.com/engine/security/security/) for more details.
