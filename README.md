@@ -11,30 +11,45 @@ After ODM has created the orthomosaic, the file is processed to produce plot-lev
 The [Scientific Filesystem](https://sci-f.github.io/) is used as to provide the entry points for the different tasks available (known as "apps" with the Scientific Filesystem).
 These apps are used by the above workflows and can be used to create custom workflows outside of what's provided.
 
-## Running the workflow
+## Table of contents
+- [Terms used](#terms)
+- [Running the workflow](#run_workflow)
+    - [Prerequisites](#prerequisites)
+    - [Workflow](#workflows)
+        - [Canopy Cover: Orthomosaic and plot boundaries](#om_can_shp)
+        - [Canopy Cover: OpenDroneMap and plot boundaries](#opendm_can_shp)
+- [Running other apps](#apps)
+    - [Clean](#app_clean)
+- [Build the container](#build)
+- [A Note On Docker Sibling Containers](#sibling_containers)
 
-This section contains different ways of executing an existing Docker workflow container.
-
-### Terms used
+## Terms used <a name="terms" />
 
 Here are the definition of some of the terms we use with links to additional information
 
-* BETYdb <a name="betydb" />
+* apps <a name="def_apps" />
+This term refers to the entry points in a (Scientific Filesystem)[#def_scif] solution.
+
+* BETYdb <a name="def_betydb" />
 [BETYdb](https://www.betydb.org/) is a database that can be used to store trait and yield data.
 It can be used in the processing pipeline as a source of plot geometry for clipping.
 
-* GeoJSON <a name="geojson" />
+* GeoJSON <a name="def_geojson" />
 [GeoJSON](https://datatracker.ietf.org/doc/rfc7946/) is a JSON format for specifying geographic shape information.
 This is the default format for specifying plot geometries.
 
-* Scientific Filesystem <a name="scif" />
+* Scientific Filesystem <a name="def_scif" />
 We use the [Scientific Filesystem](https://sci-f.github.io/) to organize our applications, provide ease of execution, and to assist in reproducibility.
 
-* Shapefile <a name="shapefile_def" />
+* Shapefile <a name="def_shapefile" />
 In this document we use the term "shapefile" to refer to all the files ending in `.shp`, `.shx`, `.dbf`, and `.prj` that have the same name.
 It can be used to specify geographic information and shapes associated with plot geometries.
 
-### Prerequisites
+## Running the workflow <a name="run_workflow" />
+
+This section contains different ways of executing an existing Docker workflow container.
+
+### Prerequisites <a name="prerequisites" />
 
 - Docker needs to be installed to run the workflows. [Get Docker](https://docs.docker.com/get-docker/)
 - Create an `inputs` folder in the current working directory (or other folder of your choice)
@@ -46,20 +61,26 @@ mkdir -p "${PWD}/inputs"
 mkdir -p "${PWD}/outputs"
 ```
 
-### Canopy Cover: Orthomosaic and plot boundaries <a name="om_can_shp" />
+### Workflow <a name="workflows" />
+
+There are workflows [apps](#def_apps) available that will run a predefined series of apps to completion.
+This section describes how to run these workflows using sample data.
+It's expected that after running these examples these workflow commands can be customized and run in other situations.
+
+#### Canopy Cover: Orthomosaic and plot boundaries <a name="om_can_shp" />
 
 The following steps are used to generate plot-level canopy cover values for a georeferenced orthomosaic image and plot boundaries using geographic information.
 We will first present the steps and then provide an example.
 
 1. Create a folder and copy the orthomosaic into it
-2. If using a [shapefile](#shapefile) or [GeoJSON](#geojson) file, copy those into the same folder as the orthomosaic image
+2. If using a [shapefile](#shapefile) or [GeoJSON](#def_geojson) file, copy those into the same folder as the orthomosaic image
 3. Create another folder for the output folders and files
-4. Run the docker container's `short_workflow` app specifying the name of the orthomosaic and either the name of the shapefile or geojson file, or the URL of they [BETYdb](#betydb) instance to query for plot boundaries
+4. Run the docker container's `short_workflow` app specifying the name of the orthomosaic and either the name of the shapefile or geojson file, or the URL of they [BETYdb](#def_betydb) instance to query for plot boundaries
 
 _NOTE_: the orthomosaic must be the file name without any extensions; in other words, leave off the `.tif` when specifying it on the Docker command line.
 
 
-#### For example: <a name="can_shp_example" />
+##### For example: <a name="can_shp_example" />
 
 You can download a sample dataset of files (archived) with names corresponding to those listed here from CyVerse using the following command.
 ```bash
@@ -89,7 +110,7 @@ Each plot will contain two key outputs of interest:
    * [In the future](https://github.com/AgPipeline/issues-and-projects/issues/210), these CSV files will be aggregated into a single file for each run.
 The file with "geostreams" in its name can be uploaded to TERRAREF's Geostreams database.  
 
-### Canopy Cover: OpenDroneMap and plot boundaries <a name="opendm_can_shp" />
+#### Canopy Cover: OpenDroneMap and plot boundaries <a name="opendm_can_shp" />
 
 The following steps are used when wanting to use OpenDroneMap (ODM) to create the Orthomosaic image that's then used to create the canopy cover values.
 As with the [previous example](#om_can_shp) we will be listing the steps and then providing an example.
@@ -99,15 +120,15 @@ Please read our section on [Docker Sibling Containers](#docker_sibling_container
 
 1. Create two named Docker volumes to use for processing data; one for input files and one for output files - the same volume can be used for both if desired
 2. Copy the source drone images into a folder
-3. If using a [shapefile](#shapefile) or [GeoJSON](#geojson) file, copy those into the same folder as the drone images
+3. If using a [shapefile](#shapefile) or [GeoJSON](#def_geojson) file, copy those into the same folder as the drone images
 4. Copy the experiment metadata file into the same folder as the drone images
 5. Copy the folder contents of the drone images folder that was just prepared onto the input named volume
 6. Create another folder for the output folders and files
-7. Run the docker container's `odm_workflow` app specifying  either the name of the shapefile or geojson file, or the URL of they [BETYdb](#betydb) instance to query for plot boundaries, and the two named volumes
+7. Run the docker container's `odm_workflow` app specifying  either the name of the shapefile or geojson file, or the URL of they [BETYdb](#def_betydb) instance to query for plot boundaries, and the two named volumes
 8. Copy the resulting files off the output named volume to the local folder
 9. Clean up the named volumes
 
-#### For example: <a name="opendm_can_shp_example" />
+##### For example: <a name="opendm_can_shp_example" />
 
 You can download a sample dataset of files (archived) with names corresponding to those listed here from CyVerse using the following command.
 ```bash
@@ -153,9 +174,11 @@ Finally, in step 6 we clean up the named volumes by deleting everything on them:
 docker run --rm -v my_input:/input -v my_output:/output --entrypoint bash agdrone/canopycover-workflow:latest -c 'rm -r /input/* && rm -r /output/*'
 ```
 
-### Clean
+## Running other apps <a name="apps" />
 
-By executing the [scif](#scif) app named `clean` it's possible to clean up the output folder and other generated files.
+### Clean <a name="app_clean" />
+
+By executing the [scif](#def_scif) app named `clean` it's possible to clean up the output folder and other generated files.
 It's recommended, but not necessary, to run the clean app between processing runs by either running this command or through other means.
 
 **Example:**
@@ -165,7 +188,7 @@ This docker command line will clean up the output files generated using the [Can
 docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/scif/data"/soilmask agdrone/canopycover-workflow:latest run clean
 ```
 
-## Build the container
+## Build the container <a name="build" />
 
 This section describes how the Docker container could be built.
 Please refer to the [Docker](https://www.docker.com/) documentation for more information on building Docker containers.
@@ -175,7 +198,7 @@ cp jx-args.json.example jx-args.json
 docker build --progress=plain -t agdrone/canopycover-workflow:latest .
 ```
 
-## A Note On Docker Sibling Containers
+## A Note On Docker Sibling Containers <a name="sibling_containers" />
 
 Sibling containers is a technique for having one Docker container start another Docker container to perform some work.
 There are a variety of instances where using sibling containers can be desirable, but typically it's used when there's an existing Docker image available and a determination has been made that using other approaches is not desirable or, perhaps, possible.
