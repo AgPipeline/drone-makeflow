@@ -180,6 +180,8 @@ docker build --progress=plain -t agdrone/canopycover-workflow:latest .
 Sibling containers is a technique for having one Docker container start another Docker container to perform some work.
 There are a variety of instances where using sibling containers can be desirable, but typically it's used when there's an existing Docker image available and a determination has been made that using other approaches is not desirable or, perhaps, possible.
 
+We are currently investigating alternatives to this architecture (see [AgPipeline/issues-and-projects#240](https://github.com/AgPipeline/issues-and-projects/issues/240)).
+
 The following links provide additional information on sibling containers:
 * <https://medium.com/@andreacolangelo/sibling-docker-container-2e664858f87a>
 * <https://www.develves.net/blogs/asd/2016-05-27-alternative-to-docker-in-docker/>
