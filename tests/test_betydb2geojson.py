@@ -7,8 +7,8 @@ Notes:
 """
 import os
 import re
-import pytest
 from subprocess import getstatusoutput
+import pytest
 
 # The name of the source file to test and it's path
 SOURCE_FILE = 'betydb2geojson.py'
@@ -37,6 +37,7 @@ def test_usage():
 def test_fail_betydb_url():
     """Test that not specifying a BETYdb URL fails
     """
+    # pylint: disable=import-outside-toplevel
     import betydb2geojson as b2j
     with pytest.raises(RuntimeError):
         b2j.query_betydb_experiments()
@@ -45,6 +46,7 @@ def test_fail_betydb_url():
 def test_betydb_url():
     """Test getting BETYdb data
     """
+    # pylint: disable=import-outside-toplevel
     import betydb2geojson as b2j
     ret_val = b2j.query_betydb_experiments(BETYDB_URL)
     assert ret_val is not None

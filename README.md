@@ -64,7 +64,6 @@ We will first present the steps and then provide an example.
 
 _NOTE_: the orthomosaic must be the file name without any extensions; in other words, leave off the `.tif` when specifying it on the Docker command line.
 
-
 #### For example: <a name="can_shp_example" />
 
 You can download a sample dataset of files (archived) with names corresponding to those listed here from CyVerse using the following command.
