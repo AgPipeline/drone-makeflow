@@ -64,7 +64,7 @@ _NOTE_: the orthomosaic must be the file name without any extensions; in other w
 You can download a sample dataset of files (archived) with names corresponding to those listed here from CyVerse using the following command.
 ```bash
 curl -X GET https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz > scif_test_data.tar.gz
-tar xvzf scif_test_data.tar.gz -C inputs
+tar xvzf scif_test_data.tar.gz -C "${PWD}/inputs"
 ```
 
 
