@@ -1,10 +1,21 @@
 # Makeflow for Drone Processing Pipeline
 
-## Running the container
+There are two main workflows in the Docker image built from this repository.
 
-This section contains different ways of executing an existing container.
+The shorter workflow uses an orthomosaic file, a plot geometry file, and an experiment context file and calculates the canopy cover for each of the plots which is saved into CSV file(s).
 
-### Terms
+The longer workflow is the `odm_workflow`.
+It uses image files captured by a drone, a plot geometry file, and an experiment context file and processes the drone image files using OpenDroneMap (ODM).
+After ODM has created the orthomosaic, the file is processed to produce plot-level canopy cover CSV file(s).
+
+The [Scientific Filesystem](https://sci-f.github.io/) is used as to provide the entry points for the different tasks available (known as "apps" with the Scientific Filesystem).
+These apps are used by the above workflows and can be used to create custom workflows outside of what's provided.
+
+## Running the workflow
+
+This section contains different ways of executing an existing Docker workflow container.
+
+### Terms used
 
 Here are the definition of some of the terms we use with links to additional information
 
@@ -23,6 +34,24 @@ We use the [Scientific Filesystem](https://sci-f.github.io/) to organize our app
 In this document we use the term "shapefile" to refer to all the files ending in `.shp`, `.shx`, `.dbf`, and `.prj` that have the same name.
 It can be used to specify geographic information and shapes associated with plot geometries.
 
+### Prerequisites
+
+- Docker needs to be installed to run the workflows. [Get Docker](https://docs.docker.com/get-docker/)
+- Create an `inputs` folder in the current working directory (or other folder of your choice)
+```bash
+mkdir -p "${PWD}/inputs"
+```
+- Create an `outputs` folder in the current working directory (or other folder of your choice)
+```bash
+mkdir -p "${PWD}/outputs"
+```
+- Create an folder to hold the output of our processing.
+The `checkpoints` folder will contain the generated workflow checkpoint data allowing easy recovery from an error and helps prevent re-running an already completed workflow.
+Removing the workflow checkpoint files will enable a complete re-run of the workflow:
+```bash
+mkdir -p "${PWD}/checkpoints"
+``` 
+
 ### Canopy Cover: Orthomosaic and plot boundaries <a name="om_can_shp" />
 
 The following steps are used to generate plot-level canopy cover values for a georeferenced orthomosaic image and plot boundaries using geographic information.
@@ -33,55 +62,24 @@ We will first present the steps and then provide an example.
 3. Create another folder for the output folders and files
 4. Run the docker container's `short_workflow` app specifying the name of the orthomosaic and either the name of the shapefile or geojson file, or the URL of they [BETYdb](#betydb) instance to query for plot boundaries
 
-_NOTE_: that the orthomosaic must be the file name without any extensions; in other words, leave off the `.tif` when specifying it on the Docker command line.
-
+_NOTE_: the orthomosaic must be the file name without any extensions; in other words, leave off the `.tif` when specifying it on the Docker command line.
 
 #### For example: <a name="can_shp_example" />
 
 You can download a sample dataset of files (archived) with names corresponding to those listed here from CyVerse using the following command.
-Be sure to replace **<username>** and **<password>** with your CyVerse username and password.
 ```bash
-curl -X GET -u '<username>:<password>' https://data.cyverse.org/dav/iplant/projects/aes/cct/diag/sample-data/scif_test_data.tar.gz > scif_test_data.tar.gz
-gunzip scif_test_data.tar.gz
-tar -xf scif_test_data.tar
+curl -X GET https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz > scif_test_data.tar.gz
+tar xvzf scif_test_data.tar.gz -C "${PWD}/inputs"
 ```
 
+In this example we're going to assume that the source image is named `orthomosaic.tif`, that we're using a shapefile named `plot_shapes.shp`, and we have an `experiment.yaml` file.
 
-In this example we're going to assume that the source image is named `orthomosaic.tif` and that we're using a shapefile named `plot_shapes.shp`.
-
-We will need one other file for this example, the `experiment.yaml` file containing some additional information.
-Copy the following content into the experiment.yaml file:
-```text
-%YAML 1.1
----
-pipeline:
-    studyName: 'S7_20181011'
-    season: 'S7_20181011'
-    germplasmName: Sorghum bicolor
-    collectingSite: Maricopa
-    observationTimeStamp: '2018-10-11T13:01:02-08:00'
+Now we can run the container mounting our source folder, destination folder, checkpoint folder, as well as indicating the name of the orthomosaic file and the name of the shapefile.
+You will need to have Docker running at this point.
+```bash
+docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/output" -v /checkpoints:/scif/data/short_workflow agdrone/canopycover-workflow:latest run short_workflow orthomosaic plot_shapes.shp
 ```
 
-First we copy all the source files into a folder:
-```bash
-mkdir /inputs
-cp orthomosaic.tif /inputs
-cp plot_shapes.* /inputs
-cp experiment.yaml /inputs
-```
-
-Next we create an folder to hold the output of our processing.
-The `checkpoints` folder will contain the generated workflow checkpoint data allowing easy recovery from an error and helps prevent re-running an already completed workflow.
-Removing the workflow checkpoint files will enable a complete re-run of the workflow:
-```bash
-mkdir /output
-mkdir /checkpoints
-``` 
-
-Finally we run the container mounting our source and destination folders, as well as indicating the name of the orthomosaic file and the name of the shapefile.
-```bash
-docker run --rm -v /inputs:/scif/data/odm/images -v /outputs:/output -v /checkpoints:/scif/data/short_workflow agdrone/canopycover-workflow:latest run short_workflow orthomosaic plot_shapes.shp
-```
 Please refer to the [Docker](https://www.docker.com/) documentation for more information on running Docker containers.
 
 _NOTE_: the above `docker` command line contains the oprthomosaic file without its extension (`orthomosaic`).
@@ -89,7 +87,11 @@ _NOTE_: the above `docker` command line contains the oprthomosaic file without i
 **Results:**
 Upon a successful run the output will contain one sub-folder for each plot.
 In the sub-folders for plots that intersected with the orthomosaic, there will be the clipped `.tif` file and two `.csv` files.
-The CSV files both contain much of the same information.
+This will generate one directory per plot in the `outputs/` folder.
+Each plot will contain two key outputs of interest:
+1. `orthomosaic_mask.tif`
+2. `canopycover.csv` with the canopy cover calculated from the mask file
+   * [In the future](https://github.com/AgPipeline/issues-and-projects/issues/210), these CSV files will be aggregated into a single file for each run.
 The file with "geostreams" in its name can be uploaded to TERRAREF's Geostreams database.  
 
 ### Canopy Cover: OpenDroneMap and plot boundaries <a name="opendm_can_shp" />
@@ -98,7 +100,7 @@ The following steps are used when wanting to use OpenDroneMap (ODM) to create th
 As with the [previous example](#om_can_shp) we will be listing the steps and then providing an example.
 
 _NOTE_: the SciF Docker image uses Docker sibling containers to run the OpenDroneMap application.
-Please read our section on [Docker Sibling Containers](#docker_sibling_containers) below to be informed of potential risks with this approach.
+Please read our section on [Docker Sibling Containers](#docker_sibling_containers) below to learn more about this approach.
 
 1. Create two named Docker volumes to use for processing data; one for input files and one for output files - the same volume can be used for both if desired
 2. Copy the source drone images into a folder
@@ -113,77 +115,45 @@ Please read our section on [Docker Sibling Containers](#docker_sibling_container
 #### For example: <a name="opendm_can_shp_example" />
 
 You can download a sample dataset of files (archived) with names corresponding to those listed here from CyVerse using the following command.
-Be sure to replace **<username>** and **<password>** with your CyVerse username and password.
 ```bash
-curl -X GET -u '<username>:<password>' https://data.cyverse.org/dav/iplant/projects/aes/cct/diag/sample-data/scif_odm_test_data.tar.gz > scif_odm_test_data.tar.gz
-gunzip scif_odm_test_data.tar.gz
-tar -xf scif_odm_test_data.tar
+curl -X GET https://de.cyverse.org/dl/d/7D28E988-67A2-498A-B18C-E0D884FD0C83/scif_odm_test_data.tar.gz > scif_odm_test_data.tar.gz
+tar xvzf scif_test_data.tar.gz -C ${PWD}/inputs
 ```
 
-In this example we're going to assume that we're using a shapefile named `plot_shapes.shp`, and that we have our drone images in a folder named `/IMG`.
-
-We will need one other file for this example, the `experiment.yaml` file containing some additional information.
-Copy the following content into the experiment.yaml file:
-```text
-%YAML 1.1
----
-pipeline:
-    studyName: 'S7_20181011'
-    season: 'S7_20181011'
-    germplasmName: Sorghum bicolor
-    collectingSite: Maricopa
-    observationTimeStamp: '2018-10-11T13:01:02-08:00'
-```
+In this example we're going to assume that we're using a shapefile named `plot_shapes.shp`, that we have our drone images in a folder named `${PWD}/inputs/IMG`, and additional data in the `experiment.yaml` file.
 
 Step 1 requires creating two named Docker volumes to use when processing.
 If you already have one or more empty named volumes you can skip this step.
+You will need to have Docker running at this point.
 ```bash
 docker volume create my_input
 docker volume create my_output
 ``` 
 
-Step 2 involves copying the drone images into a folder:
+Step 2 involves moving the drone images to the top location in the folder and then removing the empty folder:
 ```bash
-mkdir -p /inputs
-cp /IMG/* /inputs/
+mv "${PWD}/inputs/IMG/*" "${PWD}/inputs/"
+rmdir "${PWD}/inputs/IMG"
 ```
 
-Step 3 copies the optional shapefile files into the same folder as the drone images:
+In step 3 we copy the source files onto the input named volume:
 ```bash
-cp /plot_shapes.* /inputs/
+docker run --rm -v "${PWD}/inputs:/sources" -v my_input:/input --entrypoint bash agdrone/canopycover-workflow:latest -c 'cp /sources/* /input/'
 ``` 
 
-In step 4 we copy the experiment.yaml file into the same folder as the drone images:
+In step 4 we run the workflow to generate the orothomosaic image using ODM (OrthoDroneMap) and calculate plot-level canopy cover:
 ```bash
-cp experiment.yaml /inputs/
-``` 
-
-In step 5 we copy the source files onto the input named volume:
-```bash
-docker run --rm -v /inputs:/sources -v my_input:/input --entrypoint bash agdrone/canopycover-workflow:latest -c 'cp /sources/* /input/'
-``` 
-
-In step 6 we create local folders to hold the output from processing:
-The `checkpoints` folder will contain the generated workflow checkpoint data allowing easy recovery from an error and helps prevent re-running an already completed workflow.
-Removing the workflow checkpoint files will enable a complete re-run of the workflow:
-```bash
-mkdir -p /output
-mkdir -p /checkpoints
-```
-
-In step 7 we run the workflow to generate the orothomosaic image using ODM (OrthoDroneMap) and calculate plot-level canopy cover:
-```bash
-docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v /inputs:/scif/data/odm/images -v scif_output:/output -v /checkpoints:/scif/data/odm_workflow -e INPUT_VOLUME=my_input -e OUTPUT_VOLUME=my_output -e "INPUT_IMAGE_FOLDER=/images" -e "OUTPUT_FOLDER=/output" agdrone/canopycover-workflow:latest run odm_workflow plot_shapes.shp my_input my_output
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "${PWD}/inputs:/scif/data"/odm_workflow/images -v my_output:/output -v /checkpoints:/scif/data/odm_workflow -e INPUT_VOLUME=my_input -e OUTPUT_VOLUME=my_output -e "INPUT_IMAGE_FOLDER=/images" -e "OUTPUT_FOLDER=/output" agdrone/canopycover-workflow:latest run odm_workflow plot_shapes.shp my_input my_output
 ```
 and we wait until it's finished.
 
-In step 8 we copy the results off the named output volume to our local folder:
+In step 5 we copy the results off the named output volume to our local folder:
 ```bash
-docker run --rm -v /output:/results -v my_output:/output --entrypoint bash agdrone/canopycover-workflow:latest -c 'cp -r /output/* /results/'
+docker run --rm -v "${PWD}/outputs:/results" -v my_output:/output --entrypoint bash agdrone/canopycover-workflow:latest -c 'cp -r /output/* /results/'
 ```
-The results of the processing are now in the `/output` folder.
+The results of the processing are now in the `${PWD}/outputs` folder.
 
-Finally, in step 9 we clean up the named volumes by deleting everything on them:
+Finally, in step 6 we clean up the named volumes by deleting everything on them:
 ```bash
 docker run --rm -v my_input:/input -v my_output:/output --entrypoint bash agdrone/canopycover-workflow:latest -c 'rm -r /input/* && rm -r /output/*'
 ```
@@ -213,17 +183,10 @@ cp jx-args.json.example jx-args.json
 docker build --progress=plain -t agdrone/canopycover-workflow:latest .
 ```
 
-## Docker Sibling Containers
+## A Note On Docker Sibling Containers <a name="docker_sibling_containers" />
 
-Sibling containers is a technique for having one Docker container start another Docker container to perform some work.
-There are a variety of instances where using sibling containers can be desirable, but typically it's used when there's an existing Docker image available and a determination has been made that using other approaches is not desirable or, perhaps, possible.
-
-The following links provide additional information on sibling containers:
-* <https://medium.com/@andreacolangelo/sibling-docker-container-2e664858f87a>
-* <https://www.develves.net/blogs/asd/2016-05-27-alternative-to-docker-in-docker/>
-
-**Security Risk**
-
-One of the consequences of using sibling containers is that the second container needs to be started with the `root` user due to technical considerations.
-Because of this need, using sibling containers can be considered a security risk.
-The severity of this risk dependent upon the execution environment and what systems the siblings have access to.
+The OpenDroneMap workflow uses sibling containers.
+This is a technique for having one Docker container start another Docker container to perform some work.
+We plan to find a secure alternative for future releases (see [AgPipeline/issues-and-projects#240](https://github.com/AgPipeline/issues-and-projects/issues/240)), primarily because of a potential security risk that makes this approach not suitable for shared cluster computing environments (it is also a concern for containers such as websites and databases that are exposed to the internet, but that is not the case here).
+You can just as safely run these workflows on your own computer as you can any trusted Docker container.
+However, with sibling containers the second container requires administrator ("root") privileges - please see [Docker documentation](https://docs.docker.com/engine/security/security/) for more details.
