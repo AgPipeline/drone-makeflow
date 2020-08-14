@@ -38,7 +38,7 @@ jobs:
       - name: Update apt-get
         run: sudo apt-get update
       - name: Fetch/update pylint and pytest
-        run: python3 -m pip install --upgrade --no-cache-dir pylint
+        run: python3 -m pip install --upgrade --no-cache-dir pylint pytest
         id: pylint-install
       - name: Fetch source code
         uses: actions/checkout@v2
@@ -71,3 +71,5 @@ jobs:
         run: cat action_pylint_files.txt
       - name: Running pylint
         run: cat action_pylint_files.txt | xargs python3 -m pylint --rcfile ./pylint.rc
+      - name: run pytest
+        run: python3 -m pytest
