@@ -22,7 +22,7 @@ jobs:
           include:
             - app: betydb2geojson
               parameters: https://terraref.ncsa.illinois.edu/bety bety_plots.geojson
-              test_results: if [[ -f "bety_plots.geojson" ]]; then exit 0; else echo "${{ matrix.app }} app failed"; exit 1; fi;
+              test_results: if [[ -f "bety_plots.geojson" ]]; then exit 0; else echo "App failed"; exit 1; fi;
     steps:
       - name: Fetch source code
         uses: actions/checkout@v2
