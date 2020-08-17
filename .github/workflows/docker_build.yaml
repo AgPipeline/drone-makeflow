@@ -15,10 +15,17 @@ on:
 jobs:
   build_docker:
     runs-on: ubuntu-latest
-    name: Running pylint checks
+    name: Build docker container
+    matrix:
+      app: [betydb2json]
+      include:
+        - app: betydb2json
+          parameters: https://terraref.ncsa.illinois.edu/bety plots.geojson
     steps:
       - name: Fetch source code
         uses: actions/checkout@v2
         id: fetch-source
       - name: Build docker image
         run: docker build -t test ./
+      - name: run test
+        run: docker run --rm -v `pwd`:/mnt test:latest run ${{ matrix.app }} ${{ matrix.parameters }}
