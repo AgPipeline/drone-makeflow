@@ -18,9 +18,9 @@ jobs:
     name: Build docker container
     strategy:
       matrix:
-          app: [betydb2json]
+          app: [betydb2geojson]
           include:
-            - app: betydb2json
+            - app: betydb2geojson
               parameters: https://terraref.ncsa.illinois.edu/bety plots.geojson
     steps:
       - name: Fetch source code
