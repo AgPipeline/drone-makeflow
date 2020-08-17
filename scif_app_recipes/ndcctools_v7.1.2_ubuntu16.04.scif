@@ -93,7 +93,7 @@
     # Use the main environment
 
 %apprun shp2geojson
-    ogr2ogr -f GeoJSON "${2}" "${SCIF_APPDATA_odm_workflow}/images/${1}"
+    ogr2ogr -f GeoJSON "${2}" "${1}"
 
 %apphelp shp2geojson
     This app provides a conversion from a shapefile to GeoJSON plot geometries
