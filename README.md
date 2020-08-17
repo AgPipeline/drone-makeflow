@@ -58,7 +58,6 @@ We will first present the steps and then provide an example.
 
 _NOTE_: the orthomosaic must be the file name without any extensions; in other words, leave off the `.tif` when specifying it on the Docker command line.
 
-
 #### For example: <a name="can_shp_example" />
 
 You can download a sample dataset of files (archived) with names corresponding to those listed here from CyVerse using the following command.
@@ -67,7 +66,6 @@ curl -X GET https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/sci
 tar xvzf scif_test_data.tar.gz -C "${PWD}/inputs"
 ```
 
-
 In this example we're going to assume that the source image is named `orthomosaic.tif`, that we're using a shapefile named `plot_shapes.shp`, and we have an `experiment.yaml` file.
 
 Now we can run the container mounting our source and destination folders, as well as indicating the name of the orthomosaic file and the name of the shapefile.
@@ -75,6 +73,7 @@ You will need to have Docker running at this point.
 ```bash
 docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/output" agdrone/canopycover-workflow:latest run short_workflow orthomosaic plot_shapes.shp
 ```
+
 Please refer to the [Docker](https://www.docker.com/) documentation for more information on running Docker containers.
 
 _NOTE_: the above `docker` command line contains the oprthomosaic file without its extension (`orthomosaic`).
@@ -126,8 +125,10 @@ docker volume create my_output
 ``` 
 
 Step 2 involves moving the drone images to the top location in the folder and then removing the empty folder:
+```bash
 mv "${PWD}/inputs/IMG/*" "${PWD}/inputs/"
 rmdir "${PWD}/inputs/IMG"
+```
 
 In step 3 we copy the source files onto the input named volume:
 ```bash
@@ -173,6 +174,10 @@ cp jx-args.json.example jx-args.json
 docker build --progress=plain -t agdrone/canopycover-workflow:latest .
 ```
 
-## A Note On Docker Sibling Containers
+## A Note On Docker Sibling Containers <a name="docker_sibling_containers" />
 
-The OpenDroneMap workflow uses sibling containers. This is a technique for having one Docker container start another Docker container to perform some work. We plan to find a secure alternative for future releases (see [AgPipeline/issues-and-projects#240](https://github.com/AgPipeline/issues-and-projects/issues/240)), primarily because of a potential security risk that makes this approach not suitable for shared cluster computing environments (it is also a concern for containers such as websites and databases that are exposed to the internet, but that is not the case here). You can just as safely run these workflows on your own computer as you can any trusted Docker container. However, with sibling containers the second container requires adminstrator ("root") privleges - please see [Docker documentation](https://docs.docker.com/engine/security/security/) for more details.
+The OpenDroneMap workflow uses sibling containers.
+This is a technique for having one Docker container start another Docker container to perform some work.
+We plan to find a secure alternative for future releases (see [AgPipeline/issues-and-projects#240](https://github.com/AgPipeline/issues-and-projects/issues/240)), primarily because of a potential security risk that makes this approach not suitable for shared cluster computing environments (it is also a concern for containers such as websites and databases that are exposed to the internet, but that is not the case here).
+You can just as safely run these workflows on your own computer as you can any trusted Docker container.
+However, with sibling containers the second container requires administrator ("root") privileges - please see [Docker documentation](https://docs.docker.com/engine/security/security/) for more details.
