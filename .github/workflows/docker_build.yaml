@@ -17,11 +17,11 @@ jobs:
     runs-on: ubuntu-latest
     name: Build docker container
     strategy:
-    matrix:
-        app: [betydb2json]
-        include:
-          - app: betydb2json
-            parameters: https://terraref.ncsa.illinois.edu/bety plots.geojson
+      matrix:
+          app: [betydb2json]
+          include:
+            - app: betydb2json
+              parameters: https://terraref.ncsa.illinois.edu/bety plots.geojson
     steps:
       - name: Fetch source code
         uses: actions/checkout@v2
