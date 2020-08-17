@@ -31,5 +31,7 @@ jobs:
         run: docker build -t test ./
       - name: Run test
         run: docker run --rm -v `pwd`:/mnt test:latest run ${{ matrix.app }} ${{ matrix.parameters }}
+      - name: Folder listing
+        run: ls -l
       - name: Check results
         run: ${{ matrix.test_results }}
