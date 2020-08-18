@@ -23,7 +23,8 @@ def add_arguments():
                              ' environment variable)', metavar='str', type=str, default=os.getenv('BETYDB_URL'))
     parser.add_argument('-f', '--filter', help='partial or full string filter for sitename values returned',
                         metavar='str', type=str, default='')
-    parser.add_argument('-o', '--outfile', help='the output file to write GeoJSON to', metavar='FILE', type=argparse.FileType('wt'),
+    parser.add_argument('-o', '--outfile', help='the output file to write GeoJSON to', metavar='FILE',
+                        type=argparse.FileType('wt'),
                         default='out.txt')
 
     args = parser.parse_args()
