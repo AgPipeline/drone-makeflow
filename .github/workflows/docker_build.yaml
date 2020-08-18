@@ -114,3 +114,13 @@ jobs:
         run: |
              chmod +x "./.github/workflows/${{ matrix.result_check_script }}"
              "./.github/workflows/${{ matrix.result_check_script }}"
+
+  artifact_cleanup:
+    runs-on: ubuntu-latest
+    needs: [app_testing, workflow_testing]
+    name: Cleanup artifacts upon success
+    steps:
+      - name: Remove docker artifact
+        uses: geekyeggo/delete-artifact@v1
+        with:
+          name: scif_test_image
