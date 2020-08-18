@@ -49,6 +49,12 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: scif_test_image
+      - name: Load docker image
+        run: |
+             ls -l
+             gunzip scif_test_image.tar.gz
+             docker load --input scif_test_image.tar
+             docker images
       - name: Shp2geojson download check
         if: ${{ matrix.app  == 'shp2geojson' }}
         run: |
@@ -85,10 +91,10 @@ jobs:
           name: scif_test_image
       - name: Decompress and load docker image
         run: |
+             ls -l
              gunzip scif_test_data.tar.gz
              docker load --input scif_test_data.tar
-      - name: Show docker images
-        run: docker images
+             docker images
       - name: Download testing data files
         run: |
              curl -X GET ${{ matrix.data_file_archive_url }} > test_data.tar.gz
