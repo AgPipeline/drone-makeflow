@@ -72,7 +72,7 @@ jobs:
   workflow_testing:
     runs-on: ubuntu-latest
     needs: build_docker
-    name: Build docker container
+    name: Testing workflows
     strategy:
       matrix:
           app: [short_workflow]
@@ -80,8 +80,11 @@ jobs:
             - app: short_workflow
               data_file_archive_url: "https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz"
               parameters: /mnt/orthomosaic.tif /mnt/plot_shapes.shp
-              test_results: if [[ -f "shp_plots.geojson" ]]; then echo "Test shp2geojson success"; exit 0; else echo "App failed - shp2geojson"; exit 1; fi;
+              result_check_script: "short_workflow_check.sh"
     steps:
+      - name: Fetch source code
+        uses: actions/checkout@v2
+        id: fetch-source
       - name: Prepare folders
         run: |
              mkdir ./inputs
@@ -104,6 +107,10 @@ jobs:
              ls -l
              ls -l ./inputs/*
       - name: Run test
-        run: docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/output" scif_test:latest run short_workflow orthomosaic plot_shapes.shp
-      - name: Show output
+        run: docker run --rm -v "./inputs:/scif/data/odm_workflow/images" -v "./outputs:/output" scif_test:latest run short_workflow orthomosaic plot_shapes.shp
+      - name: Show outputs folder
         run: ls -l ./outputs
+      - name: Check outputs
+        run: |
+             chmod +x "./.github/workflows/${{ matrix.result_check_script }}"
+             "./.github/workflows/${{ matrix.result_check_script }}"
