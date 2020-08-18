@@ -4,6 +4,7 @@ on:
     branches:
       - master
       - develop
+      - correcting_permissions
   pull_request:
     branches:
       - master
