@@ -47,7 +47,6 @@ def test_betydb_url():
     """Test getting BETYdb data
     """
     # pylint: disable=import-outside-toplevel
-    print("I am reaching here")
     import betydb2geojson as b2j
     ret_val = b2j.query_betydb_experiments(BETYDB_URL)
     assert ret_val is not None
