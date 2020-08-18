@@ -23,7 +23,7 @@ else
 fi
 
 # Get all the folders and check the count
-FOLDER_LIST=(`find "${TARGET_FOLDER}" -d 1 -type d`)
+FOLDER_LIST=(`find -d 1 "${TARGET_FOLDER}" -type d`)
 if [[ "${#FOLDER_LIST[@]}" == "${EXPECTED_NUM_FOLDERS}" ]]; then
   echo "Found expected number of folders: ${EXPECTED_NUM_FOLDERS}"
 else
