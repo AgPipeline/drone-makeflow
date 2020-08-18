@@ -16,6 +16,24 @@ jobs:
   build_docker:
     runs-on: ubuntu-latest
     name: Build docker container
+    steps:
+      - name: Fetch source code
+        uses: actions/checkout@v2
+        id: fetch-source
+      - name: Build docker image
+        run: docker build -t scif_test:latest ./
+      - name: Compress docker image
+        run: docker save scif_test:latest | gzip  | gzip -9 -c - > scif_test_image.tar.gz
+      - name: Upload docker image
+        uses: actions/upload-artifact@v2
+        with:
+          name: scif_test_image
+          path: scif_test_image.tar.gz
+
+  app_testing:
+    runs-on: ubuntu-latest
+    needs: build_docker
+    name: Test simple apps (not workflow apps)
     strategy:
       matrix:
           app: [betydb2geojson, shp2geojson]
@@ -27,15 +45,15 @@ jobs:
               parameters: /mnt/plot_shapes.shp /mnt/shp_plots.geojson
               test_results: if [[ -f "shp_plots.geojson" ]]; then echo "Test shp2geojson success"; exit 0; else echo "App failed - shp2geojson"; exit 1; fi;
     steps:
-      - name: Fetch source code
-        uses: actions/checkout@v2
-        id: fetch-source
-      - name: Build docker image
-        run: docker build -t test ./
+      - name: Download docker image
+        uses: actions/download-artifact@v2
+        with:
+          name: scif_test_image
       - name: Shp2geojson download check
         if: ${{ matrix.app  == 'shp2geojson' }}
-        run: curl -X GET https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz > scif_test_data.tar.gz &&
-             tar xvzf scif_test_data.tar.gz -C "./" &&
+        run: |
+             curl -X GET https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz > scif_test_data.tar.gz
+             tar xvzf scif_test_data.tar.gz -C "./"
              ls -l
       - name: Run test
         run: docker run --rm -v `pwd`:/mnt test:latest run ${{ matrix.app }} ${{ matrix.parameters }}
@@ -43,3 +61,41 @@ jobs:
         run: ls -l
       - name: Check results
         run: ${{ matrix.test_results }}
+
+  workflow_testing:
+    runs-on: ubuntu-latest
+    needs: build_docker
+    name: Build docker container
+    strategy:
+      matrix:
+          app: [short_workflow]
+          include:
+            - app: short_workflow
+              data_file_archive_url: "https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz"
+              parameters: /mnt/orthomosaic.tif /mnt/plot_shapes.shp
+              test_results: if [[ -f "shp_plots.geojson" ]]; then echo "Test shp2geojson success"; exit 0; else echo "App failed - shp2geojson"; exit 1; fi;
+    steps:
+      - name: Prepare folders
+        run: |
+             mkdir ./inputs
+             mkdir ./outputs
+      - name: Download docker image
+        uses: actions/download-artifact@v2
+        with:
+          name: scif_test_image
+      - name: Decompress and load docker image
+        run: |
+             gunzip scif_test_data.tar.gz
+             docker load --input scif_test_data.tar
+      - name: Show docker images
+        run: docker images
+      - name: Download testing data files
+        run: |
+             curl -X GET ${{ matrix.data_file_archive_url }} > test_data.tar.gz
+             tar xvzf test_data.tar.gz -C "./inputs/"
+             ls -l
+             ls -l ./inputs/*
+      - name: Run test
+        run: docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/output" scif_test:latest run short_workflow orthomosaic plot_shapes.shp
+      - name: Show output
+        run: ls -l ./outputs
