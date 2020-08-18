@@ -2,7 +2,7 @@
     # Download canopycover code. In the future use pip/conda install.
     wget -O canopycover.tar.gz https://github.com/AgPipeline/transformer-canopycover/archive/v1.1.tar.gz
     tar xvf canopycover.tar.gz
-    mv transformer-canopycover src
+    mv transformer-canopycover-1.1 src
 
     # Install packages needed
     python3 -m venv --system-site-packages .venv
