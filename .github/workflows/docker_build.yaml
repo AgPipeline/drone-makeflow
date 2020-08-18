@@ -49,6 +49,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: scif_test_image
+          path: ./
       - name: Load docker image
         run: |
              ls -l
@@ -62,7 +63,7 @@ jobs:
              tar xvzf scif_test_data.tar.gz -C "./"
              ls -l
       - name: Run test
-        run: docker run --rm -v `pwd`:/mnt test:latest run ${{ matrix.app }} ${{ matrix.parameters }}
+        run: docker run --rm -v `pwd`:/mnt scif_test:latest run ${{ matrix.app }} ${{ matrix.parameters }}
       - name: Folder listing
         run: ls -l
       - name: Check results
@@ -89,11 +90,12 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: scif_test_image
+          path: ./
       - name: Decompress and load docker image
         run: |
              ls -l
-             gunzip scif_test_data.tar.gz
-             docker load --input scif_test_data.tar
+             gunzip scif_test_image.tar.gz
+             docker load --input scif_test_image.tar
              docker images
       - name: Download testing data files
         run: |
