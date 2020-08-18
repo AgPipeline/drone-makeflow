@@ -107,7 +107,7 @@ jobs:
              ls -l
              ls -l ./inputs/*
       - name: Run test
-        run: docker run --rm -v "./inputs:/scif/data/odm_workflow/images" -v "./outputs:/output" scif_test:latest run short_workflow orthomosaic plot_shapes.shp
+        run: docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/output" scif_test:latest run short_workflow orthomosaic plot_shapes.shp
       - name: Show outputs folder
         run: ls -l ./outputs
       - name: Check outputs
