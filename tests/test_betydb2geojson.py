@@ -7,6 +7,7 @@ Notes:
 """
 import os
 import re
+import subprocess
 from subprocess import getstatusoutput
 import pytest
 
@@ -48,6 +49,12 @@ def test_betydb_url():
     """
     # pylint: disable=import-outside-toplevel
     import betydb2geojson as b2j
+
+    f = open('object.json', 'w+')
+    val_1 = subprocess.run(b2j.query_betydb_experiments(BETYDB_URL)).stdout
+    f.write(str(val_1))
+    f.close()
+    print(str(val_1))
     ret_val = b2j.query_betydb_experiments(BETYDB_URL)
     assert ret_val is not None
     print("The return val is: " + str(ret_val))
