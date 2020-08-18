@@ -50,10 +50,10 @@ def test_betydb_url():
     # pylint: disable=import-outside-toplevel
     import betydb2geojson as b2j
 
-    f = open('object.json', 'w+')
+    test_file = open('object.json', 'w+')
     val_1 = subprocess.run([b2j.query_betydb_experiments(BETYDB_URL)], check=True)
-    f.write(str(val_1))
-    f.close()
+    test_file.write(str(val_1))
+    test_file.close()
     print(str(val_1))
     ret_val = b2j.query_betydb_experiments(BETYDB_URL)
     assert ret_val is not None
