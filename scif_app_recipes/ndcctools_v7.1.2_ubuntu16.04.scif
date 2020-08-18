@@ -77,18 +77,6 @@
 %apphelp clean
     This app removed all folder and files in the working folders - use with caution
 
-%appinstall jx2json
-    # Piggyback off the makeflow install
-
-%apprun jx2json
-    exec conda run --prefix "${SCIF_APPROOT_makeflow}/conda" jx2json \
-        --args "${SCIF_APPROOT_makeflow}/src/jx-args.json" \
-        --pretty \
-        "${SCIF_APPROOT_odm_workflow}/src/workflow.jx" > "${SCIF_APPDATA}/workflow.json" \
-
-%apphelp jx2json
-    This app provides an entrypoint to the jx2json tool
-
 %appinstall betydb2geojson
     # We install a virtual environment so we can get the versions we need
     python3 -m venv --system-site-packages .venv
