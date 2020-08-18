@@ -20,7 +20,7 @@ def add_arguments():
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-u', '--betydb_url',
                         help='the URL of BETYdb instance to query (defaults to ' + ENV_BETYDB_URL_NAME +
-                             ' environment variable)', metavar='str', type=str, default=os.getenv('BETYDB_URL'))
+                        ' environment variable)', metavar='str', type=str, default=os.getenv('BETYDB_URL'))
     parser.add_argument('-f', '--filter', help='partial or full string filter for sitename values returned',
                         metavar='str', type=str, default='')
     parser.add_argument('-o', '--outfile', help='the output file to write GeoJSON to', metavar='FILE',
