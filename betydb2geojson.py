@@ -19,7 +19,7 @@ def add_arguments():
     parser = argparse.ArgumentParser(description="BETYdb plots to GeoJSON",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-u', '--betydb_url',
-                        help='the URL of BETYdb instance to query (defaults to ' + ENV_BETYDB_URL_NAME + \
+                        help='the URL of BETYdb instance to query (defaults to ' + ENV_BETYDB_URL_NAME +
                              ' environment variable)', metavar='str', type=str, default=os.getenv('BETYDB_URL'))
     parser.add_argument('-f', '--filter', help='partial or full string filter for sitename values returned',
                         metavar='str', type=str, default='')
@@ -28,13 +28,14 @@ def add_arguments():
                         default='out.txt')
 
     args = parser.parse_args()
+
     if not args.betydb_url:
         parser.error('--betydb_url is required')
 
     return args
 
 
-def query_betydb_experiments(betydb_url: str) -> dict:
+def query_betydb_experiments(betydb_url: str = None) -> dict:
     """Queries BETYdb for experiment information
     Arguments:
         betydb_url: the url to query
