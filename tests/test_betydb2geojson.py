@@ -53,7 +53,7 @@ def test_betydb_url():
     test_file = open('object.json', 'w+')
     # subprocess.run(b2j.query_betydb_experiments(BETYDB_URL), check=True)
 
-    subprocess.check_output(b2j.query_betydb_experiments(BETYDB_URL), check=True)
+    subprocess.check_output(b2j.query_betydb_experiments(BETYDB_URL))
 
     print("test file is: " + str(test_file))
     ret_val = b2j.query_betydb_experiments(BETYDB_URL)
