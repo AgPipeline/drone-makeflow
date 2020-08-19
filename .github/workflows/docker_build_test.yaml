@@ -120,8 +120,7 @@ jobs:
       - name: Check artifacts
         run: |
              WFL=$(find ./checkpoints | grep "makeflowlog" | wc -l| tr -d '[:space:]')
-             echo $WFL
-             if [[ "$WFL" == "2" ]]; then echo "The correct number of makeflow log files were found"; else "Makeflow log count error"; exit 2; fi
+             if [[ "$WFL" == "2" ]]; then echo "The correct number of makeflow log files were found ($WFL)"; else "Makeflow log count error: $WFL"; exit 2; fi
 
   artifact_cleanup:
     runs-on: ubuntu-latest
