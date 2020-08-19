@@ -173,7 +173,7 @@ def convert() -> None:
     print("HELLO WORLD")
     print("HELLO WORLD")
     print("THE OUTFILE IS: " + str(args.outfile))
-    with open("out.json", 'w') as out_file:
+    with args.outfile as out_file:
         write_geojson(out_file, geojson_plots)
 
 
