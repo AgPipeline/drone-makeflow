@@ -60,7 +60,7 @@ def test_betydb_url():
     test_file.write(str(ret_val))
 
     assert ret_val is not None
-    print("The return val is: " + str(ret_val))
+    # print("The return val is: " + str(ret_val))
     subprocess.call(['echo', str(test_file)])
     for key in ['metadata', 'data']:
         assert key in ret_val
