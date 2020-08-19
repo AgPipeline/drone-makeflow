@@ -57,7 +57,7 @@ def test_betydb_url():
     # subprocess.check_output(b2j.query_betydb_experiments(BETYDB_URL))
 
     ret_val = b2j.query_betydb_experiments(BETYDB_URL)
-    test_file.write(ret_val)
+    test_file.write(str(ret_val))
 
     assert ret_val is not None
     print("The return val is: " + str(ret_val))
