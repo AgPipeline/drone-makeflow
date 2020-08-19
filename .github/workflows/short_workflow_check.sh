@@ -6,7 +6,7 @@ EXPECTED_NUM_CANOPYCOVER_CSV=56
 # The same number of CSV files + original, un-clipped mask file
 EXPECTED_NUM_MASK_TIF=$((EXPECTED_NUM_CANOPYCOVER_CSV + 1))
 
-# What folder are we looking in
+# What folder are we looking in for outputs
 if [[ ! "${1}" == "" ]]; then
   TARGET_FOLDER="${1}"
 else

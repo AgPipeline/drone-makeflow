@@ -110,11 +110,18 @@ jobs:
       - name: Run test
         run: docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/output" -v "${PWD}/checkpoints:/scif/data/short_workflow" scif_test:latest run short_workflow orthomosaic plot_shapes.shp
       - name: Show outputs folder
-        run: ls -l ./outputs
+        run: |
+             ls -l ./outputs
+             ls -l ./checkpoints
       - name: Check outputs
         run: |
              chmod +x "./.github/workflows/${{ matrix.result_check_script }}"
              "./.github/workflows/${{ matrix.result_check_script }}"
+      - name: Check artifacts
+        run: |
+             WFL=$(find ./checkpoints | grep "makeflowlog" | wc -l| tr -d '[:space:]')
+             echo $WFL
+             if [[ "$WFL" == "2" ]]; then echo "The correct number of makeflow log files were found"; else "Makeflow log count error"; exit 2; fi
 
   artifact_cleanup:
     runs-on: ubuntu-latest
