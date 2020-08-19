@@ -50,7 +50,6 @@ def test_betydb_url():
     import betydb2geojson as b2j
     ret_val = b2j.query_betydb_experiments(BETYDB_URL)
     assert ret_val is not None
-    subprocess.call(['echo', str(test_file)])
     for key in ['metadata', 'data']:
         assert key in ret_val
 
