@@ -60,7 +60,12 @@ def test_betydb_url():
     test_file.write(str(ret_val))
 
     assert ret_val is not None
-    # print("The return val is: " + str(ret_val))
     subprocess.call(['echo', str(test_file)])
     for key in ['metadata', 'data']:
         assert key in ret_val
+
+
+def run_from_command_line():
+    """Test running betydb2geojson.py from the command line
+    """
+    subprocess.run(['python', SOURCE_FILE, "--u", "https://terraref.ncsa.illinois.edu/bety", "-o", "test_output.json"])
