@@ -5,6 +5,7 @@ Author : Chris Schnaufer <schnaufer@arizona.edu
 Notes:
     This file assumes it's in a subfolder off the main folder
 """
+import json
 import os
 import re
 import subprocess
@@ -65,7 +66,7 @@ def test_betydb_url():
         assert key in ret_val
 
 
-def run_from_command_line():
+def test_command_line():
     """Test running betydb2geojson.py from the command line
     """
     subprocess.run(['python', SOURCE_FILE, "--u", "https://terraref.ncsa.illinois.edu/bety", "-o", "test_output.json"],
