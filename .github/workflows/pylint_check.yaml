@@ -74,4 +74,4 @@ jobs:
       - name: Set execution permission for PyTest
         run: chmod +x betydb2geojson.py
       - name: run pytest
-        run: python3 -m pytest -rpP
+        run: python3 -m pytest
