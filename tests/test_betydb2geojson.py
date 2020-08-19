@@ -26,10 +26,8 @@ def test_exists():
 
 
 def test_usage():
+    """Program prints a "usage" statement when requested
     """
-    Program prints a "usage" statement when requested
-    """
-
     for flag in ['-h', '--help']:
         ret_val, out = getstatusoutput(f'{SOURCE_PATH} {flag}')
         assert ret_val == 0
@@ -50,16 +48,7 @@ def test_betydb_url():
     """
     # pylint: disable=import-outside-toplevel
     import betydb2geojson as b2j
-
-    test_file = open('object.json', 'w+')
-
-    # subprocess.run(b2j.query_betydb_experiments(BETYDB_URL), check=True)
-
-    # subprocess.check_output(b2j.query_betydb_experiments(BETYDB_URL))
-
     ret_val = b2j.query_betydb_experiments(BETYDB_URL)
-    test_file.write(str(ret_val))
-
     assert ret_val is not None
     subprocess.call(['echo', str(test_file)])
     for key in ['metadata', 'data']:

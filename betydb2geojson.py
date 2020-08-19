@@ -153,7 +153,7 @@ def convert() -> None:
 
     args = add_arguments()
 
-    if not args.output_file:
+    if not args.outfile:
         raise RuntimeError("An output file must be specified to receive the GeoJSON plot information")
 
     # Get the list of sites (plots) from the JSON returned
@@ -166,7 +166,7 @@ def convert() -> None:
     geojson_plots = sites_to_geojson(sites)
 
     # Write out the GeoJSON
-    with open(args.output_file, 'w') as out_file:
+    with open(args.outfile, 'w') as out_file:
         write_geojson(out_file, geojson_plots)
 
 
