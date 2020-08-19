@@ -166,15 +166,7 @@ def convert() -> None:
     geojson_plots = sites_to_geojson(sites)
 
     # Write out the GeoJSON
-    print("HELLO WORLD")
-    print("HELLO WORLD")
-    print("HELLO WORLD")
-    print("HELLO WORLD")
-    print("HELLO WORLD")
-    print("HELLO WORLD")
-    print("THE OUTFILE IS: " + str(args.outfile))
-    with args.outfile as out_file:
-        write_geojson(out_file, geojson_plots)
+    write_geojson(args.outfile, geojson_plots)
 
 
 if __name__ == "__main__":

@@ -61,7 +61,6 @@ def test_command_line():
                    check=True)
 
     assert os.path.isfile("test_output.json")
-    # assert os.path.isfile("out.json")
 
     with open("test_output.json") as output_file:
         file_data = json.load(output_file)
