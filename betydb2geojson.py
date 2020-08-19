@@ -35,7 +35,7 @@ def add_arguments():
     return args
 
 
-def query_betydb_experiments(betydb_url: str = None) -> dict:
+def query_betydb_experiments(betydb_url: str) -> dict:
     """Queries BETYdb for experiment information
     Arguments:
         betydb_url: the url to query
