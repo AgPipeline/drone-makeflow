@@ -45,7 +45,7 @@ mkdir -p "${PWD}/inputs"
 ```bash
 mkdir -p "${PWD}/outputs"
 ```
-- Create an folder to hold the output of our processing.
+- Create an output folder.
 The `checkpoints` folder will contain the generated workflow checkpoint data allowing easy recovery from an error and helps prevent re-running an already completed workflow.
 Removing the workflow checkpoint files will enable a complete re-run of the workflow:
 ```bash
