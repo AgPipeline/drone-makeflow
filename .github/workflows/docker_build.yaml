@@ -89,6 +89,7 @@ jobs:
         run: |
              mkdir ./inputs
              mkdir ./outputs
+             mkdir ./checkpoints
       - name: Download docker image
         uses: actions/download-artifact@v2
         with:
@@ -107,7 +108,7 @@ jobs:
              ls -l
              ls -l ./inputs/*
       - name: Run test
-        run: docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/output" scif_test:latest run short_workflow orthomosaic plot_shapes.shp
+        run: docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/output" -v "${PWD}/checkpoints:/scif/data/short_workflow" scif_test:latest run short_workflow orthomosaic plot_shapes.shp
       - name: Show outputs folder
         run: ls -l ./outputs
       - name: Check outputs
