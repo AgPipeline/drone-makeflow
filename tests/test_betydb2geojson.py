@@ -51,7 +51,7 @@ def test_betydb_url():
     import betydb2geojson as b2j
 
     test_file = open('object.json', 'w+')
-    # subprocess.run(b2j.query_betydb_experiments(BETYDB_URL), check=True)
+    subprocess.run(b2j.query_betydb_experiments(BETYDB_URL), check=True)
 
     subprocess.check_output(b2j.query_betydb_experiments(BETYDB_URL))
 
