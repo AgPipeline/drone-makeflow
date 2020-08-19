@@ -51,9 +51,10 @@ def test_betydb_url():
     import betydb2geojson as b2j
 
     test_file = open('object.json', 'w+')
-    val_1 = subprocess.run(b2j.query_betydb_experiments(BETYDB_URL), check=True)
-    test_file.write(str(val_1))
-    test_file.close()
+    subprocess.run(b2j.query_betydb_experiments(BETYDB_URL), check=True)
+
+    subprocess.check_output(b2j.query_betydb_experiments(BETYDB_URL), check=True)
+
     print("test file is: " + str(test_file))
     ret_val = b2j.query_betydb_experiments(BETYDB_URL)
     assert ret_val is not None
