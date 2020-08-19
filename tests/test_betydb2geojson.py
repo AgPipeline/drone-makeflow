@@ -64,7 +64,5 @@ def test_command_line():
 
     with open("test_output.json") as output_file:
         file_data = json.load(output_file)
-        # print("THE FILE DATA IS: " + str(file_data))
-        print("THE KEYS ARE: " + str(file_data.keys()))
-        for key in ['features', 'coordinates', 'properties']:
+        for key in ['type', 'name', 'features']:
             assert key in file_data
