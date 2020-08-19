@@ -27,7 +27,8 @@ FOLDER_LIST=(`find "${TARGET_FOLDER}" -maxdepth 1 -type d`)
 if [[ "${#FOLDER_LIST[@]}" == "${EXPECTED_NUM_FOLDERS}" ]]; then
   echo "Found expected number of folders: ${EXPECTED_NUM_FOLDERS}"
 else
-  echo "Expected ${EXPECTED_NUM_FOLDERS} folders and only found ${#FOLDER_LIST[@]}"
+  echo "Expected ${EXPECTED_NUM_FOLDERS} folders and found ${#FOLDER_LIST[@]}"
+  echo ${FOLDER_LIST}
   exit 10
 fi
 
@@ -37,6 +38,7 @@ if [[ "${#EXPECTED_CSV[@]}" == "${EXPECTED_NUM_CANOPYCOVER_CSV}" ]]; then
   echo "Found expected number of canopycover.csv files: ${EXPECTED_NUM_CANOPYCOVER_CSV}"
 else
   echo "Expected ${EXPECTED_NUM_CANOPYCOVER_CSV} canopycover.csv files but only found ${#EXPECTED_CSV[@]}"
+  echo ${EXPECTED_CSV}
   exit 20
 fi
 
@@ -46,5 +48,6 @@ if [[ "${#EXPECTED_MASK[@]}" == "${EXPECTED_NUM_MASK_TIF}" ]]; then
   echo "Found expected number of orthomosaic_mask.tif files: ${EXPECTED_NUM_MASK_TIF}"
 else
   echo "Expected ${EXPECTED_NUM_MASK_TIF} orthomosaic_mask.tif files but only found ${#EXPECTED_MASK[@]}"
+  echo ${EXPECTED_MASK}
   exit 30
 fi
