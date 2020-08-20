@@ -11,7 +11,7 @@ from osgeo import ogr
 ENV_BETYDB_URL_NAME = 'BETYDB_URL'
 
 
-def add_arguments():
+def add_arguments() -> argparse.Namespace:
     """Adds arguments to the command line parser
     Return:
         No return is defined
