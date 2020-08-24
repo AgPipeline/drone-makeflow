@@ -121,6 +121,12 @@ jobs:
         run: |
              WFL=$(find ./checkpoints | grep "makeflowlog" | wc -l| tr -d '[:space:]')
              if [[ "$WFL" == "2" ]]; then echo "The correct number of makeflow log files were found ($WFL)"; else "Makeflow log count error: $WFL"; exit 2; fi
+      - name: Clean
+        run: docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/output" -v "${PWD}/checkpoints:/scif/data/short_workflow" scif_test:latest run short_workflow orthomosaic plot_shapes.shp --clean
+      -  name: Check clean
+         run: |
+              WFL=$(find ./checkpoints | wc -l| tr -d '[:space:]')
+              if [[ "$WFL" == "1" ]]; then echo "Workflow has been cleaned up"; else "Workflow not completely cleaned up"; ls -l ./checkpoints; exit 3; fi
 
   artifact_cleanup:
     runs-on: ubuntu-latest
