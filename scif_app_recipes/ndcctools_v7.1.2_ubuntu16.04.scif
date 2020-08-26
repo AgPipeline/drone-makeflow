@@ -16,7 +16,7 @@
         --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
         ${4} \
         "/scif/apps/odm_workflow/src/workflow.jx"
-    if [ ! -f "/output/canopycover_fileslist.json" ]; then "/scif/apps/odm_workflow/src/prep-canopy-cover.sh" "/output"; fi
+    if [ ! -f "/output/canopycover_fileslist.json" ]; then "/scif/apps/odm_workflow/src/prep-canopy-cover.sh" "orthomosaic"; fi
     conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
         --jx-args="${SCIF_APPROOT}/src/jx-args.json" \
