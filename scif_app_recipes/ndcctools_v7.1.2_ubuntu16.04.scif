@@ -4,8 +4,8 @@
 
 %apprun odm_workflow
     echo "{\"INPUT_IMAGE_FOLDER\": \"${INPUT_IMAGE_FOLDER}\", \"OUTPUT_FOLDER\": \"/output\", \"INPUT_VOLUME\": \"${2}\", \"OUTPUT_VOLUME\": \"${3}\" }" > ${SCIF_APPDATA}/jx-params.json
-    ${SCIF_APPROOT_odm_workflow}/src/generate_geojson.sh "${1}" "${SCIF_APPDATA_odm_workflow}/plots.json"
-    bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+    if [ ! -f "/output/plots.json" ]; then ${SCIF_APPROOT_odm_workflow}/src/generate_geojson.sh "${1}" "/output/plots.json"; fi
+    conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
         --jx-args="/scif/apps/odm_workflow/src/jx-args.json" \
         --jx-args="${SCIF_APPDATA}/jx-params.json" \
@@ -14,9 +14,10 @@
         --change-directory="${SCIF_APPDATA}" \
         --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
         --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
-        "/scif/apps/odm_workflow/src/workflow.jx"'
-    [ ! -f "/output/canopycover_fileslist.json" ]; /scif/apps/odm_workflow/src/prep-canopy-cover.sh "orthomosaic"
-    bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+        ${4} \
+        "/scif/apps/odm_workflow/src/workflow.jx"
+    if [ ! -f "/output/canopycover_fileslist.json" ]; then "/scif/apps/odm_workflow/src/prep-canopy-cover.sh" "/output"; fi
+    conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
         --jx-args="${SCIF_APPROOT}/src/jx-args.json" \
         --jx-args="/output/canopycover_fileslist.json" \
@@ -25,14 +26,15 @@
         --change-directory="${SCIF_APPDATA}" \
         --makeflow-log="${SCIF_APPDATA}/canopy-cover.jx.makeflowlog" \
         --batch-log="${SCIF_APPDATA}/canopy-cover.jx.batchlog" \
-        "${SCIF_APPROOT}/src/canopy-cover.jx"'
-    cp -r /output/* /output/
+        ${4} \
+        "${SCIF_APPROOT}/src/canopy-cover.jx"
+    if [ -f "/output/plots.json" ] && [[ "${4}" =~ "--clean" ]]; then echo "Removing plots.json" && rm "/output/plots.json"; fi
+    if [ -f "/output/canopycover_fileslist.json" ] && [[ "${4}" =~ "--clean" ]]; then echo "Removing fileslist.json" && rm "/output/canopycover_fileslist.json"; fi
 
 %apphelp odm_workflow
-    This app provides an entrypoint to the makeflow tool
+    This app provides an entrypoint to the ODM (OpenDroneMap) makeflow app.
 
-    Prepare files:
-    docker run --rm -v `pwd`/test/images:/images -v scif_input:/input --entrypoint bash test -c 'cp /images/* /input'
+    Refer to the documentation on how to run this app: https://github.com/AgPipeline/drone-makeflow#canopy-cover-opendronemap-and-plot-boundaries-
 
 %appinstall short_workflow
     # Install Makeflow
@@ -40,8 +42,8 @@
 
 %apprun short_workflow
     echo "{\"ORTHOMOSAIC_NAME\": \"${1}\", \"OUTPUT_FOLDER\": \"/output\"  }" > ${SCIF_APPDATA}/jx-params.json
-    ${SCIF_APPROOT_odm_workflow}/src/generate_geojson.sh "${2}"
-    bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+    if [ ! -f "/output/plots.json" ]; then ${SCIF_APPROOT_odm_workflow}/src/generate_geojson.sh "${2}" "/output/plots.json"; fi
+    conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
         --jx-args="/scif/apps/odm_workflow/src/jx-args.json" \
         --jx-args="${SCIF_APPDATA}/jx-params.json" \
@@ -50,9 +52,10 @@
         --change-directory="${SCIF_APPDATA}" \
         --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
         --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
-        "/scif/apps/odm_workflow/src/short_workflow.jx"'
-    [ ! -f "/output/canopycover_fileslist.json" ]; /scif/apps/odm_workflow/src/prep-canopy-cover.sh "${1}"
-    bash -c 'conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+        ${3} \
+        "/scif/apps/odm_workflow/src/short_workflow.jx"
+    if [ ! -f "/output/canopycover_fileslist.json" ]; then "/scif/apps/odm_workflow/src/prep-canopy-cover.sh" "${1}"; fi
+    conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
         --jx-args="/scif/apps/odm_workflow/src/jx-args.json" \
         --jx-args="/output/canopycover_fileslist.json" \
@@ -61,21 +64,13 @@
         --change-directory="${SCIF_APPDATA}" \
         --makeflow-log="${SCIF_APPDATA}/canopy-cover.jx.makeflowlog" \
         --batch-log="${SCIF_APPDATA}/canopy-cover.jx.batchlog" \
-        "/scif/apps/odm_workflow/src/canopy-cover.jx"'
+        ${3} \
+        "/scif/apps/odm_workflow/src/canopy-cover.jx"
+    if [ -f "/output/plots.json" ] && [[ "${3}" =~ "--clean" ]]; then echo "Removing plots.json" && rm "/output/plots.json"; fi
+    if [ -f "/output/canopycover_fileslist.json" ] && [[ "${3}" =~ "--clean" ]]; then echo "Removing fileslist.json" && rm "/output/canopycover_fileslist.json"; fi
 
 %apphelp short_workflow
-    This app provides an entrypoint to the non-ODM (OpenDroneMap) makeflow app. Specify the TIFF orthomosaic file name
-    without its extension, followed by a plot boundary shapefile, BETYDB_URL, or GeoJSON file.
-
-%appinstall clean
-
-%apprun clean
-    bash -c 'rm -r /output/*'
-    bash -c 'if [ -d /input ]; then "rm -r /scif/data/odm/images/*"; fi;'
-    #bash -c 'if [ -d /output ]; then "rm -r /output/*"; fi;'
-
-%apphelp clean
-    This app removed all folder and files in the working folders - use with caution
+    Refer to the documentation on how to run this app: https://github.com/AgPipeline/drone-makeflow#canopy-cover-orthomosaic-and-plot-boundaries-
 
 %appinstall betydb2geojson
     # We install a virtual environment so we can get the versions we need
@@ -87,13 +82,19 @@
     .venv/bin/python3 ${SCIF_APPROOT_odm_workflow}/src/betydb2geojson.py --betydb_url "${1}" "${2}"
 
 %apphelp betydb2geojson
-    This app provides a conversion from BETYdb site data to GeoJSON plot geometries
+    This app provides a conversion from BETYdb site data to GeoJSON plot geometries.
+
+    Sample command - replace <BETYdb URL> with the actual URL and <out filename> with the target file name:
+        scif run betydb2geojson <BETYdb URL> <out filename>
 
 %appinstall shp2geojson
     # Use the main environment
 
 %apprun shp2geojson
-    ogr2ogr -f GeoJSON "${2}" "${1}"
+    ogr2ogr -f GeoJSON "${2}" "${SCIF_APPDATA_odm_workflow}/images/${1}"
 
 %apphelp shp2geojson
-    This app provides a conversion from a shapefile to GeoJSON plot geometries
+    This app provides a conversion from a shapefile to GeoJSON plot geometries.
+
+    Sample command - repalce <shapefile> with the name of the shapefile and <out filename> with the target file name:
+        scif run shp2geojson <shapefile> <out filename>
