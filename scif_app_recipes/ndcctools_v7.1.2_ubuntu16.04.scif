@@ -4,7 +4,7 @@
 
 %apprun odm_workflow
     echo "{\"INPUT_IMAGE_FOLDER\": \"${INPUT_IMAGE_FOLDER}\", \"OUTPUT_FOLDER\": \"/output\", \"INPUT_VOLUME\": \"${2}\", \"OUTPUT_VOLUME\": \"${3}\" }" > ${SCIF_APPDATA}/jx-params.json
-    if [ ! -f "/output/plots.json" ]; then ${SCIF_APPROOT_odm_workflow}/src/generate_geojson.sh "${1}" "/output/plots.json"; fi
+    if [ ! -f "/output/plots.json" ]; then ${SCIF_APPROOT_odm_workflow}/src/generate_geojson.sh "${1}" "${SCIF_APPDATA_odm_workflow}/plots.json"; fi
     conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
         --jx-args="/scif/apps/odm_workflow/src/jx-args.json" \
