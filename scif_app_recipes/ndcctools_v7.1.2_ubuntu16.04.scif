@@ -4,7 +4,7 @@
 
 %apprun odm_workflow
     echo "{\"INPUT_IMAGE_FOLDER\": \"${INPUT_IMAGE_FOLDER}\", \"OUTPUT_FOLDER\": \"/output\", \"INPUT_VOLUME\": \"${2}\", \"OUTPUT_VOLUME\": \"${3}\" }" > ${SCIF_APPDATA}/jx-params.json
-    if [ ! -f "/output/plots.json" ]; then ${SCIF_APPROOT_odm_workflow}/src/generate_geojson.sh "${2}" "/output/plots.json"; fi
+    if [ ! -f "/output/plots.json" ]; then ${SCIF_APPROOT_odm_workflow}/src/generate_geojson.sh "${1}" "/output/plots.json"; fi
     conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
         --jx-args="/scif/apps/odm_workflow/src/jx-args.json" \
@@ -14,9 +14,9 @@
         --change-directory="${SCIF_APPDATA}" \
         --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
         --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
-        ${3} \
+        ${4} \
         "/scif/apps/odm_workflow/src/workflow.jx"
-    if [ ! -f "/output/canopycover_fileslist.json" ]; then "/scif/apps/odm_workflow/src/prep-canopy-cover.sh" "${1}"; fi
+    if [ ! -f "/output/canopycover_fileslist.json" ]; then "/scif/apps/odm_workflow/src/prep-canopy-cover.sh" "orthomosaic"; fi
     conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
         --jx \
         --jx-args="${SCIF_APPROOT}/src/jx-args.json" \
@@ -26,10 +26,10 @@
         --change-directory="${SCIF_APPDATA}" \
         --makeflow-log="${SCIF_APPDATA}/canopy-cover.jx.makeflowlog" \
         --batch-log="${SCIF_APPDATA}/canopy-cover.jx.batchlog" \
-        ${3} \
+        ${4} \
         "${SCIF_APPROOT}/src/canopy-cover.jx"
-    if [ -f "/output/plots.json" ] && [[ "${3}" =~ "--clean" ]]; then echo "Removing plots.json" && rm "/output/plots.json"; fi
-    if [ -f "/output/canopycover_fileslist.json" ] && [[ "${3}" =~ "--clean" ]]; then echo "Removing fileslist.json" && rm "/output/canopycover_fileslist.json"; fi
+    if [ -f "/output/plots.json" ] && [[ "${4}" =~ "--clean" ]]; then echo "Removing plots.json" && rm "/output/plots.json"; fi
+    if [ -f "/output/canopycover_fileslist.json" ] && [[ "${4}" =~ "--clean" ]]; then echo "Removing fileslist.json" && rm "/output/canopycover_fileslist.json"; fi
 
 %apphelp odm_workflow
     This app provides an entrypoint to the ODM (OpenDroneMap) makeflow app.
