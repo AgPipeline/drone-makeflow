@@ -59,7 +59,7 @@ jobs:
       - name: Shp2geojson download check
         if: ${{ matrix.app  == 'shp2geojson' }}
         run: |
-             curl -X GET https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz -O scif_test_data.tar.gz
+             curl -X GET https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz > scif_test_data.tar.gz
              tar xvzf scif_test_data.tar.gz -C "./"
              ls -l
       - name: Run test
