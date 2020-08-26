@@ -42,7 +42,7 @@ jobs:
               parameters: https://terraref.ncsa.illinois.edu/bety /mnt/bety_plots.geojson
               test_results: if [[ -f "bety_plots.geojson" ]]; then echo "Test betydb2geojson success"; exit 0; else echo "App failed - betydb2geojson"; exit 1; fi;
             - app: shp2geojson
-              parameters: /mnt/plot_shapes.shp /mnt/shp_plots.geojson
+              parameters: plot_shapes.shp /mnt/shp_plots.geojson
               test_results: if [[ -f "shp_plots.geojson" ]]; then echo "Test shp2geojson success"; exit 0; else echo "App failed - shp2geojson"; exit 1; fi;
     steps:
       - name: Download docker image
@@ -59,11 +59,11 @@ jobs:
       - name: Shp2geojson download check
         if: ${{ matrix.app  == 'shp2geojson' }}
         run: |
-             curl -X GET https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz > scif_test_data.tar.gz
+             curl -X GET https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz -O scif_test_data.tar.gz
              tar xvzf scif_test_data.tar.gz -C "./"
              ls -l
       - name: Run test
-        run: docker run --rm -v `pwd`:/mnt scif_test:latest run ${{ matrix.app }} ${{ matrix.parameters }}
+        run: docker run --rm -v `pwd`:/mnt -v `pwd`:/scif/data/odm_workflow/images scif_test:latest run ${{ matrix.app }} ${{ matrix.parameters }}
       - name: Folder listing
         run: ls -l
       - name: Check results
@@ -127,10 +127,10 @@ jobs:
          run: |
               ls -l ./outputs
               RFL=$(find ./outputs | wc -l| tr -d '[:space:]')
-              if [[ "$RFL" == "9" ]]; then echo "Output has been cleaned up"; else "Output is not completely cleaned up: $RFL remaining"; exit 3; fi
+              if [[ "$RFL" == "9" ]]; then echo "Output has been cleaned up"; else echo "Output is not completely cleaned up: $RFL remaining"; exit 3; fi
               ls -l ./checkpoints
               RFL=$(find ./checkpoints | wc -l| tr -d '[:space:]')
-              if [[ "$RFL" == "1" ]]; then echo "Makeflow artifacts has been cleaned up"; else "Makeflow artifacts not completely cleaned up: $RFL remaining"; exit 3; fi
+              if [[ "$RFL" == "2" ]]; then echo "Makeflow artifacts has been cleaned up"; else echo "Makeflow artifacts not completely cleaned up: $RFL remaining"; exit 3; fi
 
   artifact_cleanup:
     runs-on: ubuntu-latest
