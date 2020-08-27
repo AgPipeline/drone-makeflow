@@ -129,7 +129,7 @@ jobs:
         if: ${{ matrix.app == 'odm_workflow' }}
         run:  |
               docker run --rm -v my_output:/results -v "${PWD}/outputs:/output" --entrypoint bash scif_test:latest -c 'cp -r /results/* /output/'
-              docker run --rm -v my_input:/input -v my_output:/output --entrypoint bash test -c 'rm -r /input/* && rm -r /output/*'
+              docker run --rm -v my_input:/input -v my_output:/output --entrypoint bash scif_test:latest -c 'rm -r /input/* && rm -r /output/*'
       - name: Show outputs folder
         run: |
              ls -l ./outputs
