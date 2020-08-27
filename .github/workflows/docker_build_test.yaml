@@ -114,7 +114,7 @@ jobs:
              ls -l
              ls -l ./inputs/*
       - name: Docker preparation
-        if: ${{ matrix.app == "odm_workflow" }}
+        if: ${{ matrix.app == 'odm_workflow' }}
         run: |
              docker volume create my_input
              docker volume create my_output
@@ -122,7 +122,7 @@ jobs:
       - name: Run test
         run: docker run --rm ${{ matrix.docker_params }} -v "${PWD}/checkpoints:/scif/data/short_workflow" scif_test:latest run ${{ matrix.app }} ${{ matrix.parameters }}
       - name: Docker post-processing
-        if: ${{ matrix.app == "odm_workflow" }}
+        if: ${{ matrix.app == 'odm_workflow' }}
         run:  docker run --rm -v my_output:/results -v "${PWD}/outputs:/output" --entrypoint bash test -c 'cp -r /results/* /output/'
       - name: Show outputs folder
         run: |
