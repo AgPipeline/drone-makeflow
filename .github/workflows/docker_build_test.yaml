@@ -123,7 +123,7 @@ jobs:
         run: docker run --rm ${{ matrix.docker_params }} -v "${PWD}/checkpoints:/scif/data/short_workflow" scif_test:latest run ${{ matrix.app }} ${{ matrix.parameters }}
       - name: Docker post-processing
         if: ${{ matrix.app == 'odm_workflow' }}
-        run:  docker run --rm -v my_output:/results -v "${PWD}/outputs:/output" --entrypoint bash test -c 'cp -r /results/* /output/'
+        run:  docker run --rm -v my_output:/results -v "${PWD}/outputs:/output" --entrypoint bash scif_test:latest -c 'cp -r /results/* /output/'
       - name: Show outputs folder
         run: |
              ls -l ./outputs
