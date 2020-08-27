@@ -10,7 +10,7 @@ EXPECTED_NUM_MASK_TIF=$((EXPECTED_NUM_CANOPYCOVER_CSV + 1))
 if [[ ! "${1}" == "" ]]; then
   TARGET_FOLDER="${1}"
 else
-  TARGET_FOLDER="./outputs"
+  TARGET_FOLDER="./output"
 fi
 
 # Check for the orthomosaic output file

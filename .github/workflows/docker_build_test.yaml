@@ -79,14 +79,18 @@ jobs:
           include:
             - app: short_workflow
               data_file_archive_url: "https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz"
-              docker_params: -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/output"
+              docker_params: -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/output" -v "${PWD}/checkpoints:/scif/data/short_workflow"
               parameters: orthomosaic plot_shapes.shp
               result_check_script: "short_workflow_check.sh"
+              clean_leftover_output_count: "9"
+              clean_leftover_makeflow_count: "2"
             - app: odm_workflow
               data_file_archive_url: "https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_odm_test_data.tar.gz"
-              docker_params: -v /var/run/docker.sock:/var/run/docker.sock -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v my_output:/output -e INPUT_VOLUME=my_input -e OUTPUT_VOLUME=my_output -e "INPUT_IMAGE_FOLDER=/images" -e "OUTPUT_FOLDER=/output"
+              docker_params: -v /var/run/docker.sock:/var/run/docker.sock -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v my_output:/output -v "${PWD}/checkpoints:/scif/data/odm_workflow" -e INPUT_VOLUME=my_input -e OUTPUT_VOLUME=my_output -e "INPUT_IMAGE_FOLDER=/images" -e "OUTPUT_FOLDER=/output"
               parameters: plot_shapes.shp my_input my_output
               result_check_script: "odm_workflow_check.sh"
+              clean_leftover_output_count: "42"
+              clean_leftover_makeflow_count: "0"
     steps:
       - name: Fetch source code
         uses: actions/checkout@v2
@@ -120,10 +124,12 @@ jobs:
              docker volume create my_output
              docker run --rm -v "${PWD}/inputs:/images" -v my_input:/input --entrypoint bash scif_test:latest -c 'cp -r /images/* /input'
       - name: Run test
-        run: docker run --rm ${{ matrix.docker_params }} -v "${PWD}/checkpoints:/scif/data/short_workflow" scif_test:latest run ${{ matrix.app }} ${{ matrix.parameters }}
+        run: docker run --rm ${{ matrix.docker_params }} scif_test:latest run ${{ matrix.app }} ${{ matrix.parameters }}
       - name: Docker post-processing
         if: ${{ matrix.app == 'odm_workflow' }}
-        run:  docker run --rm -v my_output:/results -v "${PWD}/outputs:/output" --entrypoint bash scif_test:latest -c 'cp -r /results/* /output/'
+        run:  |
+              docker run --rm -v my_output:/results -v "${PWD}/outputs:/output" --entrypoint bash scif_test:latest -c 'cp -r /results/* /output/'
+              docker run --rm -v my_input:/input -v my_output:/output --entrypoint bash test -c 'rm -r /input/* && rm -r /output/*'
       - name: Show outputs folder
         run: |
              ls -l ./outputs
@@ -137,15 +143,17 @@ jobs:
              WFL=$(find ./checkpoints | grep "makeflowlog" | wc -l| tr -d '[:space:]')
              if [[ "$WFL" == "2" ]]; then echo "The correct number of makeflow log files were found ($WFL)"; else "Makeflow log count error: $WFL"; exit 2; fi
       - name: Clean
-        run: docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/output" -v "${PWD}/checkpoints:/scif/data/short_workflow" scif_test:latest run short_workflow ${{ matrix.parameters }} --clean
-      -  name: Check clean
-         run: |
+        run: docker run --rm ${{ matrix.docker_params }} scif_test:latest run ${{ matrix.app }} ${{ matrix.parameters }} --clean
+      - name: Check clean output
+        run: |
               ls -l ./outputs
               RFL=$(find ./outputs | wc -l| tr -d '[:space:]')
-              if [[ "$RFL" == "9" ]]; then echo "Output has been cleaned up"; else echo "Output is not completely cleaned up: $RFL remaining"; exit 3; fi
+              if [[ "$RFL" == ${{ matrix.clean_leftover_output_count }} ]]; then echo "Output has been cleaned up"; else echo "Output is not completely cleaned up: $RFL remaining"; exit 3; fi
+      - name: Check clean makeflow artifacts
+        run: |
               ls -l ./checkpoints
               RFL=$(find ./checkpoints | wc -l| tr -d '[:space:]')
-              if [[ "$RFL" == "2" ]]; then echo "Makeflow artifacts has been cleaned up"; else echo "Makeflow artifacts not completely cleaned up: $RFL remaining"; exit 3; fi
+              if [[ "$RFL" == ${{ matrix.clean_leftover_makeflow_count }} ]]; then echo "Makeflow artifacts has been cleaned up"; else echo "Makeflow artifacts not completely cleaned up: $RFL remaining"; exit 3; fi
 
   artifact_cleanup:
     runs-on: ubuntu-latest
