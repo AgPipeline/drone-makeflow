@@ -126,7 +126,7 @@ jobs:
         run: |
              docker volume create my_input
              docker volume create my_output
-             docker run --rm -v "${PWD}/inputs:/images" -v my_input:/input --entrypoint bash scif_test:latest -c 'cp -r /images/* /input && cp /input/IMG/* /input/ && rmdir /input/IMG'
+             docker run --rm -v "${PWD}/inputs:/images" -v my_input:/input --entrypoint bash scif_test:latest -c 'cp -r /images/* /input && mv /input/IMG/* /input/ && rmdir /input/IMG'
       - name: Run test
         run: docker run --rm ${{ matrix.docker_params }} scif_test:latest run ${{ matrix.app }} ${{ matrix.parameters }}
       - name: Docker post-processing
