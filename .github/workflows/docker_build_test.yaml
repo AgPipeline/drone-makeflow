@@ -115,6 +115,9 @@ jobs:
         run: |
              curl -X GET ${{ matrix.data_file_archive_url }} > test_data.tar.gz
              tar xvzf test_data.tar.gz -C "./inputs/"
+      - name: Clean inputs folder
+        if: ${{ matrix.app == 'odm_workflow' }}
+        run: |
              if [[ -f "./inputs/orthomosaic.tif" ]]; then echo "Removing existing orthomosaic.tif" && rm -vf "./inputs/orthomosaic.tif"; fi
              echo "Current folder" && ls -l
              echo "Inputs folder" && ls -l ./inputs/*
