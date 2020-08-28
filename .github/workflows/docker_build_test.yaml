@@ -85,7 +85,7 @@ jobs:
               clean_leftover_output_count: "9"
               clean_leftover_makeflow_count: "2"
             - app: odm_workflow
-              data_file_archive_url: "https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_odm_test_data.tar.gz"
+              data_file_archive_url: "https://de.cyverse.org/dl/d/7D28E988-67A2-498A-B18C-E0D884FD0C83/scif_odm_test_data.tar.gz"
               docker_params: -v /var/run/docker.sock:/var/run/docker.sock -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v my_output:/output -v "${PWD}/checkpoints:/scif/data/odm_workflow" -e INPUT_VOLUME=my_input -e OUTPUT_VOLUME=my_output -e "INPUT_IMAGE_FOLDER=/images" -e "OUTPUT_FOLDER=/output"
               parameters: plot_shapes.shp my_input my_output
               result_check_script: "odm_workflow_check.sh"
