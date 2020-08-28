@@ -115,8 +115,9 @@ jobs:
         run: |
              curl -X GET ${{ matrix.data_file_archive_url }} > test_data.tar.gz
              tar xvzf test_data.tar.gz -C "./inputs/"
-             ls -l
-             ls -l ./inputs/*
+             if [[ -f "./inputs/orthomosaic.tif" ]]; then echo "Removing existing orthomosaic.tif" && rm -vf "./inputs/orthomosaic.tif"; fi
+             echo "Current folder" && ls -l
+             echo "Inputs folder" && ls -l ./inputs/*
       - name: Docker preparation
         if: ${{ matrix.app == 'odm_workflow' }}
         run: |
@@ -132,8 +133,8 @@ jobs:
               docker run --rm -v my_input:/input -v my_output:/output --entrypoint bash scif_test:latest -c 'rm -r /input/* && rm -r /output/*'
       - name: Show outputs folder
         run: |
-             ls -l ./outputs
-             ls -l ./checkpoints
+             echo "Outputs folder" && ls -l ./outputs
+             echo "Checkpoints folder" && ls -l ./checkpoints
       - name: Check outputs
         run: |
              chmod +x "./.github/workflows/${{ matrix.result_check_script }}"
@@ -146,12 +147,12 @@ jobs:
         run: docker run --rm ${{ matrix.docker_params }} scif_test:latest run ${{ matrix.app }} ${{ matrix.parameters }} --clean
       - name: Check clean output
         run: |
-              ls -l ./outputs
+              echo "Outputs folder" && ls -l ./outputs
               RFL=$(find ./outputs | wc -l| tr -d '[:space:]')
               if [[ "$RFL" == ${{ matrix.clean_leftover_output_count }} ]]; then echo "Output has been cleaned up"; else echo "Output is not completely cleaned up: $RFL remaining"; exit 3; fi
       - name: Check clean makeflow artifacts
         run: |
-              ls -l ./checkpoints
+              echo "Checkpoints folder" && ls -l ./checkpoints
               RFL=$(find ./checkpoints | wc -l| tr -d '[:space:]')
               if [[ "$RFL" == ${{ matrix.clean_leftover_makeflow_count }} ]]; then echo "Makeflow artifacts has been cleaned up"; else echo "Makeflow artifacts not completely cleaned up: $RFL remaining"; exit 3; fi
 
