@@ -75,7 +75,7 @@ jobs:
     name: Testing workflows
     strategy:
       matrix:
-          app: [short_workflow, odm_workflow]
+          app: [short_workflow]
           include:
             - app: short_workflow
               data_file_archive_url: "https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz"
@@ -84,13 +84,6 @@ jobs:
               result_check_script: "short_workflow_check.sh"
               clean_leftover_output_count: "9"
               clean_leftover_makeflow_count: "2"
-            - app: odm_workflow
-              data_file_archive_url: "https://de.cyverse.org/dl/d/7D28E988-67A2-498A-B18C-E0D884FD0C83/scif_odm_test_data.tar.gz"
-              docker_params: -v /var/run/docker.sock:/var/run/docker.sock -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v my_output:/output -v "${PWD}/checkpoints:/scif/data/odm_workflow" -e INPUT_VOLUME=my_input -e OUTPUT_VOLUME=my_output -e "INPUT_IMAGE_FOLDER=/images" -e "OUTPUT_FOLDER=/output"
-              parameters: plot_shapes.shp my_input my_output
-              result_check_script: "odm_workflow_check.sh"
-              clean_leftover_output_count: "42"
-              clean_leftover_makeflow_count: "0"
     steps:
       - name: Fetch source code
         uses: actions/checkout@v2
@@ -115,25 +108,8 @@ jobs:
         run: |
              curl -X GET ${{ matrix.data_file_archive_url }} > test_data.tar.gz
              tar xvzf test_data.tar.gz -C "./inputs/"
-      - name: Clean inputs folder
-        if: ${{ matrix.app == 'odm_workflow' }}
-        run: |
-             if [[ -f "./inputs/orthomosaic.tif" ]]; then echo "Removing existing orthomosaic.tif" && rm -vf "./inputs/orthomosaic.tif"; fi
-             echo "Current folder" && ls -l
-             echo "Inputs folder" && ls -l ./inputs/*
-      - name: Docker preparation
-        if: ${{ matrix.app == 'odm_workflow' }}
-        run: |
-             docker volume create my_input
-             docker volume create my_output
-             docker run --rm -v "${PWD}/inputs:/images" -v my_input:/input --entrypoint bash scif_test:latest -c 'cp -r /images/* /input && mv /input/IMG/* /input/ && rmdir /input/IMG'
       - name: Run test
         run: docker run --rm ${{ matrix.docker_params }} scif_test:latest run ${{ matrix.app }} ${{ matrix.parameters }}
-      - name: Docker post-processing
-        if: ${{ matrix.app == 'odm_workflow' }}
-        run:  |
-              docker run --rm -v my_output:/results -v "${PWD}/outputs:/output" --entrypoint bash scif_test:latest -c 'cp -r /results/* /output/'
-              docker run --rm -v my_input:/input -v my_output:/output --entrypoint bash scif_test:latest -c 'rm -r /input/* && rm -r /output/*'
       - name: Show outputs folder
         run: |
              echo "Outputs folder" && ls -l ./outputs
