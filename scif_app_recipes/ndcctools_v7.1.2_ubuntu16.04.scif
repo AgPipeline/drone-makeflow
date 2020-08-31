@@ -79,7 +79,7 @@
     .venv/bin/python3 -m pip install  --upgrade --no-cache-dir pygdal==2.2.3.3
 
 %apprun betydb2geojson
-    .venv/bin/python3 ${SCIF_APPROOT_odm_workflow}/src/betydb2geojson.py --betydb_url "${1}" "${2}"
+    .venv/bin/python3 ${SCIF_APPROOT_odm_workflow}/src/betydb2geojson.py --betydb_url "${1}" --outfile "${2}"
 
 %apphelp betydb2geojson
     This app provides a conversion from BETYdb site data to GeoJSON plot geometries.

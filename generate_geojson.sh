@@ -9,7 +9,7 @@ fi
 
 if [[ "${3}" != *"--clean"* ]]; then
   if [[ ${FILE_PARAM} == http* ]]; then
-    scif run betydb2geojson --betydb_url "${FILE_PARAM}" "${DESTINATION_FILE}"
+    scif run betydb2geojson "${FILE_PARAM}" "${DESTINATION_FILE}"
   elif [[ ${FILE_PARAM} == *.shp ]]; then
     scif run shp2geojson "${FILE_PARAM}" "${DESTINATION_FILE}"
   elif [[ ${FILE_PARAM} == *.json || ${FILE_PARAM} == *.geojson ]]; then
