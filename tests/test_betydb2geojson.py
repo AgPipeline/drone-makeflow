@@ -5,14 +5,17 @@ Author : Chris Schnaufer <schnaufer@arizona.edu
 Notes:
     This file assumes it's in a subfolder off the main folder
 """
+import json
 import os
 import re
+import subprocess
 from subprocess import getstatusoutput
 import pytest
 
 # The name of the source file to test and it's path
 SOURCE_FILE = 'betydb2geojson.py'
 SOURCE_PATH = os.path.abspath(os.path.join('.', SOURCE_FILE))
+OUTPUT_FILE = 'test_output.json'
 
 # BETYdb instance to hit up
 BETYDB_URL = 'https://terraref.ncsa.illinois.edu/bety'
@@ -48,3 +51,17 @@ def test_betydb_url():
     assert ret_val is not None
     for key in ['metadata', 'data']:
         assert key in ret_val
+
+
+def test_command_line():
+    """Test running betydb2geojson.py from the command line
+    """
+    subprocess.run(['python3', SOURCE_FILE, "-u", "https://terraref.ncsa.illinois.edu/bety", "-o", OUTPUT_FILE],
+                   check=True)
+
+    assert os.path.isfile(OUTPUT_FILE)
+
+    with open(OUTPUT_FILE) as out_file:
+        file_data = json.load(out_file)
+        for key in ['type', 'name', 'features']:
+            assert key in file_data

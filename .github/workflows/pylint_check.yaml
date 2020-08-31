@@ -4,6 +4,7 @@ on:
     branches:
       - master
       - develop
+      - merge_csv
   pull_request:
     branches:
       - master
@@ -73,5 +74,7 @@ jobs:
         run: cat action_pylint_files.txt | xargs python3 -m pylint --rcfile ./pylint.rc
       - name: Running pylint
         run: find ./tests | grep '\.py' | xargs python3 -m pylint -d duplicate-code --rcfile ./pylint.rc
-      - name: Running pytest
+      - name: Set execution permission for PyTest
+        run: chmod +x betydb2geojson.py
+      - name: run pytest
         run: python3 -m pytest
