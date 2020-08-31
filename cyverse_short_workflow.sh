@@ -56,6 +56,7 @@ fi
 # Run the command
 echo "Running short workflow with image and plot shape source: \"${SOURCE_IMAGE}\" and \"${PLOT_SHAPE}\" "
 scif run short_workflow "${SOURCE_IMAGE}" "${PLOT_SHAPE}"
+scif run clean "${SOURCE_IMAGE}" "${PLOT_SHAPE}"
 
 # Copy the results back to where they'll get picked up
 cp -r /output/* "${WORKING_DIR}/"
