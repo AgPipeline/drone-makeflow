@@ -66,7 +66,7 @@
        ]
      },
      {
-       "command": "scif run plotclip -d --metadata ${METADATA_FILE} --working_space ${WORKING_FOLDER} stereoTop ${PLOTGEOMETRY_FILE} ${INPUT_GEOTIFF}",
+       "command": "scif run plotclip --metadata ${METADATA_FILE} --working_space ${WORKING_FOLDER} stereoTop ${PLOTGEOMETRY_FILE} ${INPUT_GEOTIFF}",
        "environment": {
          "INPUT_GEOTIFF": SOILMASK_OUTPUT_FILE,
          "METADATA_FILE": PLOTCLIP_METADATA_FILE,
