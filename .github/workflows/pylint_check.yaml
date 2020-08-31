@@ -45,7 +45,7 @@ jobs:
         uses: actions/checkout@v2
         id: fetch-source
       - name: Finding files
-        run: find . -type f -name "*.py" > action_pylint_files.txt
+        run: find . -type f -name "*.py" | grep -v 'tests/' > action_pylint_files.txt
         id: find-python-files
       - name: Install system requirements
         shell: bash
