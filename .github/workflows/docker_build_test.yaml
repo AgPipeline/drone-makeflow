@@ -38,7 +38,7 @@ jobs:
           app: [betydb2geojson, shp2geojson]
           include:
             - app: betydb2geojson
-              parameters: https://terraref.ncsa.illinois.edu/bety /mnt/bety_plots.geojson
+              parameters: --betydb_url https://terraref.ncsa.illinois.edu/bety /mnt/bety_plots.geojson
               test_results: if [[ -f "bety_plots.geojson" ]]; then echo "Test betydb2geojson success"; exit 0; else echo "App failed - betydb2geojson"; exit 1; fi;
             - app: shp2geojson
               parameters: plot_shapes.shp /mnt/shp_plots.geojson
