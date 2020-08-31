@@ -12,7 +12,7 @@ if [[ "${3}" != *"--clean"* ]]; then
     scif run betydb2geojson --betydb_url "${FILE_PARAM}" "${DESTINATION_FILE}"
   elif [[ ${FILE_PARAM} == *.shp ]]; then
     scif run shp2geojson "${FILE_PARAM}" "${DESTINATION_FILE}"
-  elif [[ ${FILE_PARAM} == *.json ]]; then
+  elif [[ ${FILE_PARAM} == *.json || ${FILE_PARAM} == *.geojson ]]; then
     cp "${SCIF_APPDATA_odm_workflow}/images/${FILE_PARAM}" "${DESTINATION_FILE}"
   else
     echo "Unknown plot geometries file specified: \"${FILE_PARAM}\""
