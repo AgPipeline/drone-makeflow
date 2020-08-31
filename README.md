@@ -45,6 +45,12 @@ mkdir -p "${PWD}/inputs"
 ```bash
 mkdir -p "${PWD}/outputs"
 ```
+- Create an output folder.
+The `checkpoints` folder will contain the generated workflow checkpoint data allowing easy recovery from an error and helps prevent re-running an already completed workflow.
+Removing the workflow checkpoint files will enable a complete re-run of the workflow:
+```bash
+mkdir -p "${PWD}/checkpoints"
+``` 
 
 ### Canopy Cover: Orthomosaic and plot boundaries <a name="om_can_shp" />
 
@@ -58,7 +64,6 @@ We will first present the steps and then provide an example.
 
 _NOTE_: the orthomosaic must be the file name without any extensions; in other words, leave off the `.tif` when specifying it on the Docker command line.
 
-
 #### For example: <a name="can_shp_example" />
 
 You can download a sample dataset of files (archived) with names corresponding to those listed here from CyVerse using the following command.
@@ -67,14 +72,14 @@ curl -X GET https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/sci
 tar xvzf scif_test_data.tar.gz -C "${PWD}/inputs"
 ```
 
-
 In this example we're going to assume that the source image is named `orthomosaic.tif`, that we're using a shapefile named `plot_shapes.shp`, and we have an `experiment.yaml` file.
 
-Now we can run the container mounting our source and destination folders, as well as indicating the name of the orthomosaic file and the name of the shapefile.
+Now we can run the container mounting our source folder, destination folder, checkpoint folder, as well as indicating the name of the orthomosaic file and the name of the shapefile.
 You will need to have Docker running at this point.
 ```bash
-docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/output" agdrone/canopycover-workflow:latest run short_workflow orthomosaic plot_shapes.shp
+docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/output" -v "${PWD}/checkpoints:/scif/data/short_workflow" agdrone/canopycover-workflow:latest run short_workflow orthomosaic plot_shapes.shp
 ```
+
 Please refer to the [Docker](https://www.docker.com/) documentation for more information on running Docker containers.
 
 _NOTE_: the above `docker` command line contains the oprthomosaic file without its extension (`orthomosaic`).
@@ -126,8 +131,10 @@ docker volume create my_output
 ``` 
 
 Step 2 involves moving the drone images to the top location in the folder and then removing the empty folder:
+```bash
 mv "${PWD}/inputs/IMG/*" "${PWD}/inputs/"
 rmdir "${PWD}/inputs/IMG"
+```
 
 In step 3 we copy the source files onto the input named volume:
 ```bash
@@ -136,7 +143,7 @@ docker run --rm -v "${PWD}/inputs:/sources" -v my_input:/input --entrypoint bash
 
 In step 4 we run the workflow to generate the orothomosaic image using ODM (OrthoDroneMap) and calculate plot-level canopy cover:
 ```bash
-docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "${PWD}/inputs:/scif/data"/odm_workflow/images -v my_output:/output -e INPUT_VOLUME=my_input -e OUTPUT_VOLUME=my_output -e "INPUT_IMAGE_FOLDER=/images" -e "OUTPUT_FOLDER=/output" agdrone/canopycover-workflow:latest run odm_workflow plot_shapes.shp my_input my_output
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v my_output:/output -v "${PWD}/checkpoints:/scif/data/odm_workflow" -e INPUT_VOLUME=my_input -e OUTPUT_VOLUME=my_output -e "INPUT_IMAGE_FOLDER=/images" -e "OUTPUT_FOLDER=/output" agdrone/canopycover-workflow:latest run odm_workflow plot_shapes.shp my_input my_output
 ```
 and we wait until it's finished.
 
@@ -153,15 +160,18 @@ docker run --rm -v my_input:/input -v my_output:/output --entrypoint bash agdron
 
 ### Clean
 
-By executing the [scif](#scif) app named `clean` it's possible to clean up the output folder and other generated files.
-It's recommended, but not necessary, to run the clean app between processing runs by either running this command or through other means.
+Cleaning up a workflow run will delete workflow generated files and folders.
+Be sure to copy the data you want to a safe place before cleaning.
+
+By adding the `--clean` flag to the end of the command line used to execute the workflow, the artifacts of a previous run will be cleaned up.
 
 **Example:**
 
-This docker command line will clean up the output files generated using the [Canopy Cover: Orthomosaic and Shapefile](#om_can_shp) example above.
+The following docker command line will clean up the files generated using the [Canopy Cover: Orthomosaic and Shapefile](#om_can_shp) example above.
 ```bash
-docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/scif/data"/soilmask agdrone/canopycover-workflow:latest run clean
+docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/scif/data/soilmask" -v "${PWD}/checkpoints:/scif/data/short_workflow" agdrone/canopycover-workflow:latest run short_workflow orthomosaic plot_shapes.shp --clean
 ```
+Notice the additional parameter at the end of the command line (--clean).
 
 ## Build the container
 
@@ -173,6 +183,10 @@ cp jx-args.json.example jx-args.json
 docker build --progress=plain -t agdrone/canopycover-workflow:latest .
 ```
 
-## A Note On Docker Sibling Containers
+## A Note On Docker Sibling Containers <a name="docker_sibling_containers" />
 
-The OpenDroneMap workflow uses sibling containers. This is a technique for having one Docker container start another Docker container to perform some work. We plan to find a secure alternative for future releases (see [AgPipeline/issues-and-projects#240](https://github.com/AgPipeline/issues-and-projects/issues/240)), primarily because of a potential security risk that makes this approach not suitable for shared cluster computing environments (it is also a concern for containers such as websites and databases that are exposed to the internet, but that is not the case here). You can just as safely run these workflows on your own computer as you can any trusted Docker container. However, with sibling containers the second container requires adminstrator ("root") privleges - please see [Docker documentation](https://docs.docker.com/engine/security/security/) for more details.
+The OpenDroneMap workflow uses sibling containers.
+This is a technique for having one Docker container start another Docker container to perform some work.
+We plan to find a secure alternative for future releases (see [AgPipeline/issues-and-projects#240](https://github.com/AgPipeline/issues-and-projects/issues/240)), primarily because of a potential security risk that makes this approach not suitable for shared cluster computing environments (it is also a concern for containers such as websites and databases that are exposed to the internet, but that is not the case here).
+You can just as safely run these workflows on your own computer as you can any trusted Docker container.
+However, with sibling containers the second container requires administrator ("root") privileges - please see [Docker documentation](https://docs.docker.com/engine/security/security/) for more details.
