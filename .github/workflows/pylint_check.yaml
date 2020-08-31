@@ -4,7 +4,6 @@ on:
     branches:
       - master
       - develop
-      - clip_original_image
   pull_request:
     branches:
       - master
