@@ -83,6 +83,8 @@ jobs:
         run: ls -la
       - name: Files to be tested
         run: cat action_test_files.txt
+      - name: Installed Python modules
+        run: python3 -m pip freeze
       - name: Running test
         run: ${{ matrix.test_command }}
       - name: Upload testing artifact
