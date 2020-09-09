@@ -190,3 +190,41 @@ This is a technique for having one Docker container start another Docker contain
 We plan to find a secure alternative for future releases (see [AgPipeline/issues-and-projects#240](https://github.com/AgPipeline/issues-and-projects/issues/240)), primarily because of a potential security risk that makes this approach not suitable for shared cluster computing environments (it is also a concern for containers such as websites and databases that are exposed to the internet, but that is not the case here).
 You can just as safely run these workflows on your own computer as you can any trusted Docker container.
 However, with sibling containers the second container requires administrator ("root") privileges - please see [Docker documentation](https://docs.docker.com/engine/security/security/) for more details.
+
+## Acceptance Testing
+
+There are automated test suites that are run via [GitHub Actions](https://docs.github.com/en/actions).
+In this section we provide details on these tests so that they can be run locally as well.
+
+These tests are run when a [Pull Request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests) or [push](https://docs.github.com/en/github/using-git/pushing-commits-to-a-remote-repository) occurs on the `develop` or `master` branches.
+There may be other instances when these tests are automatically run, but these are considered the mandatory events and branches.
+
+### PyLint and PyTest
+
+These tests are run against any Python scripts that are in the repository.
+
+[PyLint](https://www.pylint.org/) is used to both check that Python code conforms to the recommended coding style, and checks for syntax errors.
+The default behavior of PyLint is modified by the `pylint.rc` file in the [Organization-info](https://github.com/AgPipeline/Organization-info) repository.
+
+The following command can be used to fetch the `pylint.rc` file:
+```bash
+wget https://raw.githubusercontent.com/AgPipeline/Organization-info/master/pylint.rc
+```
+
+Assuming the `pylint.rc` file is in the current folder, the following command can be used against the `betydb2geojson.py` file:
+```bash
+python3 -m pylint --rcfile ./pylint.rc betydb2geojson.py
+```
+
+[PyTest](https://docs.pytest.org/en/stable/) is used to run Unit and Integration Testing.
+The following command can be used to run the test suite:
+```bash
+python3 -m pytest -rpP
+```
+
+If [pytest-cov](https://pytest-cov.readthedocs.io/en/latest/) is installed, it can be used to generate a code coverage report as part of running PyTest.
+The code coverage report shows how much of the code has been tested; it doesn't indicate **how well** that code has been tested.
+The modified PyTest command line including coverage is:
+```bash
+python3 -m pytest --cov=. -rpP
+```
