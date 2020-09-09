@@ -228,3 +228,7 @@ The modified PyTest command line including coverage is:
 ```bash
 python3 -m pytest --cov=. -rpP
 ```
+
+### Docker Testing
+
+The Docker testing Workflow replicate the examples in this document to ensure they continue to work.
