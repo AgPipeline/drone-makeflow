@@ -67,7 +67,7 @@ jobs:
         id: install-python-pygdal
       - name: Install system requirements from source
         shell: bash
-        run: 'if [ -s "packages.txt" ]; then && (cat packages.txt | sudo xargs apt-get install -y --no-install-recommends) || (echo "Failed to install additional packages" && exit 1); fi'
+        run: 'if [ -s "packages.txt" ]; then (cat packages.txt | sudo xargs apt-get install -y --no-install-recommends) || (echo "Failed to install additional packages" && exit 1); fi'
       - name: Install Python requirements from source
         shell: bash
         run: 'if [ -s "requirements.txt" ]; then (python3 -m pip install --no-cache-dir -r requirements.txt) || (echo "Failed to install Python requirements" && exit 1); fi'
