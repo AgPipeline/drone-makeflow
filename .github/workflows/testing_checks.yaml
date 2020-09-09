@@ -63,7 +63,7 @@ jobs:
         id: install-python-numpy
       - name: Install Python pygdal
         shell: bash
-        run: 'sudo python3 -m pip install --no-cache-dir pygdal==2.2.3.5'
+        run: 'python3 -m pip install --no-cache-dir pygdal==2.2.3.5'
         id: install-python-pygdal
       - name: Install system requirements from source
         shell: bash
