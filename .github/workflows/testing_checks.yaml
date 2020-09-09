@@ -25,7 +25,7 @@ jobs:
               test_command: cat action_test_files.txt | xargs python3 -m pylint --rcfile ./pylint.rc
             - app: pytest
               pip_installs: pytest pytest-cov
-              test_command: python3 -m pytest --cov=. -rpP --cov-report=xml > coverage.txt
+              test_command: python3 -m pytest --cov=. -rpP --cov-report=xml
               artifacts: coverage.txt
     steps:
       - name: Current python version
@@ -57,14 +57,12 @@ jobs:
       - name: Install system requirements
         shell: bash
         run: 'sudo apt-get install -y python3-gdal gdal-bin libgdal-dev gcc g++ python3.7-dev'
-      - name: Install Python numpy
+      - name: Install Python numpy and other modules
         shell: bash
-        run: 'python3 -m pip install --upgrade --no-cache-dir numpy wheel'
-        id: install-python-numpy
+        run: 'python3 -m pip install --upgrade --no-cache-dir numpy wheel requests'
       - name: Install Python pygdal
         shell: bash
         run: 'python3 -m pip install --no-cache-dir pygdal==2.2.3.5'
-        id: install-python-pygdal
       - name: Install system requirements from source
         shell: bash
         run: 'if [ -s "packages.txt" ]; then (cat packages.txt | sudo xargs apt-get install -y --no-install-recommends) || (echo "Failed to install additional packages" && exit 1); fi'
@@ -83,8 +81,6 @@ jobs:
         run: ls -la
       - name: Files to be tested
         run: cat action_test_files.txt
-      - name: Installed Python modules
-        run: python3 -m pip freeze
       - name: Running test
         run: ${{ matrix.test_command }}
       - name: Upload testing artifact
