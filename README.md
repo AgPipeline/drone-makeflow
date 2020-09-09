@@ -205,6 +205,7 @@ These tests are run against any Python scripts that are in the repository.
 
 [PyLint](https://www.pylint.org/) is used to both check that Python code conforms to the recommended coding style, and checks for syntax errors.
 The default behavior of PyLint is modified by the `pylint.rc` file in the [Organization-info](https://github.com/AgPipeline/Organization-info) repository.
+Please also refer to our [Coding Standards](https://github.com/AgPipeline/Organization-info#python) for information on how we use [pylint](https://www.pylint.org/).
 
 The following command can be used to fetch the `pylint.rc` file:
 ```bash
@@ -213,20 +214,23 @@ wget https://raw.githubusercontent.com/AgPipeline/Organization-info/master/pylin
 
 Assuming the `pylint.rc` file is in the current folder, the following command can be used against the `betydb2geojson.py` file:
 ```bash
-python3 -m pylint --rcfile ./pylint.rc betydb2geojson.py
+# Assumes Python3.7+ is default Python version
+python -m pylint --rcfile ./pylint.rc betydb2geojson.py
 ```
 
 [PyTest](https://docs.pytest.org/en/stable/) is used to run Unit and Integration Testing.
 The following command can be used to run the test suite:
 ```bash
-python3 -m pytest -rpP
+# Assumes Python3.7+ is default Python version
+python -m pytest -rpP
 ```
 
 If [pytest-cov](https://pytest-cov.readthedocs.io/en/latest/) is installed, it can be used to generate a code coverage report as part of running PyTest.
 The code coverage report shows how much of the code has been tested; it doesn't indicate **how well** that code has been tested.
 The modified PyTest command line including coverage is:
 ```bash
-python3 -m pytest --cov=. -rpP
+# Assumes Python3.7+ is default Python version
+python -m pytest --cov=. -rpP
 ```
 
 ### Docker Testing
