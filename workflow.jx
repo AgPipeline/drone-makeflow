@@ -66,9 +66,10 @@
        ]
      },
      {
-       "command": "scif run plotclip --metadata ${METADATA_FILE} --working_space ${WORKING_FOLDER} stereoTop ${PLOTGEOMETRY_FILE} ${INPUT_GEOTIFF}",
+       "command": "scif run plotclip --metadata ${METADATA_FILE} --working_space ${WORKING_FOLDER} stereoTop ${PLOTGEOMETRY_FILE} ${INPUT_GEOTIFF_1} ${INPUT_GEOTIFF_2}",
        "environment": {
-         "INPUT_GEOTIFF": SOILMASK_OUTPUT_FILE,
+         "INPUT_GEOTIFF_1": SOILMASK_OUTPUT_FILE,
+         "INPUT_GEOTIFF_2": OUTPUT_ORTHOMOSAIC_FILE,
          "METADATA_FILE": PLOTCLIP_METADATA_FILE,
          "WORKING_FOLDER": PLOTCLIP_WORKING_FOLDER,
          "PLOTGEOMETRY_FILE": PLOTCLIP_PLOTGEOMETRY_FILE,
