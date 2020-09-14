@@ -38,7 +38,7 @@ jobs:
           app: [betydb2geojson, shp2geojson]
           include:
             - app: betydb2geojson
-              parameters: "https://terraref.ncsa.illinois.edu/bety" "/mnt/bety_plots.geojson"
+              parameters: https://terraref.ncsa.illinois.edu/bety /mnt/bety_plots.geojson
               test_results: if [[ -f "bety_plots.geojson" ]]; then echo "Test betydb2geojson success"; exit 0; else echo "App failed - betydb2geojson"; exit 1; fi;
             - app: shp2geojson
               parameters: plot_shapes.shp /mnt/shp_plots.geojson
@@ -81,7 +81,7 @@ jobs:
               docker_params: -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/output" -v "${PWD}/checkpoints:/scif/data/short_workflow"
               parameters: orthomosaic plot_shapes.shp
               result_check_script: "short_workflow_check.sh"
-              clean_leftover_output_count: "9"
+              clean_leftover_output_count: "10"
               clean_leftover_makeflow_count: "2"
     steps:
       - name: Fetch source code
