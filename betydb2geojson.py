@@ -5,23 +5,35 @@
 import os
 import argparse
 import json
+import sys
 import requests
 from osgeo import ogr
 
 ENV_BETYDB_URL_NAME = 'BETYDB_URL'
 
 
-def add_arguments(parser: argparse.ArgumentParser) -> None:
+def add_arguments() -> argparse.Namespace:
     """Adds arguments to the command line parser
-    Arguments:
-        parser: instance of argparse.ArgumentParser to add to
     Return:
         No return is defined
     """
-    parser.add_argument('--betydb_url', help='the URL of BETYdb instance to query (defaults to ' + ENV_BETYDB_URL_NAME +\
-                                             ' environment variable)')
-    parser.add_argument('--filter', help='partial or full string filter for sitename values returned')
-    parser.add_argument("output_file", help='the output file to write GeoJSON to')
+    parser = argparse.ArgumentParser(description="BETYdb plots to GeoJSON",
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('-u', '--betydb_url',
+                        help='the URL of BETYdb instance to query (defaults to ' + ENV_BETYDB_URL_NAME +
+                        ' environment variable)', metavar='str', type=str, default=os.getenv('BETYDB_URL'))
+    parser.add_argument('-f', '--filter', help='partial or full string filter for sitename values returned',
+                        metavar='str', type=str, default='')
+    parser.add_argument('-o', '--outfile', help='the output file to write GeoJSON to', metavar='FILE',
+                        type=argparse.FileType('wt'),
+                        default='out.txt')
+
+    args = parser.parse_args()
+
+    if not args.betydb_url:
+        parser.error('--betydb_url is required')
+
+    return args
 
 
 def query_betydb_experiments(betydb_url: str = None) -> dict:
@@ -115,7 +127,7 @@ def write_geojson(out_file, geojson_plots: dict) -> None:
              'properties': {
                  'id': '',
                  'observationUnitName': ''
-                },
+             },
              'geometry': None
              }
 
@@ -139,11 +151,10 @@ def convert() -> None:
         No return is defined
     """
     # Get the command line parameters
-    parser = argparse.ArgumentParser(description="BETYdb plots to GeoJSON")
-    add_arguments(parser)
 
-    args = parser.parse_args()
-    if not args.output_file:
+    args = add_arguments()
+
+    if not args.outfile:
         raise RuntimeError("An output file must be specified to receive the GeoJSON plot information")
 
     # Get the list of sites (plots) from the JSON returned
@@ -156,9 +167,9 @@ def convert() -> None:
     geojson_plots = sites_to_geojson(sites)
 
     # Write out the GeoJSON
-    with open(args.output_file, 'w') as out_file:
-        write_geojson(out_file, geojson_plots)
+    write_geojson(args.outfile, geojson_plots)
 
 
 if __name__ == "__main__":
     convert()
+    sys.exit()

@@ -1,8 +1,8 @@
 %appinstall canopycover
     # Download canopycover code. In the future use pip/conda install.
-    wget -O canopycover.tar.gz https://github.com/Chris-Schnaufer/transformer-plotclip/files/4839673/canopycover.tar.gz
+    wget -O canopycover.tar.gz https://github.com/AgPipeline/transformer-canopycover/archive/v1.2.tar.gz
     tar xvf canopycover.tar.gz
-    mv transformer-canopycover src
+    mv transformer-canopycover-1.2 src
 
     # Install packages needed
     python3 -m venv --system-site-packages .venv
@@ -10,7 +10,7 @@
     .venv/bin/python3 -m pip install --upgrade --no-cache-dir -r "${PWD}/src/requirements.txt"
     .venv/bin/python3 -m pip install --upgrade --no-cache-dir pyyaml pygdal==2.2.3.3 piexif python-dateutil
 
-    .venv/bin/python3 -m pip install --upgrade --no-cache-dir laspy influxdb utm pygdal==2.2.3.5 Pillow matplotlib
+    .venv/bin/python3 -m pip install --upgrade --no-cache-dir laspy influxdb utm pygdal==2.2.3.5 matplotlib Pillow
     .venv/bin/python3 -m pip install --upgrade --no-cache-dir agpypeline
 
     # Add example Docker command to SCIF app help section
