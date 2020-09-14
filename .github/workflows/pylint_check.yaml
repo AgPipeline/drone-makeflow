@@ -44,7 +44,7 @@ jobs:
         uses: actions/checkout@v2
         id: fetch-source
       - name: Finding files
-        run: find . -type f -name "*.py" > action_pylint_files.txt
+        run: find . -type f -name "*.py" | grep -v 'tests/' > action_pylint_files.txt
         id: find-python-files
       - name: Install system requirements
         shell: bash
@@ -71,6 +71,8 @@ jobs:
         run: cat action_pylint_files.txt
       - name: Running pylint
         run: cat action_pylint_files.txt | xargs python3 -m pylint --rcfile ./pylint.rc
+      - name: Running pylint
+        run: find ./tests | grep '\.py' | xargs python3 -m pylint -d duplicate-code --rcfile ./pylint.rc
       - name: Set execution permission for PyTest
         run: chmod +x betydb2geojson.py
       - name: run pytest
