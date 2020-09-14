@@ -79,7 +79,7 @@
     .venv/bin/python3 -m pip install  --upgrade --no-cache-dir pygdal==2.2.3.3
 
 %apprun betydb2geojson
-    .venv/bin/python3 ${SCIF_APPROOT_odm_workflow}/src/betydb2geojson.py --betydb_url "${1}" "${2}"
+    .venv/bin/python3 ${SCIF_APPROOT_odm_workflow}/src/betydb2geojson.py --betydb_url "${1}" --outfile "${2}"
 
 %apphelp betydb2geojson
     This app provides a conversion from BETYdb site data to GeoJSON plot geometries.
@@ -98,3 +98,14 @@
 
     Sample command - repalce <shapefile> with the name of the shapefile and <out filename> with the target file name:
         scif run shp2geojson <shapefile> <out filename>
+
+%appinstall merge_csv
+
+%apprun merge_csv
+    /scif/apps/odm_workflow/src/merge_csv.py "${1}" "${2}"
+
+%apphelp merge_csv
+    This app searches folders for CSV files and merges them into the output folder
+
+    Sample command - replace <top source folder> and <destination folder> with the actual folder paths:
+        scif run merge_csv <top source folder> <destination folder>
