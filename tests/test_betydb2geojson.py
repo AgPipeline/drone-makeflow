@@ -27,17 +27,16 @@ def test_exists():
 
 
 def test_usage():
-    """Program prints a "usage" statement when requested
-    """
+    """Program prints a "usage" statement when requested"""
     for flag in ['-h', '--help']:
-        ret_val, out = getstatusoutput(f'{SOURCE_PATH} {flag}')
+        cmd = f'{SOURCE_PATH} {flag}'
+        ret_val, out = getstatusoutput(cmd)
         assert ret_val == 0
         assert re.match('usage', out, re.IGNORECASE)
 
 
 def test_fail_betydb_url():
-    """Test that not specifying a BETYdb URL fails
-    """
+    """Test that not specifying a BETYdb URL fails"""
     # pylint: disable=import-outside-toplevel
     import betydb2geojson as b2j
     with pytest.raises(RuntimeError):
@@ -45,8 +44,7 @@ def test_fail_betydb_url():
 
 
 def test_betydb_url():
-    """Test getting BETYdb data
-    """
+    """Test getting BETYdb data"""
     # pylint: disable=import-outside-toplevel
     import betydb2geojson as b2j
     ret_val = b2j.query_betydb_experiments(BETYDB_URL)
