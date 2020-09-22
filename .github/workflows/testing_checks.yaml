@@ -21,7 +21,7 @@ jobs:
           include:
             - app: pylint
               pip_installs: pylint pytest
-              test_command: cat action_test_files.txt | xargs python3 -m pylint --rcfile ./pylint.rc
+              test_command: (cat action_test_files.txt | xargs python3 -m pylint --rcfile ./pylint.rc) && (find ./tests | grep '\.py' | xargs python3 -m pylint -d duplicate-code --rcfile ./pylint.rc)
             - app: pytest
               pip_installs: pytest pytest-cov
               test_command: python3 -m pytest --cov=. -rpP --cov-report=xml > coverage.txt
@@ -52,7 +52,7 @@ jobs:
       - name: Fetch source code
         uses: actions/checkout@v2
       - name: Finding files
-        run: find . -type f -name "*.py" > action_test_files.txt
+        run: find . -type f -name "*.py" | grep -v 'tests/' > action_pylint_files.txt
       - name: Install system requirements
         shell: bash
         run: 'sudo apt-get install -y python3-gdal gdal-bin libgdal-dev gcc g++ python3.7-dev'
