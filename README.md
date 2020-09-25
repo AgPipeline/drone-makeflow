@@ -19,19 +19,19 @@ This section contains different ways of executing an existing Docker workflow co
 
 Here are the definition of some of the terms we use with links to additional information
 
-* BETYdb <a name="betydb" />
+* BETYdb <a name="betydb_def" />
 [BETYdb](https://www.betydb.org/) is a database that can be used to store trait and yield data.
 It can be used in the processing pipeline as a source of plot geometry for clipping.
 
-* GeoJSON <a name="geojson" />
+* GeoJSON <a name="geojson_def" />
 [GeoJSON](https://datatracker.ietf.org/doc/rfc7946/) is a JSON format for specifying geographic shape information.
 This is the default format for specifying plot geometries.
 
-* Makeflow <a name="ref_makeflow" />
+* Makeflow <a name="def_makeflow" />
 We use [Makeflow](https://cctools.readthedocs.io/en/latest/man_pages/makeflow/) to run the apps defined with Scientific Filesystem.
 This tool enables error recovery, automatic retries, distributed computing, and many other features.
 
-* Scientific Filesystem <a name="scif" />
+* Scientific Filesystem <a name="scif_def" />
 We use the [Scientific Filesystem](https://sci-f.github.io/) to organize our applications, provide ease of execution, and to assist in reproducibility.
 
 * Shapefile <a name="shapefile_def" />
@@ -62,9 +62,9 @@ The following steps are used to generate plot-level canopy cover values for a ge
 We will first present the steps and then provide an example.
 
 1. Create a folder and copy the orthomosaic into it
-2. If using a [shapefile](#shapefile) or [GeoJSON](#geojson) file, copy those into the same folder as the orthomosaic image
+2. If using a [shapefile](#shapefile_def) or [GeoJSON](#geojson_def) file, copy those into the same folder as the orthomosaic image
 3. Create another folder for the output folders and files
-4. Run the docker container's `short_workflow` app specifying the name of the orthomosaic and either the name of the shapefile or geojson file, or the URL of they [BETYdb](#betydb) instance to query for plot boundaries
+4. Run the docker container's `short_workflow` app specifying the name of the orthomosaic and either the name of the shapefile or geojson file, or the URL of they [BETYdb](#betydb_def) instance to query for plot boundaries
 
 _NOTE_: the orthomosaic must be the file name without any extensions; in other words, leave off the `.tif` when specifying it on the Docker command line.
 
@@ -108,11 +108,11 @@ Please read our section on [Docker Sibling Containers](#docker_sibling_container
 
 1. Create two named Docker volumes to use for processing data; one for input files and one for output files - the same volume can be used for both if desired
 2. Copy the source drone images into a folder
-3. If using a [shapefile](#shapefile) or [GeoJSON](#geojson) file, copy those into the same folder as the drone images
+3. If using a [shapefile](#shapefile_def) or [GeoJSON](#geojson_def) file, copy those into the same folder as the drone images
 4. Copy the experiment metadata file into the same folder as the drone images
 5. Copy the folder contents of the drone images folder that was just prepared onto the input named volume
 6. Create another folder for the output folders and files
-7. Run the docker container's `odm_workflow` app specifying  either the name of the shapefile or geojson file, or the URL of they [BETYdb](#betydb) instance to query for plot boundaries, and the two named volumes
+7. Run the docker container's `odm_workflow` app specifying  either the name of the shapefile or geojson file, or the URL of they [BETYdb](#betydb_def) instance to query for plot boundaries, and the two named volumes
 8. Copy the resulting files off the output named volume to the local folder
 9. Clean up the named volumes
 
@@ -147,7 +147,7 @@ docker run --rm -v "${PWD}/inputs:/sources" -v my_input:/input --entrypoint bash
 
 In step 4 we run the workflow to generate the orothomosaic image using ODM (OrthoDroneMap) and calculate plot-level canopy cover:
 ```bash
-docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v my_output:/output -v "${PWD}/checkpoints:/scif/data/odm_workflow" -e INPUT_VOLUME=my_input -e OUTPUT_VOLUME=my_output -e "INPUT_IMAGE_FOLDER=/images" -e "OUTPUT_FOLDER=/output" agdrone/canopycover-workflow:latest run odm_workflow plot_shapes.shp my_input my_output
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v my_output:/output -v "${PWD}/checkpoints:/scif/data/odm_workflow" -e INPUT_VOLUME=my_input -e OUTPUT_VOLUME=my_output -e "INPUT_IMAGE_FOLDER=/images" -e "OUTPUT_FOLDER=/output" agdrone/canopycover-workflow:latest run odm_workflow plot_shapes.shp
 ```
 and we wait until it's finished.
 
@@ -191,7 +191,7 @@ docker build --progress=plain -t agdrone/canopycover-workflow:latest .
 
 To monitor the running workflows, you will need to be using the checkpoints folder as described in the [Prerequisites](#prerequisites) section.
 
-[Makeflow](#ref_makeflow) has [monitoring tools](https://cctools.readthedocs.io/en/latest/man_pages/) available that can be used to follow the progress of the workflows.
+[Makeflow](#def_makeflow) has [monitoring tools](https://cctools.readthedocs.io/en/latest/man_pages/) available that can be used to follow the progress of the workflows.
 The [makeflow_monitor](https://cctools.readthedocs.io/en/latest/man_pages/makeflow_monitor/) tool can be a good starting point.
 
 ## A Note On Docker Sibling Containers <a name="docker_sibling_containers" />
