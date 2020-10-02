@@ -1,0 +1,41 @@
+name: Enforcing shell script tests
+on:
+  push:
+    branches:
+      - master
+      - develop
+      - shell_linting
+  pull_request:
+    branches:
+      - master
+      - develop
+    tags:
+      - v*
+
+jobs:
+  testing:
+    runs-on: ubuntu-latest
+    name: Running testing
+    strategy:
+      matrix:
+          app: [shellcheck, shfmt]
+          include:
+            - app: shellcheck
+              shellcheck_opts:
+              shellcheck_disable: false
+              shfmt_disable: true
+            - app: shfmt
+              shfmt_opts: -i 2 -ci -w
+              shellcheck_disable: true
+              shfmt_disable: false
+      - name: Fetch source code
+        uses: actions/checkout@v2
+      - name: shell check
+        uses: luizm/action-sh-checker@v0.1.8
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHELLCHECK_OPTS: ${{ matrix.shellcheck_opts }}
+          SHFMT_OPTS: ${{ matrix.shfmt_opts }}
+        with:
+          sh_checker_shellcheck_disable: ${{ matrix.shellcheck_disable }}
+          sh_checker_shfmt_disable: ${{ matrix.shfmt_disable }}
