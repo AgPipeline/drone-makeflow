@@ -3,12 +3,12 @@ ORTHOMOSAIC_NAME="${1}_mask.tif"
 OUTPUT_FOLDER="/output"
 echo "Orthomosaic name to look for: ${ORTHOMOSAIC_NAME}"
 clips=("${OUTPUT_FOLDER}/*")
-echo "${clips}"
+echo "${clips[@]}"
 
 found_files=0
 echo "{\"CANOPYCOVER_FILE_LIST\": [" >>"${OUTPUT_FOLDER}/canopycover_fileslist.json"
 sep=""
-for entry in ${clips[@]}; do
+for entry in "${clips[@]}"; do
   possible="${entry}/${ORTHOMOSAIC_NAME}"
   echo "Checking possible ${possible}"
   if [ -f "${possible}" ]; then

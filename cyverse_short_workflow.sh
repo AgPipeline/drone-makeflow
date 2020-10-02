@@ -13,7 +13,8 @@ mkdir -p /output
 echo "Discovering source image file and possible plot shapes file (.shp, or .json)"
 SOURCE_IMAGE=""
 PLOT_SHAPE=""
-for ONE_FILE in $(find "${WORKING_DIR}" -type f); do
+#for ONE_FILE in $(find "${WORKING_DIR}" -type f); do
+while IFS= read -r -d '' ONE_FILE; do
   case "${ONE_FILE: -4}" in
     ".tif")
       SOURCE_IMAGE="${ONE_FILE}"
@@ -30,7 +31,7 @@ for ONE_FILE in $(find "${WORKING_DIR}" -type f); do
       PLOT_SHAPE=${ONE_FILE#"$(dirname "${ONE_FILE}")/"}
       ;;
   esac
-done
+done <   <(find "${WORKING_DIR}" -type f -print0)
 
 # Determine if there's a URL in the command line if there isn't a file
 if [[ "${PLOT_SHAPE}" == "" ]]; then
