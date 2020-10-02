@@ -24,6 +24,7 @@ These apps are used by the above workflows and can be used to create custom work
 - [A Note On Docker Sibling Containers](#docker_sibling_containers)
 - [Acceptance Testing](#acceptance_testing)
     - [PyLint and PyTest](#pylint_pytest)
+    - [shellcheck and shfmt](#shellcheck_shfmt)
     - [Docker Testing](#test_docker)
 
 ## Terms used <a name="terms" />
@@ -262,6 +263,23 @@ The modified PyTest command line including coverage is:
 # Assumes Python3.7+ is default Python version
 python -m pytest --cov=. -rpP
 ```
+
+### shellcheck and shfmt <a name="shellcheck_shfmt" />
+
+These tests are run against shell scripts within the repository.
+It's expected that shell scripts will conform to these tools (no reported issues).
+
+[shellcheck](https://www.shellcheck.net/) is used to enforce modern script coding.
+The following command runs `shellcheck` against the "prep-canopy-cover.sh" bash shell script:
+```bash
+shellcheck prep-canopy-cover.sh
+``` 
+
+[shfmt](https://github.com/mvdan/sh#shfmt) is used to ensure scripts conform to Google's shell script [style guide](https://google.github.io/styleguide/shellguide.html).
+The following command runs `shfmt` against the "prep-canopy-cover.sh" bash shell script:
+```bash
+shfmt -i 2 -ci -w prep-canopy-cover.sh
+``` 
 
 ### Docker Testing <a name="test_docker" />
 
