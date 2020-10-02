@@ -31,7 +31,7 @@ while IFS= read -r -d '' ONE_FILE; do
       PLOT_SHAPE=${ONE_FILE#"$(dirname "${ONE_FILE}")/"}
       ;;
   esac
-done <   <(find "${WORKING_DIR}" -type f -print0)
+done < <(find "${WORKING_DIR}" -type f -print0)
 
 # Determine if there's a URL in the command line if there isn't a file
 if [[ "${PLOT_SHAPE}" == "" ]]; then
