@@ -13,7 +13,6 @@ mkdir -p /output
 echo "Discovering source image file and possible plot shapes file (.shp, or .json)"
 SOURCE_IMAGE=""
 PLOT_SHAPE=""
-#for ONE_FILE in $(find "${WORKING_DIR}" -type f); do
 while IFS= read -r -d '' ONE_FILE; do
   case "${ONE_FILE: -4}" in
     ".tif")
