@@ -19,7 +19,7 @@ for ONE_FILE in $(find "${WORKING_DIR}" -type f); do
       SOURCE_IMAGE="${ONE_FILE}"
       ;;
     ".shp")
-      PLOT_SHAPE=${ONE_FILE#"$(dirname ${ONE_FILE})/"}
+      PLOT_SHAPE=${ONE_FILE#"$(dirname "${ONE_FILE}")/"}
       ;;
   esac
   case "${ONE_FILE: -5}" in
@@ -27,7 +27,7 @@ for ONE_FILE in $(find "${WORKING_DIR}" -type f); do
       SOURCE_IMAGE="${ONE_FILE}"
       ;;
     ".json")
-      PLOT_SHAPE=${ONE_FILE#"$(dirname ${ONE_FILE})/"}
+      PLOT_SHAPE=${ONE_FILE#"$(dirname "${ONE_FILE}")/"}
       ;;
   esac
 done
@@ -45,7 +45,7 @@ fi
 # Get the desired file name format for the image
 echo "Manipulating image file name for processing: ${SOURCE_IMAGE}"
 if [[ "${SOURCE_IMAGE}" != "" ]]; then
-  BASE_NAME=${SOURCE_IMAGE#"$(dirname ${SOURCE_IMAGE})/"}
+  BASE_NAME=${SOURCE_IMAGE#"$(dirname "${SOURCE_IMAGE}")/"}
   echo "  BASE NAME: ${BASE_NAME}"
   SOURCE_IMAGE=${BASE_NAME%.*}
   echo "  final: ${SOURCE_IMAGE}"

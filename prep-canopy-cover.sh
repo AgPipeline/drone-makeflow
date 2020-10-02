@@ -2,8 +2,8 @@
 ORTHOMOSAIC_NAME="${1}_mask.tif"
 OUTPUT_FOLDER="/output"
 echo "Orthomosaic name to look for: ${ORTHOMOSAIC_NAME}"
-clips=( "${OUTPUT_FOLDER}/*" )
-echo ${clips}
+clips=("${OUTPUT_FOLDER}/*")
+echo "${clips}"
 
 found_files=0
 echo "{\"CANOPYCOVER_FILE_LIST\": [" >>"${OUTPUT_FOLDER}/canopycover_fileslist.json"

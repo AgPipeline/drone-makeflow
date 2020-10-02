@@ -23,7 +23,8 @@ else
 fi
 
 # Get all the folders and check the count
-FOLDER_LIST=($(find "${TARGET_FOLDER}/" -maxdepth 1 -type d))
+IFS=" " read -r -a FOLDER_LIST <<< "$(find "${TARGET_FOLDER}/" -maxdepth 1 -type d)"
+#FOLDER_LIST=($(find "${TARGET_FOLDER}/" -maxdepth 1 -type d))
 if [[ "${#FOLDER_LIST[@]}" == "${EXPECTED_NUM_FOLDERS}" ]]; then
   echo "Found expected number of folders: ${EXPECTED_NUM_FOLDERS}"
 else
@@ -41,7 +42,7 @@ if [[ "${#EXPECTED_CSV[@]}" == "${EXPECTED_NUM_CANOPYCOVER_CSV}" ]]; then
 else
   echo "Expected ${EXPECTED_NUM_CANOPYCOVER_CSV} canopycover.csv files but found ${#EXPECTED_CSV[@]}"
   for i in $(seq 0 $((${#EXPECTED_CSV[@]} - 1))); do
-    echo "$((${i} + 1)): ${EXPECTED_CSV[$i]}"
+    echo "$((i + 1)): ${EXPECTED_CSV[$i]}"
   done
   exit 20
 fi
@@ -53,7 +54,7 @@ if [[ "${#EXPECTED_MASK[@]}" == "${EXPECTED_NUM_MASK_TIF}" ]]; then
 else
   echo "Expected ${EXPECTED_NUM_MASK_TIF} orthomosaic_mask.tif files but found ${#EXPECTED_MASK[@]}"
   for i in $(seq 0 $((${#EXPECTED_MASK[@]} - 1))); do
-    echo "$((${i} + 1)): ${EXPECTED_MASK[$i]}"
+    echo "$((i + 1)): ${EXPECTED_MASK[$i]}"
   done
   exit 30
 fi
