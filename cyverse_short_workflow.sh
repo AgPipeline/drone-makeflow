@@ -1,6 +1,6 @@
 #!/bin/bash
 
-WORKING_DIR=`pwd`
+WORKING_DIR=$(pwd)
 
 # Copy the files to where we want them to be
 echo "Copying source files from current folder (${WORKING_DIR}) to target location"
@@ -13,31 +13,29 @@ mkdir -p /output
 echo "Discovering source image file and possible plot shapes file (.shp, or .json)"
 SOURCE_IMAGE=""
 PLOT_SHAPE=""
-for ONE_FILE in `find "${WORKING_DIR}" -type f`
-do
+for ONE_FILE in $(find "${WORKING_DIR}" -type f); do
   case "${ONE_FILE: -4}" in
-  ".tif")
-    SOURCE_IMAGE="${ONE_FILE}"
-    ;;
-  ".shp")
-    PLOT_SHAPE=${ONE_FILE#"$(dirname ${ONE_FILE})/"}
-    ;;
+    ".tif")
+      SOURCE_IMAGE="${ONE_FILE}"
+      ;;
+    ".shp")
+      PLOT_SHAPE=${ONE_FILE#"$(dirname ${ONE_FILE})/"}
+      ;;
   esac
   case "${ONE_FILE: -5}" in
-  ".tiff")
-    SOURCE_IMAGE="${ONE_FILE}"
-    ;;
-  ".json")
-    PLOT_SHAPE=${ONE_FILE#"$(dirname ${ONE_FILE})/"}
-    ;;
+    ".tiff")
+      SOURCE_IMAGE="${ONE_FILE}"
+      ;;
+    ".json")
+      PLOT_SHAPE=${ONE_FILE#"$(dirname ${ONE_FILE})/"}
+      ;;
   esac
 done
 
 # Determine if there's a URL in the command line if there isn't a file
 if [[ "${PLOT_SHAPE}" == "" ]]; then
   echo "Searching parameters for BETYdb URL"
-  for ONE_PARAM in "${@}"
-  do
+  for ONE_PARAM in "${@}"; do
     if [[ "${ONE_PARAM:0:4}" == "http" ]]; then
       PLOT_SHAPE="${ONE_PARAM}"
     fi
