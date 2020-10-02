@@ -28,6 +28,7 @@ jobs:
               shfmt_opts: -i 2 -ci -w
               shellcheck_disable: true
               shfmt_disable: false
+    steps:
       - name: Fetch source code
         uses: actions/checkout@v2
       - name: shell check
