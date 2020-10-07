@@ -151,7 +151,6 @@ def convert() -> None:
         No return is defined
     """
     # Get the command line parameters
-
     args = add_arguments()
 
     if not args.outfile:

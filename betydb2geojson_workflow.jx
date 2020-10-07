@@ -1,0 +1,20 @@
+{
+  "define": {
+     "SCRIPT_PATH": "/scif/apps/src/betydb2geojson.py",
+  },
+  "rules": [
+     {
+       "command": "python3 ${BETYDB2JSON_SCRIPT} --betydb_url \"${BETYDB_URL}\" --outfile \"${OUTPUT_FILE}\" ",
+       "environment": {
+         "BETYDB2JSON_SCRIPT": SCRIPT_PATH,
+         "BETYDB_URL": BETYDB_URL,
+         "OUTPUT_FILE": PLOT_GEOMETRY_FILE,
+       },
+       "inputs": [
+       ],
+       "outputs": [
+         PLOT_GEOMETRY_FILE
+       ]
+     }
+  ]
+}
