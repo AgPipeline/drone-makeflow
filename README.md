@@ -162,6 +162,55 @@ Please notice the following:
 - the `/input` folder on the command line corresponds with the `PLOT_SHAPEFILE` starting path value in the configuration JSON; this is where the app expects to find the shapefile to load and convert
 - the `/output` folder on the command line corresponds with the `PLOT_GEOMETRY_FILE` starting path value in the configuration JSON
 
+#### Merge CSV files <a name="merge_csv" />
+
+This app recursively merges same-named CSV files to a destination folder.
+If the folder contains multiple, differently named, CSV files, there will be one resulting CSV file for each unique CSV file name.
+
+**JSON configuration** \
+There are three JSON key/value pairs for this app - two are required and one is optional
+- MERGECSV_SOURCE: the path to the top-level folder containing CSV files to merge
+- MERGECSV_TARGET: the path where the merged CSV file is written
+- MERGECSV_OPTIONS: any options to be passed to the script
+
+For example:
+```json
+{
+  "MERGECSV_SOURCE": "/input",
+  "MERGECSV_TARGET": "/output",
+  "MERGECSV_OPTIONS": ""
+}
+```
+
+The following options are available to be specified on the MERGECSV_OPTIONS JSON entry:
+- `--no_header` this option indicates that the source CSV files do not have header lines
+- `--header_count <value>` indicates the number of header lines to expect in the CSV files; defaults to 1 header line
+- `--filter <file name filter>` one or more comma-separated filters of files to process; files not matching a filter aren't processed
+- `--ignore <file name filter>` one or more comma-separated filters of files to skip; files matching a filter are ignored
+- `--help` displays the help information without any file processing
+
+By combining filtering options and header options, it's possible to precisely target the CSV files to process.
+
+The filters work by matching up the file name found on disk with the names specified with the filter to determine if a file should be processed.
+Only the body and extension of a file name is compared, the path to the file is ignored when filtering.
+
+**Sample command line** \
+```bash
+docker run --rm -v ${pwd}/inputs:/input -v ${pwd}/outputs:/output -v ${pwd}/my-jx-args.json:/scif/apps/src/jx-args.json agdrone/canopycover-workflow:1.2 run merge_csv
+```
+
+The different components of the command line are:
+- `docker run --rm` tells Docker to run an image and remove the resulting container automatically after the run
+- `-v ${pwd}/inputs:/input` mounts the [previously created](#prerequisites) inputs folder to the `/input` location on the running image
+- `-v ${pwd}/outputs:/output` mounts the [previously created](#prerequisites) outputs folder to the `/output` location on the running image
+- `-v ${pwd}/my-jx-args.json:/scif/apps/src/jx-args.json` mounts the JSON configuration file so that it's available to the app
+- `agdrone/canopycover-workflow:1.2` is the Docker image to run
+- `run merge_csv` the command that runs the app
+
+Please notice the following:
+- the `/input` folder on the command line corresponds with the `MERGECSV_SOURCE` path value in the configuration JSON; this is where the app expects to find the CSV files to merge
+- the `/output` folder on the command line corresponds with the `MERGECSV_TARGET` path value in the configuration JSON; this is where the merged CSV files are stored.
+
 ### Clean runs <a name="workflow_clean" />
 
 Cleaning up a workflow run will delete workflow generated files and folders.

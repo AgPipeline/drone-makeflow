@@ -53,8 +53,15 @@
 %apphelp betydb2geojson
     This app provides a conversion from BETYdb site data to GeoJSON plot geometries.
 
-    Sample command - replace <BETYdb URL> with the actual URL and <out filename> with the target file name:
-        scif run betydb2geojson <BETYdb URL> <out filename>
+    Expected keys in the "jx-args.json" file:
+        BETYDB_URL - the value is the URL of the BETYdb instance to get plot geometries from
+        PLOT_SHAPEFILE - the path to save the GeoJSON to
+
+    Sample command:
+        scif run betydb2geojson
+
+    See also:
+        https://github.com/AgPipeline/drone-makeflow/blob/master/README.md
 
 %appinstall shp2geojson
     # Install Makeflow and other dependencies
@@ -75,16 +82,42 @@
 %apphelp shp2geojson
     This app provides a conversion from a shapefile to GeoJSON plot geometries.
 
-    Sample command - replace <shapefile> with the name of the shapefile and <out filename> with the target file name:
-        scif run shp2geojson <shapefile> <out filename>
+    Expected keys in the "jx-args.json" file:
+        PLOT_GEOMETRY_FILE - the path to the shapefile to convert to GeoJSON
+        PLOT_SHAPEFILE - the path to save the GeoJSON to
+
+    Sample command:
+        scif run shp2geojson
+
+    See also:
+        https://github.com/AgPipeline/drone-makeflow/blob/master/README.md
 
 %appinstall merge_csv
+    # Install Makeflow and other dependencies
+    conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
 
 %apprun merge_csv
-    /scif/apps/odm_workflow/src/merge_csv.py "${1}" "${2}"
+    conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+        --jx \
+        --jx-args="/scif/apps/src/jx-args.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
+        ${1} \
+        "/scif/apps/src/merge_csv_workflow.jx"
 
 %apphelp merge_csv
     This app searches folders for CSV files and merges them into the output folder
 
-    Sample command - replace <top source folder> and <destination folder> with the actual folder paths:
-        scif run merge_csv <top source folder> <destination folder>
+    Expected keys in the "jx-args.json" file:
+        MERGECSV_SOURCE - the path to the shapefile to convert to GeoJSON
+        MERGECSV_TARGET - the path to save the GeoJSON to
+        MERGECSV_OPTIONS - options for processing CSV files; set to "--help" to display all available options without processing files
+
+    Sample command:
+        scif run merge_csv
+
+    See also:
+        https://github.com/AgPipeline/drone-makeflow/blob/master/README.md
