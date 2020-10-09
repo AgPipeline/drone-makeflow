@@ -12,15 +12,16 @@ The [Scientific Filesystem](https://sci-f.github.io/) is used as to provide the 
 These apps are used by the above workflows and can be used to create custom workflows outside of what's provided.
 
 ## Table of contents
-- [Terms used](#terms)
+- [Terminology used](#terminology)
 - [Running the apps](#run_apps)
     - [Prerequisites](#prerequisites)
     - [Configuration JSON file](#config_json)
     - [Generating GeoJSON plot geometries](#geojson_plots)
         - [BETYdb to GeoJson](#betydb_geojson)
         - [Shapefile to GeoJson](#shapefile_geojson)
+    - [Merge CSV files](#merge_csv)
+    - [Soilmask images](#soilmask)
     - [Clean](#workflow_clean)
-- [Running Other Apps](#apps)
 - [Build The Container](#build)
 - [A Note On Docker Sibling Containers](#docker_sibling_containers)
 - [Acceptance Testing](#acceptance_testing)
@@ -28,7 +29,7 @@ These apps are used by the above workflows and can be used to create custom work
     - [shellcheck and shfmt](#shellcheck_shfmt)
     - [Docker Testing](#test_docker)
 
-## Terms used <a name="terms" />
+## Terminology used <a name="terminology" />
 
 Here are the definition of some of the terms we use with links to additional information
 
@@ -120,7 +121,7 @@ docker run --rm -v ${PWD}/outputs:/output -v ${PWD}/my-jx-args.json:/scif/apps/s
 ```
 
 The different components of the command line are:
-- `docker run --rm` tells Docker to run an image and remove the resulting container automatically after the run
+- `docker run --rm` tells Docker to run an image and remove the resulting container automatically after the run (`--rm`)
 - `-v ${PWD}/outputs:/output` mounts the [previously created](#prerequisites) outputs folder to the `/output` location on the running image
 - `-v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json` mounts the JSON configuration file so that it's available to the app
 - `agdrone/canopycover-workflow:1.2` is the Docker image to run
@@ -151,7 +152,7 @@ docker run --rm -v ${PWD}/inputs:/input -v ${PWD}/outputs:/output -v ${PWD}/my-j
 ```
 
 The different components of the command line are:
-- `docker run --rm` tells Docker to run an image and remove the resulting container automatically after the run
+- `docker run --rm` tells Docker to run an image and remove the resulting container automatically after the run (`--rm`)
 - `-v ${PWD}/inputs:/input` mounts the [previously created](#prerequisites) inputs folder to the `/input` location on the running image
 - `-v ${PWD}/outputs:/output` mounts the [previously created](#prerequisites) outputs folder to the `/output` location on the running image
 - `-v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json` mounts the JSON configuration file so that it's available to the app
@@ -162,7 +163,7 @@ Please notice the following:
 - the `/input` folder on the command line corresponds with the `PLOT_SHAPEFILE` starting path value in the configuration JSON; this is where the app expects to find the shapefile to load and convert
 - the `/output` folder on the command line corresponds with the `PLOT_GEOMETRY_FILE` starting path value in the configuration JSON
 
-#### Merge CSV files <a name="merge_csv" />
+### Merge CSV files <a name="merge_csv" />
 
 This app recursively merges same-named CSV files to a destination folder.
 If the folder contains multiple, differently named, CSV files, there will be one resulting CSV file for each unique CSV file name.
@@ -200,7 +201,7 @@ docker run --rm -v ${PWD}/inputs:/input -v ${PWD}/outputs:/output -v ${PWD}/my-j
 ```
 
 The different components of the command line are:
-- `docker run --rm` tells Docker to run an image and remove the resulting container automatically after the run
+- `docker run --rm` tells Docker to run an image and remove the resulting container automatically after the run (`--rm`)
 - `-v ${PWD}/inputs:/input` mounts the [previously created](#prerequisites) inputs folder to the `/input` location on the running image
 - `-v ${PWD}/outputs:/output` mounts the [previously created](#prerequisites) outputs folder to the `/output` location on the running image
 - `-v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json` mounts the JSON configuration file so that it's available to the app
@@ -209,7 +210,49 @@ The different components of the command line are:
 
 Please notice the following:
 - the `/input` folder on the command line corresponds with the `MERGECSV_SOURCE` path value in the configuration JSON; this is where the app expects to find the CSV files to merge
-- the `/output` folder on the command line corresponds with the `MERGECSV_TARGET` path value in the configuration JSON; this is where the merged CSV files are stored.
+- the `/output` folder on the command line corresponds with the `MERGECSV_TARGET` path value in the configuration JSON; this is where the merged CSV files are stored
+
+### Soilmask images <a name="soilmask" />
+
+This app masks out soil from an image.
+
+**JSON configuration** \
+There are JSON key/value pairs for this app
+- SOILMASK_SOURCE_FILE: the path to the image to mask the soil from
+- SOILMASK_MASK_FILE: the name of the mask file to write. Will be written to the path defined in SOILMASK_WORKING_FOLDER if a path is not specified.
+- SOILMASK_WORKING_FOLDER: the path to where the results of processing should be placed 
+- SOILMASK_OPTIONS: any options to be passed to the script
+
+The following JSON example would have the soilmask app write the mask to a file named `orthomosaic_masked.tif` in the `/output/` folder of the running Docker image:
+```json
+{
+  "SOILMASK_SOURCE_FILE": "/input/orthomosaic.tif",
+  "SOILMASK_MASK_FILE": "orthomosaic_masked.tif",
+  "SOILMASK_WORKING_FOLDER": "/output",
+  "SOILMASK_OPTIONS": ""
+}
+```
+
+The following options are available to be specified on the SOILMASK_OPTIONS JSON entry:
+- `--metadata METADATA` this option indicates a metadata YAML or JSON file to use when processing 
+- `--help` displays the soilmask help information without any file processing
+
+**Sample command line** \
+```bash
+docker run --rm -v ${PWD}/test/inputs:/input -v ${PWD}/test/output:/output -v ${PWD}/chris-jx-args.json:/scif/apps/src/jx-args.json agdrone/canopycover-workflow:1.2 run soilmask
+```
+
+The different components of the command line are:
+- `docker run --rm` tells Docker to run an image and remove the resulting container automatically after the run (`--rm`)
+- `-v ${PWD}/inputs:/input` mounts the [previously created](#prerequisites) inputs folder to the `/input` location on the running image
+- `-v ${PWD}/outputs:/output` mounts the [previously created](#prerequisites) outputs folder to the `/output` location on the running image
+- `-v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json` mounts the JSON configuration file so that it's available to the app
+- `agdrone/canopycover-workflow:1.2` is the Docker image to run
+- `run soilmask` the command that runs the app
+
+Please notice the following:
+- the `/input` folder on the command line corresponds with the `SOILMASK_SOURCE_FILE` path value in the configuration JSON; this is where the app expects to find the source image
+- the `/output` folder on the command line corresponds with the `SOILMASK_WORKING_FOLDER` path value in the configuration JSON; this is where the masked image is stored
 
 ### Clean runs <a name="workflow_clean" />
 
