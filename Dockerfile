@@ -1,5 +1,5 @@
 FROM ubuntu:18.04 as base
-ENV DOCKER_IMAGE agpipeline/scif-drone-pipeline:1.3
+ENV DOCKER_IMAGE agdrone/workflow:1.3
 ENV DEBIAN_FRONTEND noninteractive
 WORKDIR /
 
@@ -58,13 +58,14 @@ WORKDIR /root
 COPY --from=download_miniconda /root/miniconda.sh .
 RUN /bin/bash ~/miniconda.sh -b -p /opt/conda \
     && rm ~/miniconda.sh \
-    && /opt/conda/bin/conda clean -tipsy \
+    && /opt/conda/bin/conda clean -tipy \
     && ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
     && echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc \
     && echo "conda activate base" >> ~/.bashrc \
     && find /opt/conda/ -follow -type f -name '*.a' -delete \
     && find /opt/conda/ -follow -type f -name '*.js.map' -delete \
     && /opt/conda/bin/conda clean -afy \
+    && /opt/conda/bin/conda update -n base -c defaults conda \
     && echo "Finished installing miniconda!"
 ENV PATH /opt/conda/bin:$PATH
 WORKDIR /
@@ -91,15 +92,12 @@ COPY ./scif_app_recipes/soilmask_v0.0.1_ubuntu16.04.scif /opt/
 RUN scif install /opt/soilmask_v0.0.1_ubuntu16.04.scif
 RUN scif install /opt/ndcctools_v7.1.2_ubuntu16.04.scif
 
-FROM combined_scif as plotclip_scif
 COPY ./scif_app_recipes/plotclip_v0.0.1_ubuntu16.04.scif /opt/
 RUN scif install /opt/plotclip_v0.0.1_ubuntu16.04.scif
 
-FROM plotclip_scif as canopycover_scif
 COPY ./scif_app_recipes/canopycover_v0.0.1_ubuntu16.04.scif /opt/
 RUN scif install /opt/canopycover_v0.0.1_ubuntu16.04.scif
 
-FROM canopycover_scif as workflow
 COPY *.jx *.py *.sh jx-args.json /scif/apps/src/
 RUN chmod a+x /scif/apps/src/*.sh
 RUN chmod a+x /scif/apps/src/*.py

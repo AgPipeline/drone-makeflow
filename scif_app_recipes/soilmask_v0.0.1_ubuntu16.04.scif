@@ -1,26 +1,29 @@
 %appinstall soilmask
     # Download soilmask code. In the future use pip/conda install.
-    wget -O soilmask.tar.gz https://github.com/AgPipeline/transformer-soilmask/archive/v2.1.tar.gz
+    wget -O soilmask.tar.gz https://github.com/AgPipeline/transformer-soilmask/archive/v2.2.tar.gz
     tar xvzf soilmask.tar.gz
-    mv transformer-soilmask-2.1 src
+    mv transformer-soilmask-2.2 src
 
     # Install Makeflow and other dependencies
-    conda create --name soilmask --yes -c conda-forge ndcctools pyyaml piexif python-dateutil laspy influxdb utm opencv scikit-image pip certifi
-    conda info --envs
-    conda init bash
-    . /opt/conda/etc/profile.d/conda.sh
-    conda activate base
-    conda activate soilmask
-    conda install conda-build
-    pip install --upgrade-strategy only-if-needed certifi  pygdal==2.2.3.*
-    pip install --upgrade-strategy only-if-needed agpypeline
+    conda create --prefix "${SCIF_APPROOT}/conda" --yes -c conda-forge ndcctools pyyaml piexif python-dateutil laspy influxdb utm opencv scikit-image pip certifi
+    conda run --prefix "${SCIF_APPROOT}/conda" pip install --upgrade-strategy only-if-needed pygdal==2.2.3.*
+    conda run --prefix "${SCIF_APPROOT}/conda" pip install --upgrade-strategy only-if-needed agpypeline
+#    conda create --name soilmask --yes -c conda-forge ndcctools pyyaml piexif python-dateutil laspy influxdb utm opencv scikit-image pip certifi
+#    conda info --envs
+#    conda init bash
+#    . /opt/conda/etc/profile.d/conda.sh
+#    conda activate base
+#    conda activate soilmask
+#    conda install conda-build
+#    pip install --upgrade-strategy only-if-needed pygdal==2.2.3.*
+#    pip install --upgrade-strategy only-if-needed agpypeline
 
-#    # Install packages needed
-#    python3 -m venv --system-site-packages --symlinks .venv
-#    .venv/bin/python3 -m pip install --upgrade --no-cache-dir pip
-#    .venv/bin/python3 -m pip install --upgrade --no-cache-dir pyyaml piexif python-dateutil
-#    .venv/bin/python3 -m pip install --upgrade --no-cache-dir laspy influxdb utm opencv-python
-#    .venv/bin/python3 -m pip install --upgrade --no-cache-dir -r "${PWD}/src/requirements.txt"
+##    # Install packages needed
+##    python3 -m venv --system-site-packages --symlinks .venv
+##    .venv/bin/python3 -m pip install --upgrade --no-cache-dir pip
+##    .venv/bin/python3 -m pip install --upgrade --no-cache-dir pyyaml piexif python-dateutil
+##    .venv/bin/python3 -m pip install --upgrade --no-cache-dir laspy influxdb utm opencv-python
+##    .venv/bin/python3 -m pip install --upgrade --no-cache-dir -r "${PWD}/src/requirements.txt"
 
     # Add example Docker command to SCIF app help section
     test -z $DOCKER_IMAGE && DOCKER_IMAGE="agpipeline/soilmask:latest"
@@ -28,7 +31,8 @@
 
     # Generate remainder of SCIF app help section by running main script
     echo "Running soilmask script"
-    python3 src/soilmask.py --help >> "${PWD}/scif/runscript.help"
+#    python3 src/soilmask.py --help >> "${PWD}/scif/runscript.help"
+    conda run --prefix "${SCIF_APPROOT}/conda" python3 src/soilmask.py --help >> "${PWD}/scif/runscript.help"
 
 %apprun soilmask
     conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
