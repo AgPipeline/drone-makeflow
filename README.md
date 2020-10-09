@@ -116,13 +116,13 @@ For example:
 
 **Sample command line** \
 ```bash
-docker run --rm -v ${pwd}/outputs:/output -v ${pwd}/my-jx-args.json:/scif/apps/src/jx-args.json agdrone/canopycover-workflow:1.2 run betydb2geojson
+docker run --rm -v ${PWD}/outputs:/output -v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json agdrone/canopycover-workflow:1.2 run betydb2geojson
 ```
 
 The different components of the command line are:
 - `docker run --rm` tells Docker to run an image and remove the resulting container automatically after the run
-- `-v ${pwd}/outputs:/output` mounts the [previously created](#prerequisites) outputs folder to the `/output` location on the running image
-- `-v ${pwd}/my-jx-args.json:/scif/apps/src/jx-args.json` mounts the JSON configuration file so that it's available to the app
+- `-v ${PWD}/outputs:/output` mounts the [previously created](#prerequisites) outputs folder to the `/output` location on the running image
+- `-v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json` mounts the JSON configuration file so that it's available to the app
 - `agdrone/canopycover-workflow:1.2` is the Docker image to run
 - `run betydb2geojson` the command that runs the app
 
@@ -147,14 +147,14 @@ For example:
 
 **Sample command line** \
 ```bash
-docker run --rm -v ${pwd}/inputs:/input -v ${pwd}/outputs:/output -v ${pwd}/my-jx-args.json:/scif/apps/src/jx-args.json agdrone/canopycover-workflow:1.2 run shp2geojson
+docker run --rm -v ${PWD}/inputs:/input -v ${PWD}/outputs:/output -v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json agdrone/canopycover-workflow:1.2 run shp2geojson
 ```
 
 The different components of the command line are:
 - `docker run --rm` tells Docker to run an image and remove the resulting container automatically after the run
-- `-v ${pwd}/inputs:/input` mounts the [previously created](#prerequisites) inputs folder to the `/input` location on the running image
-- `-v ${pwd}/outputs:/output` mounts the [previously created](#prerequisites) outputs folder to the `/output` location on the running image
-- `-v ${pwd}/my-jx-args.json:/scif/apps/src/jx-args.json` mounts the JSON configuration file so that it's available to the app
+- `-v ${PWD}/inputs:/input` mounts the [previously created](#prerequisites) inputs folder to the `/input` location on the running image
+- `-v ${PWD}/outputs:/output` mounts the [previously created](#prerequisites) outputs folder to the `/output` location on the running image
+- `-v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json` mounts the JSON configuration file so that it's available to the app
 - `agdrone/canopycover-workflow:1.2` is the Docker image to run
 - `run shp2geojson` the command that runs the app
 
@@ -196,14 +196,14 @@ Only the body and extension of a file name is compared, the path to the file is 
 
 **Sample command line** \
 ```bash
-docker run --rm -v ${pwd}/inputs:/input -v ${pwd}/outputs:/output -v ${pwd}/my-jx-args.json:/scif/apps/src/jx-args.json agdrone/canopycover-workflow:1.2 run merge_csv
+docker run --rm -v ${PWD}/inputs:/input -v ${PWD}/outputs:/output -v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json agdrone/canopycover-workflow:1.2 run merge_csv
 ```
 
 The different components of the command line are:
 - `docker run --rm` tells Docker to run an image and remove the resulting container automatically after the run
-- `-v ${pwd}/inputs:/input` mounts the [previously created](#prerequisites) inputs folder to the `/input` location on the running image
-- `-v ${pwd}/outputs:/output` mounts the [previously created](#prerequisites) outputs folder to the `/output` location on the running image
-- `-v ${pwd}/my-jx-args.json:/scif/apps/src/jx-args.json` mounts the JSON configuration file so that it's available to the app
+- `-v ${PWD}/inputs:/input` mounts the [previously created](#prerequisites) inputs folder to the `/input` location on the running image
+- `-v ${PWD}/outputs:/output` mounts the [previously created](#prerequisites) outputs folder to the `/output` location on the running image
+- `-v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json` mounts the JSON configuration file so that it's available to the app
 - `agdrone/canopycover-workflow:1.2` is the Docker image to run
 - `run merge_csv` the command that runs the app
 
@@ -224,7 +224,7 @@ It's recommended, but not necessary, to run the clean app between processing run
 
 The following docker command line will clean up the files generated using the [Canopy Cover: Orthomosaic and Shapefile](#om_can_shp) example above.
 ```bash
-docker run --rm -v ${pwd}/outputs:/output -v ${pwd}/my-jx-args.json:/scif/apps/src/jx-args.json agdrone/canopycover-workflow:1.2 run betydb2geojson --clean
+docker run --rm -v ${PWD}/outputs:/output -v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json agdrone/canopycover-workflow:1.2 run betydb2geojson --clean
 ```
 Notice the additional parameter at the end of the command line (--clean).
 

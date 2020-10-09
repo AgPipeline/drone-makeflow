@@ -1,0 +1,21 @@
+{
+  "define": {
+    "SOILMASK_MASK_RESULT": SOILMASK_WORKING_FOLDER + "/" + SOILMASK_MASK_FILE,
+   },
+  "rules": [
+    {
+      "command": "python3 src/soilmask.py ${DOCKER_OPTIONS} --working_space \"${WORKING_FOLDER}\" \"${INPUT_GEOTIFF} ",
+      "environment": {
+        "INPUT_GEOTIFF": SOILMASK_ORTHOMOSAIC_FILE,
+        "WORKING_FOLDER": SOILMASK_WORKING_FOLDER,
+        "DOCKER_OPTIONS": SOILMASK_OPTIONS,
+      },
+      "inputs": [
+        SOILMASK_ORTHOMOSAIC_FILE
+      ],
+      "outputs": [
+        SOILMASK_MASK_RESULT
+      ]
+    }
+  ]
+}

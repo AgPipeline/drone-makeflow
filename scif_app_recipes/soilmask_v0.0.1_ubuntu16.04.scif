@@ -4,22 +4,43 @@
     tar xvzf soilmask.tar.gz
     mv transformer-soilmask-2.1 src
 
-    # Install packages needed
-    python3 -m venv --system-site-packages --symlinks .venv
-    .venv/bin/python3 -m pip install --upgrade --no-cache-dir pip
-    .venv/bin/python3 -m pip install --upgrade --no-cache-dir pyyaml piexif python-dateutil
-    .venv/bin/python3 -m pip install --upgrade --no-cache-dir laspy influxdb utm opencv-python
-    .venv/bin/python3 -m pip install --upgrade --no-cache-dir -r "${PWD}/src/requirements.txt"
+    # Install Makeflow and other dependencies
+    conda create --name soilmask --yes -c conda-forge ndcctools pyyaml piexif python-dateutil laspy influxdb utm opencv scikit-image pip certifi
+    conda info --envs
+    conda init bash
+    . /opt/conda/etc/profile.d/conda.sh
+    conda activate base
+    conda activate soilmask
+    conda install conda-build
+    pip install --upgrade-strategy only-if-needed certifi  pygdal==2.2.3.*
+    pip install --upgrade-strategy only-if-needed agpypeline
+
+#    # Install packages needed
+#    python3 -m venv --system-site-packages --symlinks .venv
+#    .venv/bin/python3 -m pip install --upgrade --no-cache-dir pip
+#    .venv/bin/python3 -m pip install --upgrade --no-cache-dir pyyaml piexif python-dateutil
+#    .venv/bin/python3 -m pip install --upgrade --no-cache-dir laspy influxdb utm opencv-python
+#    .venv/bin/python3 -m pip install --upgrade --no-cache-dir -r "${PWD}/src/requirements.txt"
 
     # Add example Docker command to SCIF app help section
     test -z $DOCKER_IMAGE && DOCKER_IMAGE="agpipeline/soilmask:latest"
     echo "\n\nExample Docker command: docker run $DOCKER_IMAGE run soilmask\n" >> "${PWD}/scif/runscript.help"
 
     # Generate remainder of SCIF app help section by running main script
-    .venv/bin/python3 src/soilmask.py --help >> "${PWD}/scif/runscript.help"
+    echo "Running soilmask script"
+    python3 src/soilmask.py --help >> "${PWD}/scif/runscript.help"
 
 %apprun soilmask
-    .venv/bin/python3 src/soilmask.py "${@}"
+    conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+        --jx \
+        --jx-args="/scif/apps/src/jx-args.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
+        ${1} \
+        "/scif/apps/src/soilmask_workflow.jx"
 
 %apphelp soilmask
     This app provides an entrypoint to the soilmask tool
