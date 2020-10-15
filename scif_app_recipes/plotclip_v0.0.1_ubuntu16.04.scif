@@ -11,15 +11,6 @@
     conda run --prefix "${SCIF_APPROOT}/conda" pip install --upgrade-strategy only-if-needed pygdal==2.2.3.*
     conda run --prefix "${SCIF_APPROOT}/conda" pip install --upgrade-strategy only-if-needed -r "${PWD}/src/requirements.txt"
 
-#    # Install packages needed
-#    python3 -m venv --system-site-packages .venv
-#    .venv/bin/python3 -m pip install --upgrade --no-cache-dir pip
-#    .venv/bin/python3 -m pip install --upgrade --no-cache-dir -r "${PWD}/src/requirements.txt"
-#    .venv/bin/python3 -m pip install --upgrade --no-cache-dir pyyaml pygdal==2.2.3.3 piexif
-#
-#    .venv/bin/python3 -m pip install --upgrade --no-cache-dir laspy influxdb utm pygdal==2.2.3.5 matplotlib Pillow
-#    .venv/bin/python3 -m pip install --upgrade --no-cache-dir agpypeline
-
     # Add example Docker command to SCIF app help section
     if [ -n $DOCKER_IMAGE ]; then
         echo "\n\nExample Docker command: docker run $DOCKER_IMAGE run plotclip\n" >> "${PWD}/scif/runscript.help"

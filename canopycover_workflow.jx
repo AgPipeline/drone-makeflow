@@ -1,11 +1,12 @@
 {
   "define": {
-     "SCIF_APPDATA_odm": "/scif/data/odm_workflow",
+     "CANOPYCOVER_SCRIPT": "/src/canopycover.py",
    },
   "rules": [
     {
-      "command": "scif run canopycover ${DOCKER_OPTIONS} --working_space \\\'\\\"\$\\\{WORKING_FOLDER\\\}\\\"\\\' \\\'\\\"\$\\\{INPUT_GEOTIFF\\\}\\\"\\\' ",
+      "command": "python3 ${SCIF_APPROOT}/${SCRIPT_PATH} ${DOCKER_OPTIONS} --working_space ${WORKING_FOLDER} ${INPUT_GEOTIFF} ",
       "environment": {
+        "SCRIPT_PATH": CANOPYCOVER_SCRIPT,
         "INPUT_GEOTIFF": PLOT_INFO["FILE"],
         "WORKING_FOLDER": PLOT_INFO["DIR"],
         "DOCKER_OPTIONS": CANOPYCOVER_OPTIONS,
@@ -14,10 +15,9 @@
         PLOT_INFO["FILE"]
       ],
       "outputs": [
-        PLOT_INFO["DIR"],
         PLOT_INFO["DIR"] + "/canopycover.csv",
         PLOT_INFO["DIR"] + "/result.json"
       ]
-    } for PLOT_INFO in CANOPYCOVER_FILE_LIST
+    } for PLOT_INFO in FILE_LIST
   ]
 }
