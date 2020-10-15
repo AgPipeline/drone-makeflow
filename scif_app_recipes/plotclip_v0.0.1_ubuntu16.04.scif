@@ -7,7 +7,7 @@
     rm -rf --verbose src/test_data src/tests src/.github
 
     # Install Makeflow and other dependencies
-    conda create --prefix "${SCIF_APPROOT}/conda" --yes -c conda-forge ndcctools piexif laspy influxdb utm matplotlib Pillow
+    conda create --prefix "${SCIF_APPROOT}/conda" --yes -c conda-forge ndcctools piexif laspy influxdb utm matplotlib Pillow scipy
     conda run --prefix "${SCIF_APPROOT}/conda" pip install --upgrade-strategy only-if-needed pygdal==2.2.3.*
     conda run --prefix "${SCIF_APPROOT}/conda" pip install --upgrade-strategy only-if-needed -r "${PWD}/src/requirements.txt"
 

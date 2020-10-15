@@ -1,24 +1,23 @@
 {
   "define": {
      "SCIF_APPDATA_odm": "/scif/data/odm_workflow",
-     "CANOPYCOVER_METADATA_FILE": SCIF_APPDATA_odm + "/images/experiment.yaml",
    },
   "rules": [
     {
-       "command": "scif run canopycover --metadata \\\'\\\"\$\\\{METADATA_FILE\\\}\\\"\\\' --working_space \\\'\\\"\$\\\{WORKING_FOLDER\\\}\\\"\\\' \\\'\\\"\$\\\{INPUT_GEOTIFF\\\}\\\"\\\' ",
-       "environment": {
-         "INPUT_GEOTIFF": PLOT_INFO["FILE"],
-         "METADATA_FILE": CANOPYCOVER_METADATA_FILE,
-         "WORKING_FOLDER": PLOT_INFO["DIR"],
-       },
-       "inputs": [
-         PLOT_INFO["FILE"]
-       ],
-       "outputs": [
-         PLOT_INFO["DIR"],
-         PLOT_INFO["DIR"] + "/canopycover.csv",
-         PLOT_INFO["DIR"] + "/result.json"
-       ]
-     } for PLOT_INFO in CANOPYCOVER_FILE_LIST
+      "command": "scif run canopycover ${DOCKER_OPTIONS} --working_space \\\'\\\"\$\\\{WORKING_FOLDER\\\}\\\"\\\' \\\'\\\"\$\\\{INPUT_GEOTIFF\\\}\\\"\\\' ",
+      "environment": {
+        "INPUT_GEOTIFF": PLOT_INFO["FILE"],
+        "WORKING_FOLDER": PLOT_INFO["DIR"],
+        "DOCKER_OPTIONS": CANOPYCOVER_OPTIONS,
+      },
+      "inputs": [
+        PLOT_INFO["FILE"]
+      ],
+      "outputs": [
+        PLOT_INFO["DIR"],
+        PLOT_INFO["DIR"] + "/canopycover.csv",
+        PLOT_INFO["DIR"] + "/result.json"
+      ]
+    } for PLOT_INFO in CANOPYCOVER_FILE_LIST
   ]
 }
