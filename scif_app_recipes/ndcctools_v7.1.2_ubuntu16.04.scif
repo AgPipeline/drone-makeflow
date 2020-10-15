@@ -109,7 +109,7 @@
         "/scif/apps/src/merge_csv_workflow.jx"
 
 %apphelp merge_csv
-    This app searches folders for CSV files and merges them into the output folder
+    This app searches folders for CSV files and merges them by file name into the output folder
 
     Expected keys in the "jx-args.json" file:
         MERGECSV_SOURCE - the folder path to look for CSV file
