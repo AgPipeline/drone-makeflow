@@ -42,6 +42,10 @@ It can be used in the processing pipeline as a source of plot geometry for clipp
 [GeoJSON](https://datatracker.ietf.org/doc/rfc7946/) is a JSON format for specifying geographic shape information.
 This is the default format for specifying plot geometries.
 
+* Makeflow <a name="def_makeflow" />
+We use [Makeflow](https://cctools.readthedocs.io/en/latest/man_pages/makeflow/) to run the apps defined with Scientific Filesystem.
+This tool enables error recovery, automatic retries, distributed computing, and many other features.
+
 * Scientific Filesystem <a name="def_scif" />
 We use the [Scientific Filesystem](https://sci-f.github.io/) to organize our applications, provide ease of execution, and to assist in reproducibility.
 
@@ -55,7 +59,7 @@ This section contains different ways of executing an existing Docker workflow co
 
 ### Prerequisites <a name="prerequisites" />
 
-- Docker needs to be installed to run the workflows. [Get Docker](https://docs.docker.com/get-docker/)
+- Docker needs to be installed to run the workflows. How to [get Docker](https://docs.docker.com/get-docker/)
 - Create an `inputs` folder in the current working directory (or other folder of your choice)
 ```bash
 mkdir -p "${PWD}/inputs"
@@ -64,9 +68,9 @@ mkdir -p "${PWD}/inputs"
 ```bash
 mkdir -p "${PWD}/outputs"
 ```
-- Create an output folder.
-The `checkpoints` folder will contain the generated workflow checkpoint data allowing easy recovery from an error and helps prevent re-running an already completed workflow.
-Removing the workflow checkpoint files will enable a complete re-run of the workflow:
+- Create an `checkpoints` folder.
+The checkpoints folder will contain the generated workflow checkpoint data allowing easy error recovery and stops re-running an already completed workflow.
+Removing the workflow checkpoint files will enable a complete re-run of the workflow
 ```bash
 mkdir -p "${PWD}/checkpoints"
 ``` 
@@ -213,6 +217,13 @@ Please refer to the [Docker](https://www.docker.com/) documentation for more inf
 cp jx-args.json.example jx-args.json
 docker build --progress=plain -t agdrone/canopycover-workflow:latest .
 ```
+
+## Monitoring the Workflow <a name="monitoring" />
+
+To monitor the running workflows, you will need to be using the checkpoints folder as described in the [Prerequisites](#prerequisites) section.
+
+[Makeflow](#def_makeflow) has [monitoring tools](https://cctools.readthedocs.io/en/latest/man_pages/) available that can be used to follow the progress of the workflows.
+The [makeflow_monitor](https://cctools.readthedocs.io/en/latest/man_pages/makeflow_monitor/) tool can be a good starting point.
 
 ## A Note On Docker Sibling Containers <a name="docker_sibling_containers" />
 
