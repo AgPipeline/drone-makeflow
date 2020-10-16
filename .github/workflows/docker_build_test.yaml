@@ -23,7 +23,7 @@ jobs:
       - name: Build docker image
         run: docker build -t scif_test:latest ./
       - name: Compress docker image
-        run: docker save scif_test:latest | gzip -7 -c - > scif_test_image.tar.gz
+        run: docker save scif_test:latest | gzip -9 -c - > scif_test_image.tar.gz
       - name: Upload docker image
         uses: actions/upload-artifact@v2
         with:
