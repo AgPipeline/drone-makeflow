@@ -1,0 +1,20 @@
+{
+  "BETYDB_URL": "https://terraref.ncsa.illinois.edu/bety",
+  "PLOT_SHAPEFILE": "/input/plot_shapes.shp",
+  "PLOT_GEOMETRY_FILE": "/output/plots.geojson",
+  "SOILMASK_SOURCE_FILE": "/input/orthomosaic.tif",
+  "SOILMASK_MASK_FILE": "orthomosaicmask.tif",
+  "SOILMASK_WORKING_FOLDER": "/output",
+  "SOILMASK_OPTIONS": "",
+  "PLOTCLIP_SOURCE_FILE": "/input/orthomosaicmask.tif",
+  "PLOTCLIP_PLOTGEOMETRY_FILE": "/input/plots.geojson",
+  "PLOTCLIP_WORKING_FOLDER": "/output",
+  "PLOTCLIP_OPTIONS": "",
+  "FILES2JSON_SEARCH_NAME": "orthomosaicmask.tif",
+  "FILES2JSON_SEARCH_FOLDER": "/input",
+  "FILES2JSON_JSON_FILE": "/output/canopy_cover_files.json",
+  "CANOPYCOVER_OPTIONS": "",
+  "MERGECSV_SOURCE": "/input",
+  "MERGECSV_TARGET": "/output",
+  "MERGECSV_OPTIONS": ""
+}
