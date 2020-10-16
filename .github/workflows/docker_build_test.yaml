@@ -47,7 +47,7 @@ jobs:
             - app: merge_csv
               tar_gz_file: https://de.cyverse.org/dl/d/71E146AE-A959-4EF0-A1DE-760F88F21694/ci_merge_csv_test_data.tar.gz
               parameter_json: /mnt/app_testing.json
-              test_results: if [[ "$(cat `pwd`/test/output/canopycover.csv|wc -l| tr -d '[:space:]')" == "58" ]]; then echo "Test merge_csv success"; exit 0; else echo "App failed - merge_csv"; exit 1; fi;
+              test_results: if [[ "$(cat canopycover.csv|wc -l| tr -d '[:space:]')" == "58" ]]; then echo "Test merge_csv success"; exit 0; else echo "App failed - merge_csv"; exit 1; fi;
     steps:
       - name: Fetch source code
         uses: actions/checkout@v2
@@ -61,7 +61,7 @@ jobs:
              tar xvzf scif_test_data.tar.gz -C "./"
              ls -l
       - name: Run test
-        run: docker run --rm -v `pwd`:/input -v `pwd`:output -v ${{ matrix.parameter_json }}://scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run ${{ matrix.app }}
+        run: docker run --rm -v `pwd`:/input -v `pwd`:/output -v ${{ matrix.parameter_json }}://scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run ${{ matrix.app }}
       - name: Folder listing
         run: ls -l
       - name: Check results
