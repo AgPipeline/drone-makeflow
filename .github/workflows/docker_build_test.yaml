@@ -34,7 +34,7 @@ jobs:
             - app: plotclip
               tar_gz_file: https://de.cyverse.org/dl/d/BC328D44-621B-41B6-A662-0CD7F2D4C0EE/ci_plotclip_test_data.tar.gz
               parameter_json: .github/workflows/app_testing.json
-              test_results: chmod +x .github/workflows/check_plotclip_app.sh && ./.github/workflows/check_plotclip_app.sh
+              test_results: chmod +x .github/workflows/check_plotclip_app.sh && ./.github/workflows/check_plotclip_app.sh ${PWD}
             - app: find_files2json
               tar_gz_file: https://de.cyverse.org/dl/d/ADBEEBDE-E000-4FCB-AE74-62047ED4DD8E/ci_find_files2json_test_data.tar.gz
               parameter_json: .github/workflows/app_testing.json
