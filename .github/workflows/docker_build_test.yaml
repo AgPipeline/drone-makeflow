@@ -21,32 +21,32 @@ jobs:
           app: [betydb2geojson, shp2geojson, soilmask, plotclip, find_files2json, canopycover, merge_csv]
           include:
             - app: betydb2geojson
-              parameter_json: /mnt/app_testing.json
+              parameter_json: app_testing.json
               test_results: if [[ -f "plots.geojson" ]]; then echo "Test betydb2geojson success"; exit 0; else echo "App failed - betydb2geojson"; exit 1; fi;
             - app: shp2geojson
               tar_gz_file: https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz
-              parameter_json: /mnt/app_testing.json
+              parameter_json: app_testing.json
               test_results: if [[ -f "plots.geojson" ]]; then echo "Test shp2geojson success"; exit 0; else echo "App failed - shp2geojson"; exit 1; fi;
             - app: soilmask
               tar_gz_file: https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz
-              parameter_json: /mnt/app_testing.json
+              parameter_json: app_testing.json
               test_results: if [[ -f "orthomosaicmask.tif" ]]; then echo "Test soilmask success"; exit 0; else echo "App failed - soilmask"; exit 1; fi;
             - app: plotclip
               tar_gz_file: https://de.cyverse.org/dl/d/BC328D44-621B-41B6-A662-0CD7F2D4C0EE/ci_plotclip_test_data.tar.gz
-              parameter_json: /mnt/app_testing.json
+              parameter_json: app_testing.json
               test_results: chmod +x .github/workflows/check_plotclip_app.sh && ./.github/workflows/check_plotclip_app.sh
             - app: find_files2json
               tar_gz_file: https://de.cyverse.org/dl/d/ADBEEBDE-E000-4FCB-AE74-62047ED4DD8E/ci_find_files2json_test_data.tar.gz
-              parameter_json: /mnt/app_testing.json
+              parameter_json: app_testing.json
               test_results: if [[ -f "canopy_cover_files.json" ]]; then echo "Test find_files2json success"; exit 0; else echo "App failed - find_files2json"; exit 1; fi;
             - app: canopycover
               tar_gz_file: https://de.cyverse.org/dl/d/A3C6E964-B01A-49B1-B018-08E1DD248EB2/ci_canopycover_test_data.tar.gz
-              parameter_json: /mnt/app_testing.json
+              parameter_json: app_testing.json
               extra_docker_options: -v ./canopy_cover_files.json:/scif/apps/src/canopy_cover_files.json
               test_results: chmod +x .github/workflows/check_canopycover_app.sh && ./.github/workflows/check_canopycover_app.sh
             - app: merge_csv
               tar_gz_file: https://de.cyverse.org/dl/d/71E146AE-A959-4EF0-A1DE-760F88F21694/ci_merge_csv_test_data.tar.gz
-              parameter_json: /mnt/app_testing.json
+              parameter_json: app_testing.json
               test_results: if [[ "$(cat canopycover.csv|wc -l| tr -d '[:space:]')" == "58" ]]; then echo "Test merge_csv success"; exit 0; else echo "App failed - merge_csv"; exit 1; fi;
     steps:
       - name: Fetch source code
@@ -61,7 +61,7 @@ jobs:
              tar xvzf scif_test_data.tar.gz -C "./"
              ls -l
       - name: Run test
-        run: docker run --rm -v `pwd`:/input -v `pwd`:/output -v ${{ matrix.parameter_json }}://scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run ${{ matrix.app }}
+        run: docker run --rm -v ${PWD}:/input -v ${PWD}:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run ${{ matrix.app }}
       - name: Folder listing
         run: ls -l
       - name: Check results
