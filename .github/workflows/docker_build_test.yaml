@@ -43,7 +43,7 @@ jobs:
               tar_gz_file: https://de.cyverse.org/dl/d/A3C6E964-B01A-49B1-B018-08E1DD248EB2/ci_canopycover_test_data.tar.gz
               parameter_json: .github/workflows/app_testing.json
               extra_docker_options: -v `pwd`/canopy_cover_files.json:/scif/apps/src/canopy_cover_files.json
-              test_results: chmod +x .github/workflows/check_canopycover_app.sh && ./.github/workflows/check_canopycover_app.sh ${PWD}/outputs
+              test_results: chmod +x .github/workflows/check_canopycover_app.sh && ./.github/workflows/check_canopycover_app.sh ${PWD}
             - app: merge_csv
               tar_gz_file: https://de.cyverse.org/dl/d/71E146AE-A959-4EF0-A1DE-760F88F21694/ci_merge_csv_test_data.tar.gz
               parameter_json: .github/workflows/app_testing.json
@@ -65,6 +65,10 @@ jobs:
       - name: Run test
         run: docker run --rm -v ${PWD}:/input -v ${PWD}/outputs:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run ${{ matrix.app }}
       - name: Folder listing
-        run: ls -l
+        run: |
+             echo "Current folder"
+             ls -l
+             echo "Outputs folder"
+             ls -l outputs
       - name: Check results
         run: ${{ matrix.test_results }}
