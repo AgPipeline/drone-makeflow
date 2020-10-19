@@ -16,5 +16,5 @@
   "CANOPYCOVER_OPTIONS": "",
   "MERGECSV_SOURCE": "/input",
   "MERGECSV_TARGET": "/output",
-  "MERGECSV_OPTIONS": ""
+  "MERGECSV_OPTIONS": "--ignore-dirs input/outputs"
 }
