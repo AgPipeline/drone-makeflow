@@ -14,15 +14,6 @@ else
   TARGET_FOLDER="./outputs"
 fi
 
-# Check for the mask output file
-CHECK_FILE="${TARGET_FOLDER}/${MASK_FILE_NAME}"
-if [[ -f "${CHECK_FILE}" ]]; then
-  echo "Mask file found: ${CHECK_FILE}"
-else
-  echo "Unable to find mask file: ${CHECK_FILE}"
-  exit 1
-fi
-
 # Get all the folders and check the count
 # shellcheck disable=SC2207
 FOLDER_LIST=($(find "${TARGET_FOLDER}/" -maxdepth 1 -type d))
