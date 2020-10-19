@@ -106,7 +106,7 @@ jobs:
         run: docker build -t scif_test:latest ./
       - name: Create folders
         run: |
-              nkdir -p inputs
+              mkdir -p inputs
               mkdir -p outputs
       - name: Download testing data
         if: ${{ matrix.tar_gz_file }}
