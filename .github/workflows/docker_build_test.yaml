@@ -118,16 +118,16 @@ jobs:
              echo "Inputs folder"
              ls -l inputs/
       - name: Shapefile to plots
-        run: docker run --rm -v ${PWD}:/input -v ${PWD}/outputs:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run shp2geojson
+        run: docker run --rm -v ${PWD}/inputs:/input -v ${PWD}/outputs:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run shp2geojson
       - name: Run Soilmask
-        run: docker run --rm -v ${PWD}:/input -v ${PWD}/outputs:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run soilmask
+        run: docker run --rm -v ${PWD}/inputs:/input -v ${PWD}/outputs:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run soilmask
       - name: Run Soilmask
-        run: docker run --rm -v ${PWD}:/input -v ${PWD}/outputs:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run plotclip
+        run: docker run --rm -v ${PWD}/inputs:/input -v ${PWD}/outputs:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run plotclip
       - name: Find plotclip image files
-        run: docker run --rm -v ${PWD}:/input -v ${PWD}/outputs:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run find_files2json
+        run: docker run --rm -v ${PWD}/inputs:/input -v ${PWD}/outputs:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run find_files2json
       - name: Run canopy cover
-        run: docker run --rm -v ${PWD}:/input -v ${PWD}/outputs:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.canopycover_docker_options }} scif_test:latest run canopycover
+        run: docker run --rm -v ${PWD}/inputs:/input -v ${PWD}/outputs:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.canopycover_docker_options }} scif_test:latest run canopycover
       - name: Merge CSV files
-        run: docker run --rm -v ${PWD}:/input -v ${PWD}/outputs:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run merge_csv
+        run: docker run --rm -v ${PWD}/inputs:/input -v ${PWD}/outputs:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run merge_csv
       - name: Check CSV results
         run: if [[ "$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')" == "58" ]]; then echo "Canopy Coverr success"; exit 0; else echo "Workflow failed - canopy cover"; exit 1; fi;
