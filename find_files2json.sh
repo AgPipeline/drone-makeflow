@@ -5,7 +5,7 @@ if [[ "${1}" == "" ]]; then
   echo "Missing filename to search for"
   exit -1
 fi
-if [[  "${2]}" == "" ]]; then
+if [[  "${2}" == "" ]]; then
   echo "Missing folder to search through"
   exit -2
 fi
