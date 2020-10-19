@@ -2,7 +2,7 @@
 
 # Define some counts that we expect (the number of sub-folders plus the top folder)
 EXPECTED_NUM_FOLDERS=58
-EXPECTED_NUM_CLIPS=58
+EXPECTED_NUM_CLIPS=57
 # Make file to look for: should match what's in the configuration JSON file
 MASK_FILE_NAME="orthomosaicmask.tif"
 MASK_FILE_NAME_GREP="orthomosaicmask\\.tif"
