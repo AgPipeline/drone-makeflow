@@ -48,7 +48,6 @@ RUN apt-get update -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-
 # Install base for running workflows
 FROM base as download_miniconda
 RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /root/miniconda.sh
@@ -70,13 +69,16 @@ RUN /bin/bash ~/miniconda.sh -b -p /opt/conda \
 ENV PATH /opt/conda/bin:$PATH
 WORKDIR /
 
-
 FROM install_miniconda as base_scif
 RUN pip install --upgrade --no-cache-dir scif \
-    && echo "Finished install of scif" \
-    && pip install --upgrade --no-cache-dir pygdal==2.2.3.5 \
-    && echo "Finished install of pygdal"
+    && echo "Finished install of scif"
 ENTRYPOINT ["scif"]
+
+# Create a base conda environment
+RUN conda create --no-default-packages --name "condabase" --yes -c conda-forge influxdb matplotlib ndcctools Pillow pip piexif python-dateutil pyyaml scipy utm \
+    && conda run --name "condabase" pip install --upgrade-strategy only-if-needed pygdal==2.2.3.* \
+    && conda info --envs \
+    && echo "Install base conda environment"
 
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
 ENV C_INCLUDE_PATH /usr/include/gdal

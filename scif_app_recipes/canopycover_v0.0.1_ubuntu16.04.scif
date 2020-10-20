@@ -7,8 +7,9 @@
     rm -rf --verbose src/test_data src/tests src/.github
 
     # Install Makeflow and other dependencies
-    conda create --prefix "${SCIF_APPROOT}/conda" --yes -c conda-forge ndcctools pyyaml piexif python-dateutil scipy
-    conda run --prefix "${SCIF_APPROOT}/conda" pip install --upgrade-strategy only-if-needed pygdal==2.2.3.*
+#    conda create --no-default-packages --prefix "${SCIF_APPROOT}/conda" --yes -c conda-forge ndcctools pyyaml piexif python-dateutil scipy
+#    conda run --prefix "${SCIF_APPROOT}/conda" pip install --upgrade-strategy only-if-needed pygdal==2.2.3.*
+    conda create --prefix "${SCIF_APPROOT}/conda" --clone condabase --no-default-packages
     conda run --prefix "${SCIF_APPROOT}/conda" pip install --upgrade-strategy only-if-needed -r "${PWD}/src/requirements.txt"
 
     # Add example Docker command to SCIF app help section

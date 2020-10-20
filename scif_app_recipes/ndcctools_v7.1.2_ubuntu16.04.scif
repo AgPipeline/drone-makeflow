@@ -36,7 +36,9 @@
 
 %appinstall betydb2geojson
     # Install Makeflow and other dependencies
-    conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools requests gdal
+#    conda create --no-default-packages --prefix "${PWD}/conda" --yes -c conda-forge ndcctools requests gdal
+    conda create --prefix "${SCIF_APPROOT}/conda" --clone condabase --no-default-packages
+    conda run --prefix "${SCIF_APPROOT}/conda" pip install --upgrade-strategy only-if-needed requests
 
 %apprun betydb2geojson
     conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
@@ -65,7 +67,8 @@
 
 %appinstall shp2geojson
     # Install Makeflow and other dependencies
-    conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
+#    conda create --no-default-packages --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
+    conda create --prefix "${SCIF_APPROOT}/conda" --clone condabase
 
 %apprun shp2geojson
     conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
@@ -94,7 +97,8 @@
 
 %appinstall merge_csv
     # Install Makeflow and other dependencies
-    conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
+#    conda create --no-default-packages --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
+    conda create --prefix "${SCIF_APPROOT}/conda" --clone condabase
 
 %apprun merge_csv
     conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
@@ -124,7 +128,8 @@
 
 %appinstall find_files2json
     # Install Makeflow and other dependencies
-    conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
+#    conda create --no-default-packages --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
+    conda create --prefix "${SCIF_APPROOT}/conda" --clone condabase
 
 %apprun find_files2json
     conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
