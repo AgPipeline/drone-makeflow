@@ -4,7 +4,6 @@ on:
     branches:
       - master
       - develop
-      - split_workflows
   pull_request:
     branches:
       - master
