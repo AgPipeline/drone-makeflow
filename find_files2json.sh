@@ -3,15 +3,15 @@
 # Make sure we have our parameters
 if [[ "${1}" == "" ]]; then
   echo "Missing filename to search for"
-  exit -1
+  exit 1
 fi
-if [[  "${2}" == "" ]]; then
+if [[ "${2}" == "" ]]; then
   echo "Missing folder to search through"
-  exit -2
+  exit 2
 fi
-if [[ "${3}" == ""  ]]; then
+if [[ "${3}" == "" ]]; then
   echo "Missing destination file for JSON"
-  exit -3
+  exit 3
 fi
 
 SEARCH_NAME="${1}"
