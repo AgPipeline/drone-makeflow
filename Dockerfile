@@ -100,6 +100,9 @@ RUN scif install /opt/plotclip_v0.0.1_ubuntu16.04.scif
 COPY ./scif_app_recipes/canopycover_v0.0.1_ubuntu16.04.scif /opt/
 RUN scif install /opt/canopycover_v0.0.1_ubuntu16.04.scif
 
+COPY ./scif_app_recipes/greenness_v0.0.1_ubuntu16.04.scif /opt/
+RUN scif install /opt/greenness_v0.0.1_ubuntu16.04.scif
+
 COPY *.jx *.py *.sh jx-args.json /scif/apps/src/
 RUN chmod a+x /scif/apps/src/*.sh
 RUN chmod a+x /scif/apps/src/*.py

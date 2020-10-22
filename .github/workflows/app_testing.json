@@ -14,6 +14,7 @@
   "FILES2JSON_SEARCH_FOLDER": "/input",
   "FILES2JSON_JSON_FILE": "/output/canopy_cover_files.json",
   "CANOPYCOVER_OPTIONS": "",
+  "GREENNESS_INDICES_OPTIONS": "",
   "MERGECSV_SOURCE": "/input",
   "MERGECSV_TARGET": "/output",
   "MERGECSV_OPTIONS": "--ignore-dirs input/outputs"
