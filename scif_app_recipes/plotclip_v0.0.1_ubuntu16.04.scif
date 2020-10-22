@@ -1,8 +1,8 @@
 %appinstall plotclip
     # Download plotclip code. In the future use pip/conda install.
-    wget -O plotclip.tar.gz https://github.com/AgPipeline/transformer-plotclip/archive/v2.3.tar.gz
+    wget -O plotclip.tar.gz https://github.com/AgPipeline/transformer-plotclip/archive/v2.4.tar.gz
     tar xvf plotclip.tar.gz
-    mv transformer-plotclip-2.3 src
+    mv transformer-plotclip-2.4 src
 
     # Install packages needed
     python3 -m venv --system-site-packages .venv
