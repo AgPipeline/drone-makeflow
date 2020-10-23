@@ -20,6 +20,8 @@ RUN apt-get update -y \
     liblas-bin \
     docker.io \
     libgl1-mesa-dev \
+    pdal \
+    python-pdal \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -75,7 +77,7 @@ RUN pip install --upgrade --no-cache-dir scif \
 ENTRYPOINT ["scif"]
 
 # Create a base conda environment
-RUN conda create --no-default-packages --name "condabase" --yes -c conda-forge influxdb matplotlib ndcctools Pillow pip piexif python-dateutil pyyaml scipy utm \
+RUN conda create --no-default-packages --name "condabase" --yes -c conda-forge influxdb matplotlib ndcctools Pillow pip piexif python-dateutil pyyaml scipy utm numpy \
     && conda run --name "condabase" pip install --upgrade-strategy only-if-needed pygdal==2.2.3.* \
     && conda info --envs \
     && echo "Install base conda environment"

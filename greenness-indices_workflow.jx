@@ -1,6 +1,6 @@
 {
   "define": {
-     "GREENNESS_INDICES_SCRIPT": "/src/rgb_algorithm.py",
+     "GREENNESS_INDICES_SCRIPT": "/src/transformer.py",
    },
   "rules": [
     {

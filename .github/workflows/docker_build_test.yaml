@@ -4,6 +4,7 @@ on:
     branches:
       - master
       - develop
+      - split_workflows
   pull_request:
     branches:
       - master
@@ -17,7 +18,7 @@ jobs:
     name: Test simple apps (not workflow apps)
     strategy:
       matrix:
-        app: [betydb2geojson, shp2geojson, soilmask, plotclip, find_files2json, canopycover, merge_csv]
+        app: [betydb2geojson, shp2geojson, soilmask, plotclip, find_files2json, canopycover, merge_csv, greenness-indices]
         include:
           - app: betydb2geojson
             parameter_json: .github/workflows/app_testing.json
@@ -43,6 +44,11 @@ jobs:
             parameter_json: .github/workflows/app_testing.json
             extra_docker_options: -v `pwd`/canopy_cover_files.json:/scif/apps/src/canopy_cover_files.json
             test_results: chmod +x .github/workflows/check_canopycover_app.sh && ./.github/workflows/check_canopycover_app.sh ${PWD}
+          - app: greenness-indices
+            tar_gz_file: https://de.cyverse.org/dl/d/6EB55DDF-DC57-4BC9-BCF5-F668EF9D0B10/ci_greenness_indices_test_data.tar.gz
+            parameter_json: .github/workflows/app_testing.json
+            extra_docker_options: -v `pwd`/greenness_indicies_files.json:/scif/apps/src/greenness_indicies_files.json
+            test_results: chmod +x .github/workflows/check_greenness_indicies_app.sh && ./.github/workflows/check_greenness_indicies_app.sh ${PWD}
           - app: merge_csv
             tar_gz_file: https://de.cyverse.org/dl/d/71E146AE-A959-4EF0-A1DE-760F88F21694/ci_merge_csv_test_data.tar.gz
             parameter_json: .github/workflows/app_testing.json

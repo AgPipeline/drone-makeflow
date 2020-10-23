@@ -1,14 +1,21 @@
 %appinstall greenness-indices
-    # Download greenness-indices code. In the future use pip/conda install.
-    wget -O greenness-indices.tar.gz https://github.com/AgPipeline/transformer-rgb-indices/archive/v1.0.zip
-    tar xvf greenness-indices.tar.gz
-    mv transformer-rgb-indices-1.0 src
-    echo "Removing unneeded files"
-    rm -rf --verbose src/test_data src/tests src/.github
-
     # Install Makeflow and other dependencies
     conda create --prefix "${SCIF_APPROOT}/conda" --clone condabase --no-default-packages
+
+    # Download plot-base-rgb code
+    wget -O plot_base_rgb.tar.gz https://github.com/AgPipeline/plot-base-rgb/archive/v1.5.1.tar.gz
+    tar xvf plot_base_rgb.tar.gz
+    mv plot-base-rgb-1.5.1 src
     conda run --prefix "${SCIF_APPROOT}/conda" pip install --upgrade-strategy only-if-needed -r "${PWD}/src/requirements.txt"
+
+    # Download greenness-indices code. In the future use pip/conda install.
+    wget -O greenness_indices.tar.gz https://github.com/AgPipeline/transformer-rgb-indices/archive/v1.0.tar.gz
+    tar xvf greenness_indices.tar.gz
+    cp -r transformer-rgb-indices-1.0/* src/
+    rm -r transformer-rgb-indices-1.0
+    conda run --prefix "${SCIF_APPROOT}/conda" pip install --upgrade-strategy only-if-needed -r "${PWD}/src/requirements.txt"
+    echo "Removing unneeded files"
+    rm -rf --verbose src/test_data src/tests src/.github
 
     # Add example Docker command to SCIF app help section
     if [ -n $DOCKER_IMAGE ]; then
@@ -16,7 +23,8 @@
     fi
 
     # Generate remainder of SCIF app help section by running main script
-    conda run --prefix "${SCIF_APPROOT}/conda" python3 src/rgb_algorithm.py --help >> "${PWD}/scif/runscript.help"
+    ls -l src
+    conda run --prefix "${SCIF_APPROOT}/conda" python3 src/transformer.py --help >> "${PWD}/scif/runscript.help"
 
 %apprun greenness-indices
     conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
