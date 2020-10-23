@@ -15,6 +15,7 @@ These apps are used to create workflows.
     - [Plotclip images](#plotclip)
     - [Find files and write JSON](#files2json)
     - [Canopy Cover calculation](#canopycover)
+    - [Greenness Indices calculation](#greenness_indices)
     - [Merge CSV files](#merge_csv)
     - [Clean](#workflow_clean)
 - [Build The Container](#build)
@@ -316,10 +317,47 @@ docker run --rm -v ${PWD}/test/inputs:/input -v ${PWD}/test/output:/output -v ${
 The different components of the command line are:
 - `docker run --rm` tells Docker to run an image and remove the resulting container automatically after the run (`--rm`)
 - `-v ${PWD}/inputs:/input` mounts the [previously created](#prerequisites) inputs folder to the `/input` location on the running image
+- `-v ${PWD}/outputs:/output` mounts the [previously created](#prerequisites) outputs folder to the `/output` location on the running image
 - `-v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json` mounts the JSON configuration file so that it's available to the app
 - `-v ${PWD}/canopy_cover_files.json:/scif/apps/src/canopy_cover_files.json` mounts the JSON file containing information on the files to process so that it's available to the app; also see [Find files and write JSON](#files2json)
 - `agdrone/canopycover-workflow:latest` is the Docker image to run
 - `run canopycover` the command that runs the app
+
+Please notice the following:
+- the `/input` folder on the command line corresponds to where the files to be processed are expected to be found and where the CSV files are written to
+
+### Greenness Indices calculation <a name="greenness_indices" />
+
+This app calculates several greenness indices of [soilmasked](#soilmask) images and writes the CSV files next to the source image (in the same folder).
+
+**JSON configuration** \
+There are JSON key/value pairs for this app
+- CANOPYCOVER_OPTIONS: any options to be passed to the script
+
+The following JSON example shows how to define runtime options when running this app:
+```json
+{
+  "GREENNESS_INDICES_OPTIONS": ""
+}
+```
+
+The following options are available to be specified on the GREENNESS_INDICES_OPTIONS JSON entry:
+- `--metadata METADATA` this option indicates a metadata YAML or JSON file to use when processing 
+- `--help` displays the greenness indices help information without any file processing. This is useful for finding options which affect the output
+
+**Sample command line** \
+```bash
+docker run --rm -v ${PWD}/test/inputs:/input -v ${PWD}/test/output:/output -v ${PWD}/chris-jx-args.json:/scif/apps/src/jx-args.json -v ${PWD}/greenness_indices_files.json:/scif/apps/src/greenness-indices_files.json agdrone/canopycover-workflow:latest run greenness-indices
+```
+
+The different components of the command line are:
+- `docker run --rm` tells Docker to run an image and remove the resulting container automatically after the run (`--rm`)
+- `-v ${PWD}/inputs:/input` mounts the [previously created](#prerequisites) inputs folder to the `/input` location on the running image
+- `-v ${PWD}/outputs:/output` mounts the [previously created](#prerequisites) outputs folder to the `/output` location on the running image
+- `-v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json` mounts the JSON configuration file so that it's available to the app
+- `-v ${PWD}/greenness_indices_files.json:/scif/apps/src/greenness-indices_files.json` mounts the JSON file containing information on the files to process so that it's available to the app; also see [Find files and write JSON](#files2json)
+- `agdrone/canopycover-workflow:latest` is the Docker image to run
+- `run greenness-indices` the command that runs the app
 
 Please notice the following:
 - the `/input` folder on the command line corresponds to where the files to be processed are expected to be found and where the CSV files are written to
