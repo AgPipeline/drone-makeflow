@@ -4,6 +4,7 @@ on:
     branches:
       - master
       - develop
+      - data_quality_checks
   pull_request:
     branches:
       - master
@@ -135,4 +136,8 @@ jobs:
       - name: Merge CSV files
         run: docker run --rm -v ${PWD}/outputs:/input -v ${PWD}/outputs:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run merge_csv
       - name: Check CSV results
-        run: if [[ "$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')" == "58" ]]; then echo "Canopy Coverr success"; exit 0; else echo "Workflow failed - canopy cover"; exit 1; fi;
+        run: if [[ "$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')" == "58" ]]; then echo "Canopy Cover row count success"; exit 0; else echo "Workflow failed - canopy cover row count"; exit 1; fi;
+      - name: CSV contents check
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aswinkarthik/csvdiff/master/install.sh | sh -s -- -b ./csvdiff
+          if [[ "$(./csvdiff/csvdiff /test_data/canopycover.csv /outputs/canopycover.csv --columns 1 --primary-key 4 --format rowmark 2>&1 | grep -A 5 'Rows:' | wc -l  | tr -d '[:space:]')" == '1']]; then echo "Canopy Cover value compare success"; exit 0; else echo "Workflow failed - canopy cover value compare"; exit 1; fi;
