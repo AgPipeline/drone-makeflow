@@ -215,7 +215,7 @@ Please refer to the [Docker](https://www.docker.com/) documentation for more inf
 
 ```bash
 cp jx-args.json.example jx-args.json
-docker build --progress=plain -t agdrone/canopycover-workflow:latest .
+docker build -t agdrone/canopycover-workflow:latest .
 ```
 
 ## Monitoring the Workflow <a name="monitoring" />
