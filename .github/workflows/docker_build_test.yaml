@@ -57,7 +57,7 @@ jobs:
           - app: merge_csv
             tar_gz_file: https://de.cyverse.org/dl/d/71E146AE-A959-4EF0-A1DE-760F88F21694/ci_merge_csv_test_data.tar.gz
             parameter_json: .github/workflows/app_testing.json
-            test_results: if [[ "$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')" == "58" ]]; then echo "Test merge_csv success"; exit 0; else echo "App failed - merge_csv (actual: \"$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')\""; exit 1; fi;
+            test_results: if [[ "$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')" == "58" ]]; then echo "Test merge_csv success"; exit 0; else echo "App failed - merge_csv (actual \"$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')\""; exit 1; fi;
     steps:
       - name: Fetch source code
         uses: actions/checkout@v2
@@ -140,7 +140,7 @@ jobs:
       - name: Merge CSV files
         run: docker run --rm -v ${PWD}/outputs:/input -v ${PWD}/outputs:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run merge_csv
       - name: Check CSV results
-        run: if [[ "$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')" == "58" ]]; then echo "Canopy Cover row count success"; exit 0; else echo "Workflow failed - canopy cover row count (actual: \"$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')\")"; exit 1; fi;
+        run: if [[ "$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')" == "58" ]]; then echo "Canopy Cover row count success"; exit 0; else echo "Workflow failed - canopy cover row count (actual \"$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')\")"; exit 1; fi;
       - name: CSV contents check
         run: |
           curl -sfL https://raw.githubusercontent.com/aswinkarthik/csvdiff/master/install.sh | sh -s -- -b ./csvdiff
