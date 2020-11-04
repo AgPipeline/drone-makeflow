@@ -17,5 +17,5 @@
   "GREENNESS_INDICES_OPTIONS": "",
   "MERGECSV_SOURCE": "/input",
   "MERGECSV_TARGET": "/output",
-  "MERGECSV_OPTIONS": "--ignore-dirs input/outputs"
+  "MERGECSV_OPTIONS": "--ignore-dirs input/outputs,input/test_data/"
 }
