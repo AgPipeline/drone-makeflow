@@ -57,7 +57,7 @@ jobs:
           - app: merge_csv
             tar_gz_file: https://de.cyverse.org/dl/d/71E146AE-A959-4EF0-A1DE-760F88F21694/ci_merge_csv_test_data.tar.gz
             parameter_json: .github/workflows/app_testing.json
-            test_results: if [[ "$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')" == "58" ]]; then echo "Test merge_csv success"; exit 0; else echo "App failed - merge_csv (actual \"$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')\""; exit 1; fi;
+            test_results: if [[ "$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')" == "58" ]]; then echo "Test merge_csv success"; exit 0; else echo "App failed - merge_csv (actual \"$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')\")"; exit 1; fi;
     steps:
       - name: Fetch source code
         uses: actions/checkout@v2
