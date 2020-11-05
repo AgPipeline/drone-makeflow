@@ -50,7 +50,10 @@ jobs:
             parameter_json: .github/workflows/app_testing.json
             test_data_tar_gz: https://de.cyverse.org/dl/d/B5B91CA6-6B8A-40A0-980C-B7F0C67800F8/ci_docker_test_data.tar.gz
             test_results: if [[ -f "outputs/canopy_cover_files.json" ]]; then echo "Test find_files2json success"; exit 0; else echo "App failed - find_files2json"; exit 1; fi;
-            test_results_quality: if [[ "$(diff --ignore-all-space './test_data/canopy_cover_files.json' './outputs/canopy_cover_files.json')" == "" ]]; then echo "Test find_files2json content matches expected"; exit 0; else echo "App failed - find_files2json contents mismatch from test_data/canopy_cover_files.json"; exit 1; fi;
+            test_results_quality: |
+              echo "JSON file contents"
+              cat './outputs/canopy_cover_files.json'
+              if [[ "$(diff --ignore-all-space './test_data/canopy_cover_files.json' './outputs/canopy_cover_files.json')" == "" ]]; then echo "Test find_files2json content matches expected"; exit 0; else echo "App failed - find_files2json contents mismatch from test_data/canopy_cover_files.json"; exit 1; fi;
           - app: canopycover
             tar_gz_file: https://de.cyverse.org/dl/d/A3C6E964-B01A-49B1-B018-08E1DD248EB2/ci_canopycover_test_data.tar.gz
             parameter_json: .github/workflows/app_testing.json
@@ -76,8 +79,15 @@ jobs:
             parameter_json: .github/workflows/app_testing.json
             test_data_tar_gz: https://de.cyverse.org/dl/d/B5B91CA6-6B8A-40A0-980C-B7F0C67800F8/ci_docker_test_data.tar.gz
             test_results: if [[ "$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')" == "58" ]]; then echo "Test merge_csv success"; exit 0; else echo "App failed - merge_csv (actual \"$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')\")"; exit 1; fi;
-            test_results_quality: if [[ "$(diff --ignore-all-space './test_data/canopycover.csv' './outputs/canopycover.csv')" == "" ]]; then echo "Test merge_csv content matches expected"; exit 0; else echo "App failed - merge_csv contents mismatch from test_data/canopycover.csv"; exit 1; fi;
+            test_results_quality: |
+              echo "JSON file contents"
+              cat './outputs/canopycover.csv'
+              if [[ "$(diff --ignore-all-space './test_data/canopycover.csv' './outputs/canopycover.csv')" == "" ]]; then echo "Test merge_csv content matches expected"; exit 0; else echo "App failed - merge_csv contents mismatch from test_data/canopycover.csv"; exit 1; fi;
     steps:
+      - name: Install Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
       - name: Fetch source code
         uses: actions/checkout@v2
         id: fetch-source
@@ -136,6 +146,7 @@ jobs:
             tar_gz_file: https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz
             parameter_json: .github/workflows/app_testing.json
             canopycover_docker_options: -v `pwd`/outputs/canopy_cover_files.json:/scif/apps/src/canopy_cover_files.json
+            test_data_tar_gz: https://de.cyverse.org/dl/d/B5B91CA6-6B8A-40A0-980C-B7F0C67800F8/ci_docker_test_data.tar.gz
     steps:
       - name: Fetch source code
         uses: actions/checkout@v2
