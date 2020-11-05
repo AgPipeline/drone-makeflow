@@ -43,7 +43,9 @@ def compare_file_contents(source_file: str, compare_file: str) -> bool:
         Returns True if the files are considered the same, and False if they are not
     """
     cmd = ['diff', '--brief', source_file, compare_file]
+    print(" diff command", str(cmd))
     res = subprocess.run(cmd, capture_output=True, check=True)
+    print(" result: ", str(res))
     return len(res.stdout) == 0
 
 
@@ -73,8 +75,11 @@ def find_compare_files(truth_folder: str, compare_folder: str, file_ext: str, ch
         cur_compare = os.path.join(compare_folder, cur_subpath)
 
         # Check truth folder for matching files and sub-folders
+        print("Checking folder: ", cur_truth)
         for one_file in os.listdir(cur_truth):
             if os.path.splitext(one_file)[1].lower() == check_ext:
+                print("Found file: ", os.path.join(cur_truth, one_file), "  compare: ",
+                      os.path.join(cur_compare, one_file))
                 if not os.path.exists(os.path.join(cur_compare, one_file)):
                     raise RuntimeError('Unable to find expected file "%s"' % os.path.join(cur_subpath, one_file))
                 if not compare_file_contents(os.path.join(cur_truth, one_file), os.path.join(cur_compare, one_file)):
@@ -108,9 +113,14 @@ def check_details() -> None:
                          ",".join(['"' + folder + '"' for folder in bad_folders]))
 
     # Start searching folders
+    print("Truth folder: ", args.truth_folder)
+    print("Compare folder: ", args.check_folder)
+    print("Filename extension: ", args.file_ext)
     if args.no_recurse or args.top_folder:
+        print("Checking top level folder")
         find_compare_files(args.truth_folder, args.check_folder, args.file_ext, False)
     else:
+        print("Searching folder: ", args.truth_folder)
         for one_file in os.listdir(args.truth_folder):
             cur_path = os.path.join(args.truth_folder, one_file)
             if os.path.isdir(cur_path):
