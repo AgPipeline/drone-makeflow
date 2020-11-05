@@ -59,11 +59,13 @@ jobs:
             parameter_json: .github/workflows/app_testing.json
             extra_docker_options: -v `pwd`/canopy_cover_files.json:/scif/apps/src/canopy_cover_files.json
             test_data_tar_gz: https://de.cyverse.org/dl/d/B5B91CA6-6B8A-40A0-980C-B7F0C67800F8/ci_docker_test_data.tar.gz
-            test_results: chmod +x .github/workflows/check_canopycover_app.sh && ./.github/workflows/check_canopycover_app.sh ${PWD}
+            test_results: |
+              chmod +x .github/workflows/check_canopycover_app.sh
+              ./.github/workflows/check_canopycover_app.sh ${PWD}
             test_results_quality: |
               curl -sfL https://raw.githubusercontent.com/aswinkarthik/csvdiff/master/install.sh | sh -s -- -b ./csvdiff
               chmod +x './.github/workflows/check_csv_details.sh'
-              ./.github/workflows/check_csv_details.sh 'canopycover.csv' test_data outputs
+              ./.github/workflows/check_csv_details.sh 'canopycover.csv' test_data '.'
           - app: greenness-indices
             tar_gz_file: https://de.cyverse.org/dl/d/6EB55DDF-DC57-4BC9-BCF5-F668EF9D0B10/ci_greenness_indices_test_data.tar.gz
             parameter_json: .github/workflows/app_testing.json
@@ -73,7 +75,7 @@ jobs:
             test_results_quality: |
               curl -sfL https://raw.githubusercontent.com/aswinkarthik/csvdiff/master/install.sh | sh -s -- -b ./csvdiff
               chmod +x './.github/workflows/check_csv_details.sh'
-              ./.github/workflows/check_csv_details.sh 'rgb_plot.csv' test_data outputs
+              ./.github/workflows/check_csv_details.sh 'rgb_plot.csv' test_data '.'
           - app: merge_csv
             tar_gz_file: https://de.cyverse.org/dl/d/71E146AE-A959-4EF0-A1DE-760F88F21694/ci_merge_csv_test_data.tar.gz
             parameter_json: .github/workflows/app_testing.json
