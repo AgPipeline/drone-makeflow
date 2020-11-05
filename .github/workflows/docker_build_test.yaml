@@ -80,9 +80,10 @@ jobs:
             test_data_tar_gz: https://de.cyverse.org/dl/d/B5B91CA6-6B8A-40A0-980C-B7F0C67800F8/ci_docker_test_data.tar.gz
             test_results: if [[ "$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')" == "58" ]]; then echo "Test merge_csv success"; exit 0; else echo "App failed - merge_csv (actual \"$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')\")"; exit 1; fi;
             test_results_quality: |
-              echo "JSON file contents"
+              echo "CSV file contents"
               cat './outputs/canopycover.csv'
-              if [[ "$(diff --ignore-all-space './test_data/canopycover.csv' './outputs/canopycover.csv')" == "" ]]; then echo "Test merge_csv content matches expected"; exit 0; else echo "App failed - merge_csv contents mismatch from test_data/canopycover.csv"; exit 1; fi;
+              curl -sfL https://raw.githubusercontent.com/aswinkarthik/csvdiff/master/install.sh | sh -s -- -b ./csvdiff
+              if [[ "$(./csvdiff/csvdiff './test_data/canopycover.csv' './outputs/canopycover.csv' --columns 1 --primary-key 4 --format rowmark 2>&1 | grep -A 5 'Rows:' | wc -l  | tr -d '[:space:]')" == "1" ]]; then echo "Test merge_csv content matches expected"; exit 0; else echo "App failed - merge_csv contents mismatch from test_data/canopycover.csv"; exit 1; fi;
     steps:
       - name: Install Python 3.7
         uses: actions/setup-python@v2

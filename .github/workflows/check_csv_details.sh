@@ -40,6 +40,8 @@ do
     echo "No differences: ${TRUTH_FOLDER}/${WORKING_FOLDER} for file ${FILENAME}"
   else
     echo "Error: folder ${TRUTH_FOLDER}/${WORKING_FOLDER} file ${FILENAME} doesn't match"
+    echo "Folder listing"
+    ls -l "${COMPARE_FOLDER}/${WORKING_FOLDER}"
     echo "File contents"
     cat "${COMPARE_FOLDER}/${WORKING_FOLDER}/${FILENAME}"
     exit 10
