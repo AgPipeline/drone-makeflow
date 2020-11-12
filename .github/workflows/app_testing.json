@@ -1,5 +1,5 @@
 {
-  "BETYDB_URL": "https://terraref.ncsa.illinois.edu/bety",
+  "BETYDB_URL": "https://terraref.org/bety",
   "PLOT_SHAPEFILE": "/input/plot_shapes.shp",
   "PLOT_GEOMETRY_FILE": "/output/plots.geojson",
   "SOILMASK_SOURCE_FILE": "/input/orthomosaic.tif",
