@@ -81,7 +81,7 @@ jobs:
               docker_params: -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/output" -v "${PWD}/checkpoints:/scif/data/short_workflow"
               parameters: orthomosaic plot_shapes.shp
               result_check_script: "short_workflow_check.sh"
-              clean_leftover_output_count: "3"
+              clean_leftover_output_count: "1"
               clean_leftover_makeflow_count: "2"
     steps:
       - name: Fetch source code
