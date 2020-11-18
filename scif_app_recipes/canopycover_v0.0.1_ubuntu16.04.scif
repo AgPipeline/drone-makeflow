@@ -1,8 +1,8 @@
 %appinstall canopycover
     # Download canopycover code. In the future use pip/conda install.
-    wget -O canopycover.tar.gz https://github.com/AgPipeline/transformer-canopycover/archive/v1.3.tar.gz
+    wget -O canopycover.tar.gz https://github.com/AgPipeline/transformer-canopycover/archive/v1.4.tar.gz
     tar xvf canopycover.tar.gz
-    mv transformer-canopycover-1.3 src
+    mv transformer-canopycover-1.4 src
     echo "Removing unneeded files"
     rm -rf --verbose src/test_data src/tests src/.github
 
