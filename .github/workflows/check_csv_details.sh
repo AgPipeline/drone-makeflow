@@ -20,6 +20,7 @@ fi
 echo "Comparison folder ${COMPARE_FOLDER}"
 
 TRUTH_FOLDER_LEN="${#TRUTH_FOLDER}"
+# shellcheck disable=SC2207
 FOLDER_LIST=($(find "${TRUTH_FOLDER}/" -maxdepth 1 -type d))
 
 # Get the line count of differences between the files
@@ -33,6 +34,7 @@ for subfolder in "${FOLDER_LIST[@]}"; do
     continue
   fi
 
+  # shellcheck disable=SC2126
   DIFF_RESULT="$(./csvdiff/csvdiff "${TRUTH_FOLDER}/${WORKING_FOLDER}/${FILENAME}" "${COMPARE_FOLDER}/${WORKING_FOLDER}/${FILENAME}" --columns 1 --primary-key 4 --format rowmark 2>&1 | grep -A 5 'Rows:' | wc -l | tr -d '[:space:]')"
 
   if [[ "${DIFF_RESULT}" == "1" ]]; then
