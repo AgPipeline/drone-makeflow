@@ -12,7 +12,7 @@ fi
 
 # Check the expected number of output files
 # shellcheck disable=SC2207
-EXPECTED_CSV=($(find "${TARGET_FOLDER}/" -type f | grep 'canopycover\.csv'))
+EXPECTED_CSV=($(find "${TARGET_FOLDER}/" -type f | grep 'canopycover\.csv' | grep -v 'test_data'))
 if [[ "${#EXPECTED_CSV[@]}" == "${EXPECTED_NUM_CANOPYCOVER_CSV}" ]]; then
   echo "Found expected number of canopycover.csv files: ${EXPECTED_NUM_CANOPYCOVER_CSV}"
 else
