@@ -1,5 +1,5 @@
 FROM ubuntu:18.04 as base
-ENV DOCKER_IMAGE agpipeline/scif-drone-pipeline:1.3
+ENV DOCKER_IMAGE agdrone/workflow:1.3
 ENV DEBIAN_FRONTEND noninteractive
 WORKDIR /
 
@@ -20,6 +20,9 @@ RUN apt-get update -y \
     liblas-bin \
     docker.io \
     libgl1-mesa-dev \
+    pdal \
+    python-pdal \
+    python3-pip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -48,7 +51,6 @@ RUN apt-get update -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-
 # Install base for running workflows
 FROM base as download_miniconda
 RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /root/miniconda.sh
@@ -58,24 +60,29 @@ WORKDIR /root
 COPY --from=download_miniconda /root/miniconda.sh .
 RUN /bin/bash ~/miniconda.sh -b -p /opt/conda \
     && rm ~/miniconda.sh \
-    && /opt/conda/bin/conda clean -tipsy \
+    && /opt/conda/bin/conda clean -tipy \
     && ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
     && echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc \
     && echo "conda activate base" >> ~/.bashrc \
     && find /opt/conda/ -follow -type f -name '*.a' -delete \
     && find /opt/conda/ -follow -type f -name '*.js.map' -delete \
     && /opt/conda/bin/conda clean -afy \
+    && /opt/conda/bin/conda update -n base -c defaults conda \
     && echo "Finished installing miniconda!"
 ENV PATH /opt/conda/bin:$PATH
 WORKDIR /
 
-
 FROM install_miniconda as base_scif
-RUN pip install --upgrade --no-cache-dir scif \
-    && echo "Finished install of scif" \
-    && pip install --upgrade --no-cache-dir pygdal==2.2.3.5 \
-    && echo "Finished install of pygdal"
+RUN pip3 install --upgrade --no-cache-dir setuptools \
+    && pip3 install --upgrade --no-cache-dir scif \
+    && echo "Finished install of scif"
 ENTRYPOINT ["scif"]
+
+# Create a base conda environment
+RUN conda create --no-default-packages --name "condabase" --yes -c conda-forge influxdb matplotlib ndcctools Pillow pip piexif python-dateutil pyyaml scipy utm numpy \
+    && conda run --name "condabase" pip install --upgrade-strategy only-if-needed pygdal==2.2.3.* \
+    && conda info --envs \
+    && echo "Install base conda environment"
 
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
 ENV C_INCLUDE_PATH /usr/include/gdal
@@ -91,15 +98,15 @@ COPY ./scif_app_recipes/soilmask_v0.0.1_ubuntu16.04.scif /opt/
 RUN scif install /opt/soilmask_v0.0.1_ubuntu16.04.scif
 RUN scif install /opt/ndcctools_v7.1.2_ubuntu16.04.scif
 
-FROM combined_scif as plotclip_scif
 COPY ./scif_app_recipes/plotclip_v0.0.1_ubuntu16.04.scif /opt/
 RUN scif install /opt/plotclip_v0.0.1_ubuntu16.04.scif
 
-FROM plotclip_scif as canopycover_scif
 COPY ./scif_app_recipes/canopycover_v0.0.1_ubuntu16.04.scif /opt/
 RUN scif install /opt/canopycover_v0.0.1_ubuntu16.04.scif
 
-FROM canopycover_scif as workflow
-COPY workflow.jx short_workflow.jx canopy-cover.jx betydb2geojson.py merge_csv.py cyverse_short_workflow.sh generate_geojson.sh prep-canopy-cover.sh jx-args.json /scif/apps/odm_workflow/src/
-RUN chmod a+x /scif/apps/odm_workflow/src/*.sh
-RUN chmod a+x /scif/apps/odm_workflow/src/*.py
+COPY ./scif_app_recipes/greenness_v0.0.1_ubuntu16.04.scif /opt/
+RUN scif install /opt/greenness_v0.0.1_ubuntu16.04.scif
+
+COPY *.jx *.py *.sh jx-args.json /scif/apps/src/
+RUN chmod a+x /scif/apps/src/*.sh
+RUN chmod a+x /scif/apps/src/*.py

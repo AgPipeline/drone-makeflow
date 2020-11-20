@@ -10,136 +10,185 @@ on:
       - develop
     tags:
       - v*
+  workflow_dispatch:
 
 jobs:
-  build_docker:
+  app_testing:
     runs-on: ubuntu-latest
-    name: Build docker container
+    name: Test simple apps (not workflow apps)
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [betydb2geojson, shp2geojson, soilmask, plotclip, find_files2json, canopycover, merge_csv, greenness-indices]
+        include:
+          - app: betydb2geojson
+            parameter_json: .github/workflows/app_testing.json
+            test_data_tar_gz: https://de.cyverse.org/dl/d/2FB75B8C-E361-489A-8331-B1B6C7697730/ci_docker_test_data_2.tar.gz
+            test_results: if [[ -f "outputs/plots.geojson" ]]; then echo "Test betydb2geojson success"; exit 0; else echo "App failed - betydb2geojson"; exit 1; fi;
+            test_results_quality: if [[ "$(diff --ignore-all-space './test_data/plots_betydb.geojson' './outputs/plots.geojson')" == "" ]]; then echo "Test betydb2json content matches expected"; exit 0; else echo "App failed - betydb2json contents mismatch from test_data/plots_betydb.geojson"; exit 1; fi;
+          - app: shp2geojson
+            tar_gz_file: https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz
+            parameter_json: .github/workflows/app_testing.json
+            test_data_tar_gz: https://de.cyverse.org/dl/d/2FB75B8C-E361-489A-8331-B1B6C7697730/ci_docker_test_data_2.tar.gz
+            test_results: if [[ -f "outputs/plots.geojson" ]]; then echo "Test shp2geojson success"; exit 0; else echo "App failed - shp2geojson"; exit 1; fi;
+            test_results_quality: if [[ "$(diff --ignore-all-space './test_data/plots_shapefile.geojson' './outputs/plots.geojson')" == "" ]]; then echo "Test shp2geojson content matches expected"; exit 0; else echo "App failed - shp2geojson contents mismatch from test_data/plots_shapefile.geojson"; exit 1; fi;
+          - app: soilmask
+            tar_gz_file: https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz
+            parameter_json: .github/workflows/app_testing.json
+            test_data_tar_gz: https://de.cyverse.org/dl/d/2FB75B8C-E361-489A-8331-B1B6C7697730/ci_docker_test_data_2.tar.gz
+            test_results: if [[ -f "outputs/orthomosaicmask.tif" ]]; then echo "Test soilmask success"; exit 0; else echo "App failed - soilmask"; exit 1; fi;
+            test_results_quality: if [[ "$(diff './test_data/orthomosaicmask.tif' './outputs/orthomosaicmask.tif')" == "" ]]; then echo "Test soilmask content matches expected"; exit 0; else echo "App failed - soilmask contents mismatch from test_data/orthomosaicmask.tif"; exit 1; fi;
+          - app: plotclip
+            tar_gz_file: https://de.cyverse.org/dl/d/BC328D44-621B-41B6-A662-0CD7F2D4C0EE/ci_plotclip_test_data.tar.gz
+            parameter_json: .github/workflows/app_testing.json
+            test_data_tar_gz: https://de.cyverse.org/dl/d/2FB75B8C-E361-489A-8331-B1B6C7697730/ci_docker_test_data_2.tar.gz
+            test_results: chmod +x .github/workflows/check_plotclip_app.sh && ./.github/workflows/check_plotclip_app.sh ${PWD}/outputs
+            test_results_quality: python3 './.github/workflows/check_plotclip_details.py' ./test_data ./outputs
+          - app: find_files2json
+            tar_gz_file: https://de.cyverse.org/dl/d/ADBEEBDE-E000-4FCB-AE74-62047ED4DD8E/ci_find_files2json_test_data.tar.gz
+            parameter_json: .github/workflows/app_testing.json
+            test_data_tar_gz: https://de.cyverse.org/dl/d/2FB75B8C-E361-489A-8331-B1B6C7697730/ci_docker_test_data_2.tar.gz
+            test_results: if [[ -f "outputs/canopy_cover_files.json" ]]; then echo "Test find_files2json success"; exit 0; else echo "App failed - find_files2json"; exit 1; fi;
+            test_results_quality: |
+              echo "JSON file contents"
+              cat './outputs/canopy_cover_files.json'
+              if [[ "$(diff --ignore-all-space './test_data/canopy_cover_files.json' './outputs/canopy_cover_files.json')" == "" ]]; then echo "Test find_files2json content matches expected"; exit 0; else echo "App failed - find_files2json contents mismatch from test_data/canopy_cover_files.json"; exit 1; fi;
+          - app: canopycover
+            tar_gz_file: https://de.cyverse.org/dl/d/A3C6E964-B01A-49B1-B018-08E1DD248EB2/ci_canopycover_test_data.tar.gz
+            parameter_json: .github/workflows/app_testing.json
+            extra_docker_options: -v `pwd`/canopy_cover_files.json:/scif/apps/src/canopy_cover_files.json
+            test_data_tar_gz: https://de.cyverse.org/dl/d/2FB75B8C-E361-489A-8331-B1B6C7697730/ci_docker_test_data_2.tar.gz
+            test_results: |
+              chmod +x .github/workflows/check_canopycover_app.sh
+              ./.github/workflows/check_canopycover_app.sh ${PWD}
+            test_results_quality: |
+              curl -sfL https://raw.githubusercontent.com/aswinkarthik/csvdiff/master/install.sh | sh -s -- -b ./csvdiff
+              chmod +x './.github/workflows/check_csv_details.sh'
+              ./.github/workflows/check_csv_details.sh 'canopycover.csv' test_data '.'
+          - app: greenness-indices
+            tar_gz_file: https://de.cyverse.org/dl/d/6EB55DDF-DC57-4BC9-BCF5-F668EF9D0B10/ci_greenness_indices_test_data.tar.gz
+            parameter_json: .github/workflows/app_testing.json
+            extra_docker_options: -v `pwd`/greenness_indices_files.json:/scif/apps/src/greenness-indices_files.json
+            test_data_tar_gz: https://de.cyverse.org/dl/d/2FB75B8C-E361-489A-8331-B1B6C7697730/ci_docker_test_data_2.tar.gz
+            test_results: chmod +x .github/workflows/check_greenness_indices_app.sh && ./.github/workflows/check_greenness_indices_app.sh ${PWD}
+            test_results_quality: |
+              curl -sfL https://raw.githubusercontent.com/aswinkarthik/csvdiff/master/install.sh | sh -s -- -b ./csvdiff
+              chmod +x './.github/workflows/check_csv_details.sh'
+              ./.github/workflows/check_csv_details.sh 'rgb_plot.csv' test_data '.'
+          - app: merge_csv
+            tar_gz_file: https://de.cyverse.org/dl/d/7EB4E7EF-9635-483C-8C61-3CE9806B8906/ci_merge_csv_test_data_2.tar.gz
+            parameter_json: .github/workflows/app_testing.json
+            test_data_tar_gz: https://de.cyverse.org/dl/d/2FB75B8C-E361-489A-8331-B1B6C7697730/ci_docker_test_data_2.tar.gz
+            test_results: if [[ "$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')" == "58" ]]; then echo "Test merge_csv success"; exit 0; else echo "App failed - merge_csv (actual \"$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')\")"; exit 1; fi;
+            test_results_quality: |
+              echo "CSV file contents"
+              cat './outputs/canopycover.csv'
+              curl -sfL https://raw.githubusercontent.com/aswinkarthik/csvdiff/master/install.sh | sh -s -- -b ./csvdiff
+              if [[ "$(./csvdiff/csvdiff './test_data/canopycover.csv' './outputs/canopycover.csv' --columns 1 --primary-key 3 --format rowmark 2>&1 | grep -A 5 'Rows:' | wc -l  | tr -d '[:space:]')" == "1" ]]; then echo "Test merge_csv content matches expected"; exit 0; else echo "App failed - merge_csv contents mismatch from test_data/canopycover.csv"; exit 1; fi;
+    steps:
+      - name: Install Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
+      - name: Fetch source code
+        uses: actions/checkout@v2
+        id: fetch-source
+      - name: Build docker image
+        run: docker build -t scif_test:latest ./
+      - name: Create folders
+        run: |
+             mkdir outputs
+             mkdir checkpoints
+      - name: Download testing data
+        if: ${{ matrix.tar_gz_file }}
+        run: |
+             curl -X GET ${{ matrix.tar_gz_file }} > scif_test_data.tar.gz
+             tar xvzf scif_test_data.tar.gz -C "./"
+             ls -l
+      - name: Run test
+        run: docker run --rm -v ${PWD}:/input -v ${PWD}/outputs:/output -v ${PWD}/checkpoints:/scif/data/${{ matrix.app }} -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run ${{ matrix.app }}
+      - name: Folder listing
+        run: |
+             echo "Current folder"
+             ls -l
+             echo "Outputs folder"
+             ls -l outputs
+             echo "Checkpoints folder"
+             ls -l checkpoints
+      - name: Fetching comparison files for results testing
+        run: |
+          mkdir test_data
+          curl -X GET ${{ matrix.test_data_tar_gz }} > scif_results_data.tar.gz
+          tar xvzf scif_results_data.tar.gz -C "./test_data"
+          ls -l test_data
+      - name: Check results
+        run: ${{ matrix.test_results }}
+      - name: Check results details
+        if: ${{ matrix.test_results_quality }}
+        run: ${{ matrix.test_results_quality }}
+      - name: Run cleanup
+        run: docker run --rm -v ${PWD}:/input -v ${PWD}/outputs:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run ${{ matrix.app }} --clean
+      - name: Confirm cleanup
+        run: |
+             echo "Current folder"
+             ls -l
+             echo "Output folder"
+             ls -l outputs
+             echo "Checkpoint folder"
+             ls -l checkpoints
+
+  workflow_testing:
+    runs-on: ubuntu-latest
+    name: Test workflows
+    strategy:
+      matrix:
+        app: [canopycover]
+        include:
+          - app: canopycover
+            tar_gz_file: https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz
+            parameter_json: .github/workflows/app_testing.json
+            canopycover_docker_options: -v `pwd`/outputs/canopy_cover_files.json:/scif/apps/src/canopy_cover_files.json
+            test_data_tar_gz: https://de.cyverse.org/dl/d/2FB75B8C-E361-489A-8331-B1B6C7697730/ci_docker_test_data_2.tar.gz
     steps:
       - name: Fetch source code
         uses: actions/checkout@v2
         id: fetch-source
       - name: Build docker image
         run: docker build -t scif_test:latest ./
-      - name: Compress docker image
-        run: docker save scif_test:latest | gzip -7 -c - > scif_test_image.tar.gz
-      - name: Upload docker image
-        uses: actions/upload-artifact@v2
-        with:
-          name: scif_test_image
-          path: scif_test_image.tar.gz
-
-  app_testing:
-    runs-on: ubuntu-latest
-    needs: build_docker
-    name: Test simple apps (not workflow apps)
-    strategy:
-      matrix:
-          app: [betydb2geojson, shp2geojson]
-          include:
-            - app: betydb2geojson
-              parameters: https://terraref.ncsa.illinois.edu/bety /mnt/bety_plots.geojson
-              test_results: if [[ -f "bety_plots.geojson" ]]; then echo "Test betydb2geojson success"; exit 0; else echo "App failed - betydb2geojson"; exit 1; fi;
-            - app: shp2geojson
-              parameters: plot_shapes.shp /mnt/shp_plots.geojson
-              test_results: if [[ -f "shp_plots.geojson" ]]; then echo "Test shp2geojson success"; exit 0; else echo "App failed - shp2geojson"; exit 1; fi;
-    steps:
-      - name: Download docker image
-        uses: actions/download-artifact@v2
-        with:
-          name: scif_test_image
-          path: ./
-      - name: Load docker image
+      - name: Create folders
         run: |
+              mkdir -p inputs
+              mkdir -p outputs
+      - name: Download testing data
+        if: ${{ matrix.tar_gz_file }}
+        run: |
+             curl -X GET ${{ matrix.tar_gz_file }} > scif_test_data.tar.gz
+             tar xvzf scif_test_data.tar.gz -C "./inputs/"
+             echo "Current folder"
              ls -l
-             gunzip scif_test_image.tar.gz
-             docker load --input scif_test_image.tar
-             docker images
-      - name: Shp2geojson download check
-        if: ${{ matrix.app  == 'shp2geojson' }}
+             echo "Inputs folder"
+             ls -l inputs/
+      - name: Shapefile to plots
+        run: docker run --rm -v ${PWD}/inputs:/input -v ${PWD}/outputs:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run shp2geojson
+      - name: Run Soilmask
+        run: docker run --rm -v ${PWD}/inputs:/input -v ${PWD}/outputs:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run soilmask
+      - name: Run Plotclip
+        run: docker run --rm -v ${PWD}/outputs:/input -v ${PWD}/outputs:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run plotclip
+      - name: Find plotclip image files
+        run: docker run --rm -v ${PWD}/outputs:/input -v ${PWD}/outputs:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run find_files2json
+      - name: Run canopy cover
+        run: docker run --rm -v ${PWD}/outputs:/input -v ${PWD}/outputs:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.canopycover_docker_options }} scif_test:latest run canopycover
+      - name: Merge CSV files
+        run: docker run --rm -v ${PWD}/outputs:/input -v ${PWD}/outputs:/output -v ${PWD}/${{ matrix.parameter_json }}:/scif/apps/src/jx-args.json ${{ matrix.extra_docker_options }} scif_test:latest run merge_csv
+      - name: Check CSV results
+        run: if [[ "$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')" == "58" ]]; then echo "Canopy Cover row count success"; exit 0; else echo "Workflow failed - canopy cover row count (actual \"$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')\")"; exit 1; fi;
+      - name: Fetching comparison files for results testing
         run: |
-             curl -X GET https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz > scif_test_data.tar.gz
-             tar xvzf scif_test_data.tar.gz -C "./"
-             ls -l
-      - name: Run test
-        run: docker run --rm -v `pwd`:/mnt -v `pwd`:/scif/data/odm_workflow/images scif_test:latest run ${{ matrix.app }} ${{ matrix.parameters }}
-      - name: Folder listing
-        run: ls -l
-      - name: Check results
-        run: ${{ matrix.test_results }}
-
-  workflow_testing:
-    runs-on: ubuntu-latest
-    needs: build_docker
-    name: Testing workflows
-    strategy:
-      matrix:
-          app: [short_workflow]
-          include:
-            - app: short_workflow
-              data_file_archive_url: "https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz"
-              docker_params: -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/output" -v "${PWD}/checkpoints:/scif/data/short_workflow"
-              parameters: orthomosaic plot_shapes.shp
-              result_check_script: "short_workflow_check.sh"
-              clean_leftover_output_count: "1"
-              clean_leftover_makeflow_count: "2"
-    steps:
-      - name: Fetch source code
-        uses: actions/checkout@v2
-        id: fetch-source
-      - name: Prepare folders
+          mkdir test_data
+          curl -X GET ${{ matrix.test_data_tar_gz }} > scif_results_data.tar.gz
+          tar xvzf scif_results_data.tar.gz -C "./test_data"
+          ls -l test_data
+      - name: CSV contents check
         run: |
-             mkdir ./inputs
-             mkdir ./outputs
-             mkdir ./checkpoints
-      - name: Download docker image
-        uses: actions/download-artifact@v2
-        with:
-          name: scif_test_image
-          path: ./
-      - name: Decompress and load docker image
-        run: |
-             ls -l
-             gunzip scif_test_image.tar.gz
-             docker load --input scif_test_image.tar
-             docker images
-      - name: Download testing data files
-        run: |
-             curl -X GET ${{ matrix.data_file_archive_url }} > test_data.tar.gz
-             tar xvzf test_data.tar.gz -C "./inputs/"
-      - name: Run test
-        run: docker run --rm ${{ matrix.docker_params }} scif_test:latest run ${{ matrix.app }} ${{ matrix.parameters }}
-      - name: Show outputs folder
-        run: |
-             echo "Outputs folder" && ls -l ./outputs
-             echo "Checkpoints folder" && ls -l ./checkpoints
-      - name: Check outputs
-        run: |
-             chmod +x "./.github/workflows/${{ matrix.result_check_script }}"
-             "./.github/workflows/${{ matrix.result_check_script }}"
-      - name: Check artifacts
-        run: |
-             WFL=$(find ./checkpoints | grep "makeflowlog" | wc -l| tr -d '[:space:]')
-             if [[ "$WFL" == "2" ]]; then echo "The correct number of makeflow log files were found ($WFL)"; else "Makeflow log count error: $WFL"; exit 2; fi
-      - name: Clean
-        run: docker run --rm ${{ matrix.docker_params }} scif_test:latest run ${{ matrix.app }} ${{ matrix.parameters }} --clean
-      - name: Check clean output
-        run: |
-              echo "Outputs folder" && ls -l ./outputs
-              RFL=$(find ./outputs | wc -l| tr -d '[:space:]')
-              if [[ "$RFL" == ${{ matrix.clean_leftover_output_count }} ]]; then echo "Output has been cleaned up"; else echo "Output is not completely cleaned up: $RFL remaining"; exit 3; fi
-      - name: Check clean makeflow artifacts
-        run: |
-              echo "Checkpoints folder" && ls -l ./checkpoints
-              RFL=$(find ./checkpoints | wc -l| tr -d '[:space:]')
-              if [[ "$RFL" == ${{ matrix.clean_leftover_makeflow_count }} ]]; then echo "Makeflow artifacts has been cleaned up"; else echo "Makeflow artifacts not completely cleaned up: $RFL remaining"; exit 3; fi
-
-  artifact_cleanup:
-    runs-on: ubuntu-latest
-    needs: [app_testing, workflow_testing]
-    name: Cleanup artifacts upon success
-    steps:
-      - name: Remove docker artifact
-        uses: geekyeggo/delete-artifact@v1
-        with:
-          name: scif_test_image
+          curl -sfL https://raw.githubusercontent.com/aswinkarthik/csvdiff/master/install.sh | sh -s -- -b ./csvdiff
+          if [[ "$(./csvdiff/csvdiff test_data/canopycover.csv outputs/canopycover.csv --columns 1 --primary-key 3 --format rowmark 2>&1 | grep -A 5 'Rows:' | wc -l  | tr -d '[:space:]')" == "1" ]]; then echo "Canopy Cover value compare success"; exit 0; else echo "Workflow failed - canopy cover value compare"; ./csvdiff/csvdiff test_data/canopycover.csv outputs/canopycover.csv --columns 1 --primary-key 3 --format rowmark 2>&1; exit 1; fi;

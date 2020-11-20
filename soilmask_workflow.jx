@@ -1,0 +1,23 @@
+{
+  "define": {
+    "SOLIMASK_SCRIPT": "/src/soilmask.py",
+    "SOILMASK_MASK_RESULT": SOILMASK_WORKING_FOLDER + "/" + SOILMASK_MASK_FILE,
+   },
+  "rules": [
+    {
+      "command": "python3 ${SCIF_APPROOT}/${SCRIPT_PATH} ${DOCKER_OPTIONS} --working_space \"${WORKING_FOLDER}\" \"${INPUT_GEOTIFF}\" ",
+      "environment": {
+        "SCRIPT_PATH": SOLIMASK_SCRIPT,
+        "INPUT_GEOTIFF": SOILMASK_SOURCE_FILE,
+        "WORKING_FOLDER": SOILMASK_WORKING_FOLDER,
+        "DOCKER_OPTIONS": SOILMASK_OPTIONS + " --out_file " + SOILMASK_MASK_FILE,
+      },
+      "inputs": [
+        SOILMASK_SOURCE_FILE
+      ],
+      "outputs": [
+        SOILMASK_MASK_RESULT
+      ]
+    }
+  ]
+}

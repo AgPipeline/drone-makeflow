@@ -1,0 +1,19 @@
+{
+  "define": {
+  },
+  "rules": [
+     {
+       "command": "ogr2ogr -f GeoJSON \"${OUTPUT_FILE}\" \"${PLOT_SHAPEFILE}\" ",
+       "environment": {
+         "PLOT_SHAPEFILE": PLOT_SHAPEFILE,
+         "OUTPUT_FILE": PLOT_GEOMETRY_FILE,
+       },
+       "inputs": [
+         PLOT_SHAPEFILE
+       ],
+       "outputs": [
+         PLOT_GEOMETRY_FILE
+       ]
+     }
+  ]
+}

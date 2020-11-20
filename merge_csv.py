@@ -20,6 +20,7 @@ def _merge_csv(source_path: str, target_path: str, has_headers: bool = True, hea
 
     # Read in the lines and append to the output file
     with open(target_path, 'a') as out_file:
+        print("Merging: ", source_path)
         with open(source_path, 'r') as infile:
             # Read in a line, return if everything was read and skip over headers
             one_line = infile.readline()
@@ -34,6 +35,51 @@ def _merge_csv(source_path: str, target_path: str, has_headers: bool = True, hea
 
                 # Read in the next line
                 one_line = infile.readline()
+
+
+def _path_in_ignore_dirs(source_path: str, ignore_dirs: list) -> bool:
+    """Checks if the source path is to be ignored using a case sensitive match
+    Arguments:
+        source_path: the path to check
+        ignore_dirs: the list of directories to ignore
+    Return:
+        Returns True if the path is to be ignored, and False if not
+    """
+    # Break apart the source path for later checking
+    if '/' in source_path:
+        source_parts = source_path.split('/')
+        test_join_char = '/'
+    elif '\\' in source_path:
+        source_parts = source_path.split('\\')
+        test_join_char = '\\'
+    else:
+        source_parts = [source_path]
+        test_join_char = '/'
+
+    for one_dir in ignore_dirs:
+        # Check for multiple folders
+        if '/' in one_dir:
+            dir_parts = one_dir.split('/')
+        elif '\\' in one_dir:
+            dir_parts = one_dir.split('\\')
+        else:
+            dir_parts = [one_dir]
+
+        # See if the entire path to check is to be found
+        if test_join_char.join(dir_parts) not in source_path:
+            continue
+
+        # Check path particles to ensure the entire path names match and not just parts of path names
+        # 'test' vs. 'testing' for example
+        parts_matched = 0
+        for one_part in dir_parts:
+            if one_part not in source_parts:
+                break
+            parts_matched += 1
+        if parts_matched == len(dir_parts):
+            return True
+
+    return False
 
 
 def get_arg_parser() -> argparse.ArgumentParser:
@@ -61,6 +107,7 @@ def get_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument('--header_count', '-c', type=int, default=1, help='number of header lines in files')
     parser.add_argument('--filter', '-f', help='comma separated list of files to filter in')
     parser.add_argument('--ignore', '-i', help='comma separated list of files to ignore')
+    parser.add_argument('--ignore-dirs', help='comma separated list of directory names to ignore (eg: bad_folder, path/ignore)')
     parser.add_argument('source_folder', type=dir_type, help='the folder to search in')
     parser.add_argument('target_folder', type=dir_type, help='folder for combined CSV files')
 
@@ -76,6 +123,7 @@ def merge():
     have_headers = not args.no_header
     includes = [one_name.strip() for one_name in args.filter.split(',')] if args.filter else []
     excludes = [one_name.strip() for one_name in args.ignore.split(',')] if args.ignore else []
+    ignore_dirs = args.ignore_dirs.split(',') if args.ignore_dirs else []
 
     # Loop through the folders until we run out of folders to process
     # This list only contains complete paths
@@ -87,7 +135,8 @@ def merge():
 
             # If it's a folder, save it for recursion
             if os.path.isdir(source_path):
-                check_dirs.append(source_path)
+                if not ignore_dirs or not _path_in_ignore_dirs(source_path, ignore_dirs):
+                    check_dirs.append(source_path)
                 continue
 
             # Ignore non-CSV files

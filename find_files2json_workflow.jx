@@ -1,0 +1,22 @@
+{
+  "define": {
+    "FIND_FILES2JSON_SCRIPT_PATH": "/scif/apps/src/find_files2json.sh",
+  },
+  "rules": [
+    {
+      "command": "${SCRIPT_PATH} \"${SEARCH_NAME}\" \"${SEARCH_FOLDER}\" \"${TARGET_FOLDER}\" ",
+      "environment": {
+        "SCRIPT_PATH": FIND_FILES2JSON_SCRIPT_PATH,
+        "SEARCH_NAME": FILES2JSON_SEARCH_NAME,
+        "SEARCH_FOLDER": FILES2JSON_SEARCH_FOLDER,
+        "TARGET_FOLDER": FILES2JSON_JSON_FILE,
+      },
+      "inputs": [
+        FILES2JSON_SEARCH_FOLDER
+      ],
+      "outputs": [
+        FILES2JSON_JSON_FILE
+      ]
+    }
+  ]
+}
