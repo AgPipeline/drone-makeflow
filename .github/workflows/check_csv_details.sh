@@ -4,7 +4,7 @@
 FILENAME="canopycover.csv"
 if [[ ! "${1}" == "" ]]; then
   FILENAME="${1}"
-fi;
+fi
 echo "Checking files named ${FILENAME}"
 
 TRUTH_FOLDER="test_data"
@@ -23,18 +23,17 @@ TRUTH_FOLDER_LEN="${#TRUTH_FOLDER}"
 FOLDER_LIST=($(find "${TRUTH_FOLDER}/" -maxdepth 1 -type d))
 
 # Get the line count of differences between the files
-for subfolder in "${FOLDER_LIST[@]}"
-do
+for subfolder in "${FOLDER_LIST[@]}"; do
   WORKING_FOLDER="${subfolder:${TRUTH_FOLDER_LEN}}"
 
-  if [[ "${WORKING_FOLDER}" == ""  ]]; then
+  if [[ "${WORKING_FOLDER}" == "" ]]; then
     continue
   fi
-  if [[ "${WORKING_FOLDER}" == "/"  ]]; then
+  if [[ "${WORKING_FOLDER}" == "/" ]]; then
     continue
   fi
 
-  DIFF_RESULT="$(./csvdiff/csvdiff "${TRUTH_FOLDER}/${WORKING_FOLDER}/${FILENAME}" "${COMPARE_FOLDER}/${WORKING_FOLDER}/${FILENAME}" --columns 1 --primary-key 4 --format rowmark 2>&1 | grep -A 5 'Rows:' | wc -l  | tr -d '[:space:]')"
+  DIFF_RESULT="$(./csvdiff/csvdiff "${TRUTH_FOLDER}/${WORKING_FOLDER}/${FILENAME}" "${COMPARE_FOLDER}/${WORKING_FOLDER}/${FILENAME}" --columns 1 --primary-key 4 --format rowmark 2>&1 | grep -A 5 'Rows:' | wc -l | tr -d '[:space:]')"
 
   if [[ "${DIFF_RESULT}" == "1" ]]; then
     echo "No differences: ${TRUTH_FOLDER}/${WORKING_FOLDER} for file ${FILENAME}"
