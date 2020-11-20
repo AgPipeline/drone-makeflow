@@ -20,6 +20,7 @@ def _merge_csv(source_path: str, target_path: str, has_headers: bool = True, hea
 
     # Read in the lines and append to the output file
     with open(target_path, 'a') as out_file:
+        print("Merging: ", source_path)
         with open(source_path, 'r') as infile:
             # Read in a line, return if everything was read and skip over headers
             one_line = infile.readline()

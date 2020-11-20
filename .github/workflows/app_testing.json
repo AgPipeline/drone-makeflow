@@ -1,5 +1,5 @@
 {
-  "BETYDB_URL": "https://terraref.ncsa.illinois.edu/bety",
+  "BETYDB_URL": "https://terraref.org/bety",
   "PLOT_SHAPEFILE": "/input/plot_shapes.shp",
   "PLOT_GEOMETRY_FILE": "/output/plots.geojson",
   "SOILMASK_SOURCE_FILE": "/input/orthomosaic.tif",
@@ -17,5 +17,5 @@
   "GREENNESS_INDICES_OPTIONS": "",
   "MERGECSV_SOURCE": "/input",
   "MERGECSV_TARGET": "/output",
-  "MERGECSV_OPTIONS": "--ignore-dirs input/outputs"
+  "MERGECSV_OPTIONS": "--ignore-dirs input/outputs,test_data/"
 }
