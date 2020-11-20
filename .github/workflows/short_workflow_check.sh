@@ -2,7 +2,7 @@
 
 # Define some counts that we expect (the number of sub-folders plus the top folder)
 EXPECTED_NUM_FOLDERS=58
-EXPECTED_NUM_CANOPYCOVER_CSV=56
+EXPECTED_NUM_CANOPYCOVER_CSV=57
 # The same number of CSV files + original, un-clipped mask file
 EXPECTED_NUM_MASK_TIF=$((EXPECTED_NUM_CANOPYCOVER_CSV + 1))
 
