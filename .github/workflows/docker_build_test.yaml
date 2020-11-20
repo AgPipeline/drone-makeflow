@@ -76,7 +76,7 @@ jobs:
               chmod +x './.github/workflows/check_csv_details.sh'
               ./.github/workflows/check_csv_details.sh 'rgb_plot.csv' test_data '.'
           - app: merge_csv
-            tar_gz_file: https://de.cyverse.org/dl/d/71E146AE-A959-4EF0-A1DE-760F88F21694/ci_merge_csv_test_data.tar.gz
+            tar_gz_file: https://de.cyverse.org/dl/d/7EB4E7EF-9635-483C-8C61-3CE9806B8906/ci_merge_csv_test_data_2.tar.gz
             parameter_json: .github/workflows/app_testing.json
             test_data_tar_gz: https://de.cyverse.org/dl/d/2FB75B8C-E361-489A-8331-B1B6C7697730/ci_docker_test_data_2.tar.gz
             test_results: if [[ "$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')" == "58" ]]; then echo "Test merge_csv success"; exit 0; else echo "App failed - merge_csv (actual \"$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')\")"; exit 1; fi;
