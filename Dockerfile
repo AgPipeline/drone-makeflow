@@ -22,6 +22,7 @@ RUN apt-get update -y \
     libgl1-mesa-dev \
     pdal \
     python-pdal \
+    python3-pip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -72,7 +73,8 @@ ENV PATH /opt/conda/bin:$PATH
 WORKDIR /
 
 FROM install_miniconda as base_scif
-RUN pip install --upgrade --no-cache-dir scif \
+RUN pip3 install --upgrade --no-cache-dir setuptools \
+    && pip3 install --upgrade --no-cache-dir scif \
     && echo "Finished install of scif"
 ENTRYPOINT ["scif"]
 
