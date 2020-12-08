@@ -19,13 +19,13 @@ PLOTGEOMETRY_FILE="${2}"
 # No supported options at this time
 OPTIONS=""
 
-echo "Merging CSV files from '${WORKING_FOLDER}/${TOP_LEVEL_FOLDER}' to '${WORKING_FOLDER}'"
+echo "Clipping image '${WORKING_FOLDER}/${SOURCE_FILE}' using geometries from '${WORKING_FOLDER}/${PLOTGEOMETRY_FILE}'"
   echo "{" >"/scif/apps/src/jx-args.json"
   {
-    echo "\"PLOTCLIP_SOURCE_FILE\"=\"${SOURCE_FILE}\","
-    echo "\"PLOTCLIP_PLOTGEOMETRY_FILE\"=\"${PLOTGEOMETRY_FILE}\","
-    echo "\"PLOTCLIP_WORKING_FOLDER\"=\"${WORKING_FOLDER}\","
-    echo "\"PLOTCLIP_OPTIONS\"=\"${OPTIONS}\""
+    echo "\"PLOTCLIP_SOURCE_FILE\": \"${WORKING_FOLDER}/${SOURCE_FILE}\","
+    echo "\"PLOTCLIP_PLOTGEOMETRY_FILE\": \"${WORKING_FOLDER}/${PLOTGEOMETRY_FILE}\","
+    echo "\"PLOTCLIP_WORKING_FOLDER\": \"${WORKING_FOLDER}\","
+    echo "\"PLOTCLIP_OPTIONS\": \"${OPTIONS}\""
     echo "}"
   } >>"/scif/apps/src/jx-args.json"
 

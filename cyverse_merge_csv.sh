@@ -7,7 +7,7 @@ if [[ "${1}" == "" ]]; then
   echo "Top level folder not specified"
   exit 1
 fi
-TOP_LEVEL_FOLDER="{1}"
+TOP_LEVEL_FOLDER="${1}"
 
 # Check for options
 if [[ "${2}" != "" ]]; then
@@ -19,9 +19,9 @@ fi
 echo "Merging CSV files from '${WORKING_FOLDER}/${TOP_LEVEL_FOLDER}' to '${WORKING_FOLDER}'"
 echo "{" >"/scif/apps/src/jx-args.json"
 {
-  echo "\"MERGECSV_SOURCE\"=\"${WORKING_FOLDER}/${TOP_LEVEL_FOLDER}\","
-  echo "\"MERGECSV_TARGET\"=\"${WORKING_FOLDER}\","
-  echo "\"MERGECSV_OPTIONS\"=\"${OPTIONS}\""
+  echo "\"MERGECSV_SOURCE\": \"${WORKING_FOLDER}/${TOP_LEVEL_FOLDER}\","
+  echo "\"MERGECSV_TARGET\": \"${WORKING_FOLDER}\","
+  echo "\"MERGECSV_OPTIONS\": \"${OPTIONS}\""
   echo "}"
 } >>"/scif/apps/src/jx-args.json"
 

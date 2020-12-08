@@ -16,13 +16,13 @@ MASK_FILE=${ORTHO_FILENAME%.*}_mask.${ORTHO_FILENAME##*.}
 # No supported options at this time
 OPTIONS=""
 
-echo "Merging CSV files from '${WORKING_FOLDER}/${TOP_LEVEL_FOLDER}' to '${WORKING_FOLDER}'"
+echo "Masking image file '${WORKING_FOLDER}/${ORTHO_IMAGE}' to file '${MASK_FILE}'"
 echo "{" >"/scif/apps/src/jx-args.json"
 {
-  echo "\"SOILMASK_SOURCE_FILE\"=\"${ORTHO_IMAGE}\","
-  echo "\"SOILMASK_MASK_FILE\"=\"${MASK_FILE}\","
-  echo "\"SOILMASK_WORKING_FOLDER\"=\"${WORKING_FOLDER}\","
-  echo "\"SOILMASK_OPTIONS\"=\"${OPTIONS}\""
+  echo "\"SOILMASK_SOURCE_FILE\": \"${WORKING_FOLDER}/${ORTHO_IMAGE}\","
+  echo "\"SOILMASK_MASK_FILE\": \"${MASK_FILE}\","
+  echo "\"SOILMASK_WORKING_FOLDER\": \"${WORKING_FOLDER}\","
+  echo "\"SOILMASK_OPTIONS\": \"${OPTIONS}\""
   echo "}"
 } >>"/scif/apps/src/jx-args.json"
 

@@ -13,9 +13,10 @@ OPTIONS=""
 # Copy the json file to the correct place
 cp "${FILE_LIST_JSON}" "/scif/apps/src/greenness-indices_files.json"
 
+echo "Calculating greenness indices using files listed in '${FILE_LIST_JSON}'"
 echo "{" >"/scif/apps/src/jx-args.json"
 {
-  echo "\"GREENNESS_INDICES_OPTIONS\"=\"${OPTIONS}\""
+  echo "\"GREENNESS_INDICES_OPTIONS\": \"${OPTIONS}\""
   echo "}"
 } >>"/scif/apps/src/jx-args.json"
 
