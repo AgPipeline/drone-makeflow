@@ -42,7 +42,7 @@ echo "  Options: '${OPTIONS}'"
   {
     echo "\"PLOTCLIP_SOURCE_FILE\": \"${WORKING_FOLDER}/${SOURCE_FILE}\","
     echo "\"PLOTCLIP_PLOTGEOMETRY_FILE\": \"${WORKING_FOLDER}/${PLOTGEOMETRY_FILE}\","
-    echo "\"PLOTCLIP_WORKING_FOLDER\": \"${WORKING_FOLDER}\","
+    echo "\"PLOTCLIP_WORKING_FOLDER\": \"${WORKING_FOLDER}/plot_clip\","
     echo "\"PLOTCLIP_OPTIONS\": \"${OPTIONS}\""
     echo "}"
   } >>"/scif/apps/src/jx-args.json"

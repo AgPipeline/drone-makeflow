@@ -34,13 +34,14 @@ while IFS= read -r -d '' ONE_FILE; do
   esac
 done < <(find "${WORKING_FOLDER}" -type f -print0)
 
+DESTINATION_FOLDER="${WORKING_FOLDER}/greenness"
 for i in "${FOUND_FILES[@]}"; do
   FILE_NAME=$(basename "${i}")
   FILE_PATH=$(dirname "${i}")
   LAST_FOLDER_NAME=$(basename "${FILE_PATH}")
   # Only copy files where the destination is not the same as the origin
-  if [[ "${i}" != "${WORKING_FOLDER}/${LAST_FOLDER_NAME}/${FILE_NAME}" ]]; then
-    mkdir -p "${WORKING_FOLDER}/${LAST_FOLDER_NAME}"
-    cp -f "${i}" "${WORKING_FOLDER}/${LAST_FOLDER_NAME}/${FILE_NAME}"
+  if [[ "${i}" != "${DESTINATION_FOLDER}/${LAST_FOLDER_NAME}/${FILE_NAME}" ]]; then
+    mkdir -p "${DESTINATION_FOLDER}/${LAST_FOLDER_NAME}"
+    cp -f "${i}" "${DESTINATION_FOLDER}/${LAST_FOLDER_NAME}/${FILE_NAME}"
   fi
 done

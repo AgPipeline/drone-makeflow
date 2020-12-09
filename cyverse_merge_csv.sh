@@ -20,7 +20,7 @@ echo "Merging CSV files from '${WORKING_FOLDER}/${TOP_LEVEL_FOLDER}' to '${WORKI
 echo "{" >"/scif/apps/src/jx-args.json"
 {
   echo "\"MERGECSV_SOURCE\": \"${WORKING_FOLDER}/${TOP_LEVEL_FOLDER}\","
-  echo "\"MERGECSV_TARGET\": \"${WORKING_FOLDER}\","
+  echo "\"MERGECSV_TARGET\": \"${WORKING_FOLDER}/merged_csv\","
   echo "\"MERGECSV_OPTIONS\": \"${OPTIONS}\""
   echo "}"
 } >>"/scif/apps/src/jx-args.json"

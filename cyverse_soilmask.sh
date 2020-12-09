@@ -11,7 +11,7 @@ ORTHO_IMAGE="${1}"
 
 # Get the mask file name
 ORTHO_FILENAME=${ORTHO_IMAGE#"$(dirname "${ORTHO_IMAGE}")/"}
-MASK_FILE=${ORTHO_FILENAME%.*}_mask.${ORTHO_FILENAME##*.}
+MASK_FILE="orthoimage_mask.tif"
 
 # No supported options at this time
 OPTIONS=""
