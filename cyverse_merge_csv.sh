@@ -16,7 +16,8 @@ else
   OPTIONS=""
 fi
 
-echo "Merging CSV files from '${WORKING_FOLDER}/${TOP_LEVEL_FOLDER}' to '${WORKING_FOLDER}'"
+mkdir -p "${WORKING_FOLDER}/merged_csv"
+echo "Merging CSV files from '${WORKING_FOLDER}/${TOP_LEVEL_FOLDER}' to '${WORKING_FOLDER}/merged_csv'"
 echo "{" >"/scif/apps/src/jx-args.json"
 {
   echo "\"MERGECSV_SOURCE\": \"${WORKING_FOLDER}/${TOP_LEVEL_FOLDER}\","
