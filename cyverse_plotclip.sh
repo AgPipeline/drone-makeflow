@@ -38,13 +38,13 @@ done < <(find "${WORKING_FOLDER}" -type f -print0)
 
 echo "Clipping image '${WORKING_FOLDER}/${SOURCE_FILE}' using geometries from '${WORKING_FOLDER}/${PLOTGEOMETRY_FILE}'"
 echo "  Options: '${OPTIONS}'"
-  echo "{" >"/scif/apps/src/jx-args.json"
-  {
-    echo "\"PLOTCLIP_SOURCE_FILE\": \"${WORKING_FOLDER}/${SOURCE_FILE}\","
-    echo "\"PLOTCLIP_PLOTGEOMETRY_FILE\": \"${WORKING_FOLDER}/${PLOTGEOMETRY_FILE}\","
-    echo "\"PLOTCLIP_WORKING_FOLDER\": \"${WORKING_FOLDER}/plot_clip\","
-    echo "\"PLOTCLIP_OPTIONS\": \"${OPTIONS}\""
-    echo "}"
-  } >>"/scif/apps/src/jx-args.json"
+echo "{" >"/scif/apps/src/jx-args.json"
+{
+  echo "\"PLOTCLIP_SOURCE_FILE\": \"${WORKING_FOLDER}/${SOURCE_FILE}\","
+  echo "\"PLOTCLIP_PLOTGEOMETRY_FILE\": \"${WORKING_FOLDER}/${PLOTGEOMETRY_FILE}\","
+  echo "\"PLOTCLIP_WORKING_FOLDER\": \"${WORKING_FOLDER}/plot_clip\","
+  echo "\"PLOTCLIP_OPTIONS\": \"${OPTIONS}\""
+  echo "}"
+} >>"/scif/apps/src/jx-args.json"
 
 scif run plotclip
