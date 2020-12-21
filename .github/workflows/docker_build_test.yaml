@@ -69,7 +69,7 @@ jobs:
             tar_gz_file: https://de.cyverse.org/dl/d/6EB55DDF-DC57-4BC9-BCF5-F668EF9D0B10/ci_greenness_indices_test_data.tar.gz
             parameter_json: .github/workflows/app_testing.json
             extra_docker_options: -v `pwd`/greenness_indices_files.json:/scif/apps/src/greenness-indices_files.json
-            test_data_tar_gz: https://de.cyverse.org/dl/d/2FB75B8C-E361-489A-8331-B1B6C7697730/ci_docker_test_data_2.tar.gz
+            test_data_tar_gz: https://de.cyverse.org/dl/d/2FB75B8C-E361-489A-8331-B1B6C7697730/ci_docker_test_data_3.tar.gz
             test_results: chmod +x .github/workflows/check_greenness_indices_app.sh && ./.github/workflows/check_greenness_indices_app.sh ${PWD}
             test_results_quality: |
               curl -sfL https://raw.githubusercontent.com/aswinkarthik/csvdiff/master/install.sh | sh -s -- -b ./csvdiff
