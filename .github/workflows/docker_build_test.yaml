@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [betydb2geojson, shp2geojson, soilmask, plotclip, find_files2json, canopycover, merge_csv, greenness-indices]
+        app: [betydb2geojson, shp2geojson, soilmask, soilmask_ratio, plotclip, find_files2json, canopycover, merge_csv, greenness-indices]
         include:
           - app: betydb2geojson
             parameter_json: .github/workflows/app_testing.json
@@ -38,6 +38,12 @@ jobs:
             test_data_tar_gz: https://de.cyverse.org/dl/d/2FB75B8C-E361-489A-8331-B1B6C7697730/ci_docker_test_data_2.tar.gz
             test_results: if [[ -f "outputs/orthomosaicmask.tif" ]]; then echo "Test soilmask success"; exit 0; else echo "App failed - soilmask"; exit 1; fi;
             test_results_quality: if [[ "$(diff './test_data/orthomosaicmask.tif' './outputs/orthomosaicmask.tif')" == "" ]]; then echo "Test soilmask content matches expected"; exit 0; else echo "App failed - soilmask contents mismatch from test_data/orthomosaicmask.tif"; exit 1; fi;
+          - app: soilmask_ratio
+            tar_gz_file: https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz
+            parameter_json: .github/workflows/app_testing.json
+            test_data_tar_gz: https://de.cyverse.org/dl/d/2FB75B8C-E361-489A-8331-B1B6C7697730/ci_docker_test_data_3.tar.gz
+            test_results: if [[ -f "outputs/orthomosaicmask.tif" ]]; then echo "Test soilmask ratio success"; exit 0; else echo "App failed - soilmask_ratio"; exit 1; fi;
+            test_results_quality: if [[ "$(diff './test_data/orthomosaicmask_ratio.tif' './outputs/orthomosaicmask.tif')" == "" ]]; then echo "Test soilmask content matches expected"; exit 0; else echo "App failed - soilmask contents mismatch from test_data/orthomosaicmask.tif"; exit 1; fi;
           - app: plotclip
             tar_gz_file: https://de.cyverse.org/dl/d/BC328D44-621B-41B6-A662-0CD7F2D4C0EE/ci_plotclip_test_data.tar.gz
             parameter_json: .github/workflows/app_testing.json
@@ -69,7 +75,7 @@ jobs:
             tar_gz_file: https://de.cyverse.org/dl/d/6EB55DDF-DC57-4BC9-BCF5-F668EF9D0B10/ci_greenness_indices_test_data.tar.gz
             parameter_json: .github/workflows/app_testing.json
             extra_docker_options: -v `pwd`/greenness_indices_files.json:/scif/apps/src/greenness-indices_files.json
-            test_data_tar_gz: https://de.cyverse.org/dl/d/2FB75B8C-E361-489A-8331-B1B6C7697730/ci_docker_test_data_2.tar.gz
+            test_data_tar_gz: https://de.cyverse.org/dl/d/2FB75B8C-E361-489A-8331-B1B6C7697730/ci_docker_test_data_3.tar.gz
             test_results: chmod +x .github/workflows/check_greenness_indices_app.sh && ./.github/workflows/check_greenness_indices_app.sh ${PWD}
             test_results_quality: |
               curl -sfL https://raw.githubusercontent.com/aswinkarthik/csvdiff/master/install.sh | sh -s -- -b ./csvdiff
