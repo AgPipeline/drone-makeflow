@@ -3,9 +3,9 @@
     conda create --prefix "${SCIF_APPROOT}/conda" --clone condabase --no-default-packages
 
     # Download plot-base-rgb code
-    wget -O plot_base_rgb.tar.gz https://github.com/AgPipeline/plot-base-rgb/archive/v1.5.1.tar.gz
+    wget -O plot_base_rgb.tar.gz https://github.com/AgPipeline/plot-base-rgb/archive/v1.7.tar.gz
     tar xvf plot_base_rgb.tar.gz
-    mv plot-base-rgb-1.5.1 src
+    mv plot-base-rgb-1.7 src
     conda run --prefix "${SCIF_APPROOT}/conda" pip install --upgrade-strategy only-if-needed -r "${PWD}/src/requirements.txt"
 
     # Download greenness-indices code. In the future use pip/conda install.

@@ -3,7 +3,7 @@
   },
   "rules": [
      {
-       "command": "ogr2ogr -f GeoJSON \"${OUTPUT_FILE}\" \"${PLOT_SHAPEFILE}\" ",
+       "command": "ogr2ogr -f GeoJSON -t_srs EPSG:4326 \"${OUTPUT_FILE}\" \"${PLOT_SHAPEFILE}\" ",
        "environment": {
          "PLOT_SHAPEFILE": PLOT_SHAPEFILE,
          "OUTPUT_FILE": PLOT_GEOMETRY_FILE,
