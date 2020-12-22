@@ -98,6 +98,9 @@ COPY ./scif_app_recipes/soilmask_v0.0.1_ubuntu16.04.scif /opt/
 RUN scif install /opt/soilmask_v0.0.1_ubuntu16.04.scif
 RUN scif install /opt/ndcctools_v7.1.2_ubuntu16.04.scif
 
+COPY ./scif_app_recipes/soilmask_ratio_v0.0.1_ubuntu18.04.scif /opt/
+RUN scif install /opt/soilmask_ratio_v0.0.1_ubuntu18.04.scif
+
 COPY ./scif_app_recipes/plotclip_v0.0.1_ubuntu16.04.scif /opt/
 RUN scif install /opt/plotclip_v0.0.1_ubuntu16.04.scif
 
