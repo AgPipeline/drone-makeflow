@@ -19,6 +19,18 @@ if [[ ! "${3}" == "" ]]; then
 fi
 echo "Comparison folder ${COMPARE_FOLDER}"
 
+PRIMARY_KEY_COLUMNS="4"
+if [[ ! "${4}" == "" ]]; then
+  PRIMARY_KEY_COLUMNS="${4}"
+fi
+echo "Primary key columns ${PRIMARY_KEY_COLUMNS}"
+
+COMPARE_COLUMNS="1"
+if [[ ! "${5}" == "" ]]; then
+  COMPARE_COLUMNS="${5}"
+fi
+echo "Columns to compare ${COMPARE_COLUMNS}"
+
 TRUTH_FOLDER_LEN="${#TRUTH_FOLDER}"
 # shellcheck disable=SC2207
 FOLDER_LIST=($(find "${TRUTH_FOLDER}/" -maxdepth 1 -type d))
@@ -35,16 +47,20 @@ for subfolder in "${FOLDER_LIST[@]}"; do
   fi
 
   # shellcheck disable=SC2126
-  DIFF_RESULT="$(./csvdiff/csvdiff "${TRUTH_FOLDER}/${WORKING_FOLDER}/${FILENAME}" "${COMPARE_FOLDER}/${WORKING_FOLDER}/${FILENAME}" --columns 1 --primary-key 4 --format rowmark 2>&1 | grep -A 5 'Rows:' | wc -l | tr -d '[:space:]')"
+  DIFF_RESULT="$(./csvdiff/csvdiff "${TRUTH_FOLDER}/${WORKING_FOLDER}/${FILENAME}" "${COMPARE_FOLDER}/${WORKING_FOLDER}/${FILENAME}" --columns 1 --primary-key "${PRIMARY_KEY_COLUMNS}" --format rowmark 2>&1 | grep -A 5 'Rows:' | wc -l | tr -d '[:space:]')"
 
   if [[ "${DIFF_RESULT}" == "1" ]]; then
     echo "No differences: ${TRUTH_FOLDER}/${WORKING_FOLDER} for file ${FILENAME}"
   else
     echo "Error: folder ${TRUTH_FOLDER}/${WORKING_FOLDER} file ${FILENAME} doesn't match"
-    echo "Folder listing"
+    echo "Comparison folder listing"
     ls -l "${COMPARE_FOLDER}/${WORKING_FOLDER}"
-    echo "File contents"
+    echo "Generated file contents"
+    cat "${TRUTH_FOLDER}/${WORKING_FOLDER}/${FILENAME}"
+    echo "Comparison file contents"
     cat "${COMPARE_FOLDER}/${WORKING_FOLDER}/${FILENAME}"
+    echo "CSV differences result"
+    ./csvdiff/csvdiff "${TRUTH_FOLDER}/${WORKING_FOLDER}/${FILENAME}" "${COMPARE_FOLDER}/${WORKING_FOLDER}/${FILENAME}" --columns 1 --primary-key 4 --format rowmark
     exit 10
   fi
 done
