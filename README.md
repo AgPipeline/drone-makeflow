@@ -1,4 +1,4 @@
-[![license](https://img.shields.io/badge/license-BSD%203-green?logo=Open-Source-Initiative)](https://github.com/AgPipeline/template-transformer-simple/blob/master/LICENSE)
+[![license](https://img.shields.io/badge/license-BSD%203-green?logo=Open-Source-Initiative)](https://github.com/AgPipeline/drone-makeflow/blob/add_badges/LICENSE)
 
 [![testing](https://github.com/AgPipeline/drone-makeflow/workflows/Enforcing%20shell%20script%20tests/badge.svg)](https://github.com/AgPipeline/drone-makeflow/actions?query=workflow%3A%22Enforcing+shell+script+tests%22)
 [![testing](https://github.com/AgPipeline/drone-makeflow/workflows/Enforcing%20tests/badge.svg)](https://github.com/AgPipeline/drone-makeflow/actions?query=workflow%3A%22Enforcing+tests%22)
