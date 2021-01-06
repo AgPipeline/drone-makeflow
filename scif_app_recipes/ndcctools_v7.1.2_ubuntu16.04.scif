@@ -3,7 +3,7 @@
     # Install dependencies
     python3.7 -m venv --system-site-packages .venv
     .venv/bin/python3 -m pip install --upgrade --no-cache-dir pip
-    .venv/bin/python3 -m pip install  --upgrade --no-cache-dir pygdal==2.2.3.*
+    .venv/bin/python3 -m pip install  --upgrade --no-cache-dir requests pygdal==2.2.3.*
 
 %apprun betydb2geojson
     /cctools/bin/makeflow \
