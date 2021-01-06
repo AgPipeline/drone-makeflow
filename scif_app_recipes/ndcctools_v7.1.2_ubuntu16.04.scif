@@ -1,9 +1,9 @@
 
 %appinstall betydb2geojson
-    # Install Makeflow and other dependencies
-    python3 -m venv --system-site-packages .venv
+    # Install dependencies
+    python3.7 -m venv --system-site-packages .venv
     .venv/bin/python3 -m pip install --upgrade --no-cache-dir pip
-    .venv/bin/python3 -m pip install  --upgrade --no-cache-dir pygdal==3.0.4.*
+    .venv/bin/python3 -m pip install  --upgrade --no-cache-dir pygdal==2.2.3.*
 
 %apprun betydb2geojson
     /cctools/bin/makeflow \
@@ -31,9 +31,7 @@
         https://github.com/AgPipeline/drone-makeflow/blob/master/README.md
 
 %appinstall shp2geojson
-    # Install Makeflow and other dependencies
-##    conda create --no-default-packages --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
-#    conda create --prefix "${SCIF_APPROOT}/conda" --clone condabase
+    # Install dependencies
 
 %apprun shp2geojson
     /cctools/bin/makeflow  \
@@ -61,9 +59,7 @@
         https://github.com/AgPipeline/drone-makeflow/blob/master/README.md
 
 %appinstall merge_csv
-    # Install Makeflow and other dependencies
-##    conda create --no-default-packages --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
-#    conda create --prefix "${SCIF_APPROOT}/conda" --clone condabase
+    # Install dependencies
 
 %apprun merge_csv
     /cctools/bin/makeflow  \
@@ -92,9 +88,7 @@
         https://github.com/AgPipeline/drone-makeflow/blob/master/README.md
 
 %appinstall find_files2json
-    # Install Makeflow and other dependencies
-##    conda create --no-default-packages --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
-#    conda create --prefix "${SCIF_APPROOT}/conda" --clone condabase
+    # Install dependencies
 
 %apprun find_files2json
     /cctools/bin/makeflow  \
