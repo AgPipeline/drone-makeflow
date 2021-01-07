@@ -9,13 +9,28 @@ if [[ "${1}" == "" ]]; then
 fi
 FILE_LIST_JSON="${1}"
 
-# No options supported at this time
+# No command line options are supported at this time
 OPTIONS=""
+
+# Look for YAML files to use as metadata
+while IFS= read -r -d '' ONE_FILE; do
+  case "${ONE_FILE: -4}" in
+    ".yml")
+      OPTIONS="${OPTIONS} --metadata ${ONE_FILE}"
+      ;;
+  esac
+  case "${ONE_FILE: -5}" in
+    ".yaml")
+      OPTIONS="${OPTIONS} --metadata ${ONE_FILE}"
+      ;;
+  esac
+done < <(find "${WORKING_FOLDER}" -maxdepth 1 -type f -print0)
 
 # Copy the json file to the correct place
 cp "${FILE_LIST_JSON}" "/scif/apps/src/greenness-indices_files.json"
 
 echo "Calculating greenness indices using files listed in '${FILE_LIST_JSON}'"
+echo "  using options: ${OPTIONS}"
 echo "{" >"/scif/apps/src/jx-args.json"
 {
   echo "\"GREENNESS_INDICES_OPTIONS\": \"${OPTIONS}\""

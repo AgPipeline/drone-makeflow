@@ -16,6 +16,19 @@ if [[ "${2}" == "" ]]; then
 fi
 SEARCH_NAME="${2}"
 
+# Since CyVerse appears to change parameter order depending upon how the app is defined
+# we need to check the parameters and adjust as needed
+if [ ! -d "${WORKING_FOLDER}/${SEARCH_FOLDER}" ]; then
+  # Check if the other parameter is a folder and swap if it is. Do nothing otherwise
+  # allowing the error to be caught later
+  if [ -d "${WORKING_FOLDER}/${SEARCH_NAME}" ]; then
+    SWAP="${SEARCH_FOLDER}"
+    SEARCH_FOLDER="${SEARCH_NAME}"
+    SEARCH_NAME="${SWAP}"
+    echo "Swapping to use folder: ${SEARCH_FOLDER} and file name: ${SEARCH_NAME}"
+  fi
+fi
+
 echo "Searching for files named '${SEARCH_NAME}' starting in folder '${WORKING_FOLDER}/${SEARCH_FOLDER}'"
 echo "{" >"/scif/apps/src/jx-args.json"
 {
