@@ -1,6 +1,8 @@
 #!/bin/bash
 
 WORKING_FOLDER=$(pwd)
+# List of folders to exclude from the results
+EXCLUDE_FOLDERS=("/logs/")
 
 # Get the file JSON list
 if [[ "${1}" == "" ]]; then
@@ -37,6 +39,8 @@ echo "{" >"/scif/apps/src/jx-args.json"
   echo "}"
 } >>"/scif/apps/src/jx-args.json"
 
+echo "JSON Args file:"
+cat "/scif/apps/src/jx-args.json"
 scif run canopycover
 
 # Copy the CSV files to the working folder as output
@@ -44,7 +48,17 @@ FOUND_FILES=()
 while IFS= read -r -d '' ONE_FILE; do
   case "${ONE_FILE: -4}" in
     ".csv")
-      FOUND_FILES+=("${ONE_FILE}")
+      # Look for the excluded folders
+      EXCLUDE_THIS_FILE="false"
+      for i in "${EXCLUDE_FOLDERS[@]}"; do
+        if [[ "${ONE_FILE}" == *"${i}"* ]]; then
+          EXCLUDE_THIS_FILE="true"
+          break
+        fi
+      done
+      if [ "${EXCLUDE_THIS_FILE}" == "false" ]; then
+        FOUND_FILES+=("${ONE_FILE}")
+      fi
       ;;
   esac
 done < <(find "${WORKING_FOLDER}" -type f -print0)
