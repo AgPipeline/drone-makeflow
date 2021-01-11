@@ -26,7 +26,7 @@ for i in "${EXCLUDE_FOLDERS[@]}"; do
   EXCLUDE_FOLDER_SEPARATOR=","
 done
 if [[ "${EXCLUDE_FOLDER_OPTION}" != "" ]]; then
-  OPTIONS="${OPTIONS} --ignore-dirs \\\"${EXCLUDE_FOLDER_OPTION}\\\" "
+  OPTIONS="${OPTIONS} --ignore-dirs ${EXCLUDE_FOLDER_OPTION} "
 fi
 
 mkdir -p "${WORKING_FOLDER}/merged_csv"
