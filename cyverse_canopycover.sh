@@ -71,6 +71,6 @@ for i in "${FOUND_FILES[@]}"; do
   # Only copy files where the destination is not the same as the origin
   if [[ "${i}" != "${DESTINATION_FOLDER}/${LAST_FOLDER_NAME}/${FILE_NAME}" ]]; then
     mkdir -p "${DESTINATION_FOLDER}/${LAST_FOLDER_NAME}"
-    cp -f "${i}" "${DESTINATION_FOLDER}/${LAST_FOLDER_NAME}/${FILE_NAME}"
+    mv -v -f "${i}" "${DESTINATION_FOLDER}/${LAST_FOLDER_NAME}/${FILE_NAME}"
   fi
 done

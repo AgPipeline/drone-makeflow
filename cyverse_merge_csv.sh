@@ -2,7 +2,7 @@
 
 WORKING_FOLDER=$(pwd)
 # List of folders to exclude from the results
-EXCLUDE_FOLDERS=("/logs/")
+EXCLUDE_FOLDERS=("logs")
 
 # Get the folder that's top level
 if [[ "${1}" == "" ]]; then
@@ -35,7 +35,7 @@ echo "  with options: ${OPTIONS}"
 echo "{" >"/scif/apps/src/jx-args.json"
 {
   echo "\"MERGECSV_SOURCE\": \"${WORKING_FOLDER}/${TOP_LEVEL_FOLDER}\","
-  echo "\"MERGECSV_TARGET\": \"${WORKING_FOLDER}\","
+  echo "\"MERGECSV_TARGET\": \"${WORKING_FOLDER}/merged_csv\","
   echo "\"MERGECSV_OPTIONS\": \"${OPTIONS}\""
   echo "}"
 } >>"/scif/apps/src/jx-args.json"
