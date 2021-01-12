@@ -36,7 +36,9 @@ jobs:
         with:
           python-version: '3.7'
       - name: Updated python version
-        run: python3 --version
+        run: |
+             echo "Python version" && python --version
+             echo "Python3 version" && python3 --version
       - name: PYTHONPATH environment variable
         run: echo "PYTHONPATH is ${PYTHONPATH}"
       - name: Update pip
