@@ -34,14 +34,12 @@ jobs:
             test_results: if [[ -f "outputs/plots.geojson" ]]; then echo "Test shp2geojson success"; exit 0; else echo "App failed - shp2geojson"; exit 1; fi;
             test_results_quality: if [[ "$(diff --ignore-all-space './test_data/plots_shapefile.geojson' './outputs/plots.geojson')" == "" ]]; then echo "Test shp2geojson content matches expected"; exit 0; else echo "App failed - shp2geojson contents mismatch from test_data/plots_shapefile.geojson"; exit 1; fi;
           - app: soilmask
-            python_dependencies: numpy Pillow
             tar_gz_file: https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz
             parameter_json: .github/workflows/app_testing.json
             test_data_tar_gz: https://de.cyverse.org/dl/d/3E5DAA36-3966-4511-A183-8813FAF76C88/ci_docker_test_data_3.tar.gz
             test_results: if [[ -f "outputs/orthomosaicmask.tif" ]]; then echo "Test soilmask success"; exit 0; else echo "App failed - soilmask"; exit 1; fi;
             test_results_quality: python3 tests/compare_image_pixels.py './test_data/orthomosaicmask.tif' './outputs/orthomosaicmask.tif'
           - app: soilmask_ratio
-            python_dependencies: numpy Pillow
             tar_gz_file: https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz
             parameter_json: .github/workflows/app_testing.json
             test_data_tar_gz: https://de.cyverse.org/dl/d/3E5DAA36-3966-4511-A183-8813FAF76C88/ci_docker_test_data_3.tar.gz
@@ -100,10 +98,9 @@ jobs:
         with:
           python-version: '3.7'
       - name: Install python dependencies
-        if: ${{ matrix.python_dependencies }}
         run: |
              python3 -m pip install -U pip
-             python3 -m pip install -U ${{ matrix.python_dependencies }}
+             python3 -m pip install -U numpy Pillow
       - name: Fetch source code
         uses: actions/checkout@v2
         id: fetch-source
