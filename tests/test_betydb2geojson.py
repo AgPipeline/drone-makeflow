@@ -56,7 +56,7 @@ def test_betydb_url():
 def test_command_line():
     """Test running betydb2geojson.py from the command line
     """
-    subprocess.run(['python3', SOURCE_FILE, "-u", "https://terraref.ncsa.illinois.edu/bety", "-o", OUTPUT_FILE],
+    subprocess.run(['python3', SOURCE_FILE, "-u", BETYDB_URL, "-o", OUTPUT_FILE],
                    check=True)
 
     assert os.path.isfile(OUTPUT_FILE)
