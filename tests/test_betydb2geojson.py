@@ -18,7 +18,7 @@ SOURCE_PATH = os.path.abspath(os.path.join('.', SOURCE_FILE))
 OUTPUT_FILE = 'test_output.json'
 
 # BETYdb instance to hit up
-BETYDB_URL = 'https://terraref.ncsa.illinois.edu/bety'
+BETYDB_URL = 'http://128.196.65.186:8000/bety'
 
 
 def test_exists():
