@@ -52,12 +52,12 @@ RUN apt-get update && \
     python3 -m pip install --upgrade --no-cache-dir \
         wheel && \
     python3 -m pip install --upgrade --no-cache-dir \
-        influxdb matplotlib Pillow pip piexif python-dateutil pyyaml scipy utm numpy cryptography PDAL && \
+        influxdb matplotlib Pillow pip piexif python-dateutil pyyaml scipy utm numpy cryptography PDAL==2.3.6 && \
     python3 -m pip install --upgrade --no-cache-dir \
         pygdal==3.0.4.* && \
-#    python3 -m pip install --upgrade --no-cache-dir \
-#        agpypeline && \
-    python3 -m pip install --upgrade --no-cache-dir --index-url https://test.pypi.org/simple/ agpypeline==0.0.105 && \
+    python3 -m pip install --upgrade --no-cache-dir \
+        agpypeline && \
+#    python3 -m pip install --upgrade --no-cache-dir --index-url https://test.pypi.org/simple/ agpypeline==0.0.105 && \ # this is the newer version of agpypeline for testing
     curl http://ccl.cse.nd.edu/software/files/cctools-7.1.12-source.tar.gz > cctools-source.tar.gz && \
     tar -xzf cctools-source.tar.gz &&\
     cd cctools-*-source && \
