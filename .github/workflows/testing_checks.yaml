@@ -21,11 +21,11 @@ jobs:
           app: [pylint, pytest]
           include:
             - app: pylint
-              pip_installs: pylint pytest
+              pip_installs: pylint pytest Pillow
               test_command: (cat action_pylint_files.txt | xargs python3 -m pylint --rcfile ./pylint.rc) && (find ./tests | grep '\.py' | xargs python3 -m pylint -d duplicate-code --rcfile ./pylint.rc)
             - app: pytest
-              pip_installs: pytest pytest-cov
-              test_command: python3 -m pytest --cov=. -rpP --cov-report=xml > coverage.txt
+              pip_installs: pytest pytest-cov requests
+              test_command: python3 -m pytest --cov=. -rpP --cov-report=xml
               artifacts: coverage.txt
     steps:
       - name: Current python version
@@ -35,19 +35,15 @@ jobs:
         with:
           python-version: '3.7'
       - name: Updated python version
-        run: python3 --version
+        run: |
+             echo "Python version" && python --version
+             echo "Python3 version" && python3 --version
       - name: PYTHONPATH environment variable
         run: echo "PYTHONPATH is ${PYTHONPATH}"
       - name: Update pip
         run: python3 -m pip install --upgrade --no-cache-dir pip
       - name: Fetch/update setuptools
         run: python3 -m pip install --upgrade --no-cache-dir setuptools
-      - name: Install python-apt
-        run: sudo apt-get install -y python-apt
-      - name: HACK to fix apt-get update problem w/ different python versions
-        run: 'cd /usr/lib/python3/dist-packages && sudo cp apt_pkg.cpython-36m-x86_64-linux-gnu.so apt_pkg.so'
-      - name: Update apt-get
-        run: sudo apt-get update
       - name: Fetch/update testing pip installations
         run: python3 -m pip install --upgrade --no-cache-dir ${{ matrix.pip_installs }}
       - name: Fetch source code

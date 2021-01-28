@@ -7,11 +7,11 @@
     rm -rf --verbose src/test_data src/tests src/.github src/figures
 
     # Install Makeflow and other dependencies
-#    conda create --no-default-packages --prefix "${SCIF_APPROOT}/conda" --yes -c conda-forge ndcctools pyyaml piexif python-dateutil laspy influxdb utm opencv scikit-image pip certifi
-#    conda run --prefix "${SCIF_APPROOT}/conda" pip install --upgrade-strategy only-if-needed pygdal==2.2.3.*
-    conda create --prefix "${SCIF_APPROOT}/conda" --clone condabase --no-default-packages
-    conda run --prefix "${SCIF_APPROOT}/conda" pip install --upgrade-strategy only-if-needed opencv-python scikit-image certifi
-    conda run --prefix "${SCIF_APPROOT}/conda" pip install --upgrade-strategy only-if-needed -r "${PWD}/src/requirements.txt"
+    python3.7 -m venv --system-site-packages .venv
+    .venv/bin/python3 -m pip install --upgrade --no-cache-dir pip
+    .venv/bin/python3 -m pip install --upgrade --no-cache-dir -r "${PWD}/src/requirements.txt"
+    .venv/bin/python3 -m pip install --upgrade --no-cache-dir opencv-python scikit-image certifi
+
 
     # Add example Docker command to SCIF app help section
     if [ -n $DOCKER_IMAGE ]; then
@@ -19,10 +19,10 @@
     fi
 
     # Generate remainder of SCIF app help section by running main script
-    conda run --prefix "${SCIF_APPROOT}/conda" python3 src/soilmask.py --help >> "${PWD}/scif/runscript.help"
+    .venv/bin/python3 src/soilmask.py --help >> "${PWD}/scif/runscript.help"
 
 %apprun soilmask
-    conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+    /cctools/bin/makeflow \
         --jx \
         --jx-args="/scif/apps/src/jx-args.json" \
         --log-verbose \

@@ -1,47 +1,12 @@
-#%appinstall short_workflow
-#    # Install Makeflow
-#    conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
-#
-#%apprun short_workflow
-#    echo "{\"ORTHOMOSAIC_NAME\": \"${1}\", \"OUTPUT_FOLDER\": \"/output\"  }" > ${SCIF_APPDATA}/jx-params.json
-#    if [ ! -f "/output/plots.json" ]; then ${SCIF_APPROOT_odm_workflow}/src/generate_geojson.sh "${2}" "/output/plots.json"; fi
-#    conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
-#        --jx \
-#        --jx-args="/scif/apps/odm_workflow/src/jx-args.json" \
-#        --jx-args="${SCIF_APPDATA}/jx-params.json" \
-#        --log-verbose \
-#        --retry-count=1 \
-#        --change-directory="${SCIF_APPDATA}" \
-#        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
-#        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
-#        ${3} \
-#        "/scif/apps/odm_workflow/src/short_workflow.jx"
-#    if [ ! -f "/output/canopycover_fileslist.json" ]; then "/scif/apps/odm_workflow/src/prep-canopy-cover.sh" "${1}"; fi
-#    conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
-#        --jx \
-#        --jx-args="/scif/apps/odm_workflow/src/jx-args.json" \
-#        --jx-args="/output/canopycover_fileslist.json" \
-#        --log-verbose \
-#        --retry-count=1 \
-#        --change-directory="${SCIF_APPDATA}" \
-#        --makeflow-log="${SCIF_APPDATA}/canopy-cover.jx.makeflowlog" \
-#        --batch-log="${SCIF_APPDATA}/canopy-cover.jx.batchlog" \
-#        ${3} \
-#        "/scif/apps/odm_workflow/src/canopy-cover.jx"
-#    if [ -f "/output/plots.json" ] && [[ "${3}" =~ "--clean" ]]; then echo "Removing plots.json" && rm "/output/plots.json"; fi
-#    if [ -f "/output/canopycover_fileslist.json" ] && [[ "${3}" =~ "--clean" ]]; then echo "Removing fileslist.json" && rm "/output/canopycover_fileslist.json"; fi
-#
-#%apphelp short_workflow
-#    Refer to the documentation on how to run this app: https://github.com/AgPipeline/drone-makeflow#canopy-cover-orthomosaic-and-plot-boundaries-
 
 %appinstall betydb2geojson
-    # Install Makeflow and other dependencies
-#    conda create --no-default-packages --prefix "${PWD}/conda" --yes -c conda-forge ndcctools requests gdal
-    conda create --prefix "${SCIF_APPROOT}/conda" --clone condabase --no-default-packages
-    conda run --prefix "${SCIF_APPROOT}/conda" pip install --upgrade-strategy only-if-needed requests
+    # Install dependencies
+    python3.7 -m venv --system-site-packages .venv
+    .venv/bin/python3 -m pip install --upgrade --no-cache-dir pip
+    .venv/bin/python3 -m pip install  --upgrade --no-cache-dir requests pygdal==2.2.3.*
 
 %apprun betydb2geojson
-    conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+    /cctools/bin/makeflow \
         --jx \
         --jx-args="/scif/apps/src/jx-args.json" \
         --log-verbose \
@@ -66,12 +31,10 @@
         https://github.com/AgPipeline/drone-makeflow/blob/master/README.md
 
 %appinstall shp2geojson
-    # Install Makeflow and other dependencies
-#    conda create --no-default-packages --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
-    conda create --prefix "${SCIF_APPROOT}/conda" --clone condabase
+    # Install dependencies
 
 %apprun shp2geojson
-    conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+    /cctools/bin/makeflow  \
         --jx \
         --jx-args="/scif/apps/src/jx-args.json" \
         --log-verbose \
@@ -96,12 +59,10 @@
         https://github.com/AgPipeline/drone-makeflow/blob/master/README.md
 
 %appinstall merge_csv
-    # Install Makeflow and other dependencies
-#    conda create --no-default-packages --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
-    conda create --prefix "${SCIF_APPROOT}/conda" --clone condabase
+    # Install dependencies
 
 %apprun merge_csv
-    conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+    /cctools/bin/makeflow  \
         --jx \
         --jx-args="/scif/apps/src/jx-args.json" \
         --log-verbose \
@@ -127,12 +88,10 @@
         https://github.com/AgPipeline/drone-makeflow/blob/master/README.md
 
 %appinstall find_files2json
-    # Install Makeflow and other dependencies
-#    conda create --no-default-packages --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
-    conda create --prefix "${SCIF_APPROOT}/conda" --clone condabase
+    # Install dependencies
 
 %apprun find_files2json
-    conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
+    /cctools/bin/makeflow  \
         --jx \
         --jx-args="/scif/apps/src/jx-args.json" \
         --log-verbose \

@@ -18,7 +18,7 @@ SOURCE_PATH = os.path.abspath(os.path.join('.', SOURCE_FILE))
 OUTPUT_FILE = 'test_output.json'
 
 # BETYdb instance to hit up
-BETYDB_URL = 'https://terraref.ncsa.illinois.edu/bety'
+BETYDB_URL = 'http://128.196.65.186:8000/bety'
 
 
 def test_exists():
@@ -56,7 +56,7 @@ def test_betydb_url():
 def test_command_line():
     """Test running betydb2geojson.py from the command line
     """
-    subprocess.run(['python3', SOURCE_FILE, "-u", "https://terraref.ncsa.illinois.edu/bety", "-o", OUTPUT_FILE],
+    subprocess.run(['python3', SOURCE_FILE, "-u", BETYDB_URL, "-o", OUTPUT_FILE],
                    check=True)
 
     assert os.path.isfile(OUTPUT_FILE)
