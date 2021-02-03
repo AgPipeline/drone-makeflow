@@ -34,6 +34,9 @@ jobs:
     steps:
       - name: Fetch source code
         uses: actions/checkout@v2
+      - name: shell check support
+        shell: bash
+        run: 'sudo apt-get install -y xz-utils'
       - name: shell check
         uses: luizm/action-sh-checker@v0.1.8
         env:
