@@ -4,6 +4,7 @@ on:
     branches:
       - master
       - develop
+      - auto_actions
   pull_request:
     branches:
       - master
