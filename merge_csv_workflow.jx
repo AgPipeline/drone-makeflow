@@ -1,0 +1,21 @@
+{
+  "define": {
+    "MERGE_SCRIPT_PATH": "/scif/apps/src/merge_csv.py",
+  },
+  "rules": [
+    {
+      "command": "${SCRIPT_PATH} ${SCRIPT_OPTIONS} \"${SOURCE_FOLDER}\" \"${TARGET_FOLDER}\" ",
+      "environment": {
+        "SCRIPT_PATH": MERGE_SCRIPT_PATH,
+        "SOURCE_FOLDER": MERGECSV_SOURCE,
+        "TARGET_FOLDER": MERGECSV_TARGET,
+        "SCRIPT_OPTIONS": MERGECSV_OPTIONS,
+      },
+      "inputs": [
+        MERGECSV_SOURCE
+      ],
+      "outputs": [
+      ]
+    }
+  ]
+}

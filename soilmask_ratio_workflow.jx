@@ -1,0 +1,23 @@
+{
+  "define": {
+    "SOLIMASK_RATIO_SCRIPT": "/src/transformer.py",
+    "SOILMASK_RATIO_MASK_RESULT": SOILMASK_RATIO_WORKING_FOLDER + "/" + SOILMASK_RATIO_MASK_FILE,
+   },
+  "rules": [
+    {
+      "command": "${SCIF_APPROOT}/.venv/bin/python3 ${SCIF_APPROOT}/${SCRIPT_PATH} ${DOCKER_OPTIONS} --working_space \"${WORKING_FOLDER}\" \"${INPUT_GEOTIFF}\" ",
+      "environment": {
+        "SCRIPT_PATH": SOLIMASK_RATIO_SCRIPT,
+        "INPUT_GEOTIFF": SOILMASK_RATIO_SOURCE_FILE,
+        "WORKING_FOLDER": SOILMASK_RATIO_WORKING_FOLDER,
+        "DOCKER_OPTIONS": SOILMASK_RATIO_OPTIONS + " --out_file " + SOILMASK_RATIO_MASK_FILE,
+      },
+      "inputs": [
+        SOILMASK_RATIO_SOURCE_FILE
+      ],
+      "outputs": [
+        SOILMASK_RATIO_MASK_RESULT
+      ]
+    }
+  ]
+}

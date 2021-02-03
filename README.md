@@ -1,25 +1,29 @@
+[![license](https://img.shields.io/badge/license-BSD%203-green?logo=Open-Source-Initiative)](https://github.com/AgPipeline/drone-makeflow/blob/master/LICENSE)
+
+[![testing](https://github.com/AgPipeline/drone-makeflow/workflows/Enforcing%20shell%20script%20tests/badge.svg)](https://github.com/AgPipeline/drone-makeflow/actions?query=workflow%3A%22Enforcing+shell+script+tests%22)
+[![testing](https://github.com/AgPipeline/drone-makeflow/workflows/Enforcing%20tests/badge.svg)](https://github.com/AgPipeline/drone-makeflow/actions?query=workflow%3A%22Enforcing+tests%22)
+[![testing](https://github.com/AgPipeline/drone-makeflow/workflows/Building%20Docker%20container/badge.svg)](https://github.com/AgPipeline/drone-makeflow/actions?query=workflow%3A%22Building+Docker+container%22)
+
 # Makeflow for Drone Processing Pipeline
 
-There are two main workflows in the Docker image built from this repository.
-
-The shorter workflow uses an orthomosaic file, a plot geometry file, and an experiment context file and calculates the canopy cover for each of the plots which is saved into CSV file(s).
-
-The longer workflow is the `odm_workflow`.
-It uses image files captured by a drone, a plot geometry file, and an experiment context file and processes the drone image files using OpenDroneMap (ODM).
-After ODM has created the orthomosaic, the file is processed to produce plot-level canopy cover CSV file(s).
-
 The [Scientific Filesystem](https://sci-f.github.io/) is used as to provide the entry points for the different tasks available (known as "apps" with the Scientific Filesystem).
-These apps are used by the above workflows and can be used to create custom workflows outside of what's provided.
+These apps are used to create workflows.
 
 ## Table of contents
-- [Terms used](#terms)
-- [Running the workflow](#run_workflow)
+- [Terminology used](#terminology)
+- [Running the apps](#run_apps)
     - [Prerequisites](#prerequisites)
-    - [Workflow](#workflows)
-        - [Canopy Cover: Orthomosaic and plot boundaries](#om_can_shp)
-        - [Canopy Cover: OpenDroneMap and plot boundaries](#opendm_can_shp)
+    - [Configuration JSON file](#config_json)
+    - [Generating GeoJSON plot geometries](#geojson_plots)
+        - [BETYdb to GeoJson](#betydb_geojson)
+        - [Shapefile to GeoJson](#shapefile_geojson)
+    - [Soilmask images](#soilmask)
+    - [Plotclip images](#plotclip)
+    - [Find files and write JSON](#files2json)
+    - [Canopy Cover calculation](#canopycover)
+    - [Greenness Indices calculation](#greenness_indices)
+    - [Merge CSV files](#merge_csv)
     - [Clean](#workflow_clean)
-- [Running Other Apps](#apps)
 - [Build The Container](#build)
 - [A Note On Docker Sibling Containers](#docker_sibling_containers)
 - [Acceptance Testing](#acceptance_testing)
@@ -27,7 +31,7 @@ These apps are used by the above workflows and can be used to create custom work
     - [shellcheck and shfmt](#shellcheck_shfmt)
     - [Docker Testing](#test_docker)
 
-## Terms used <a name="terms" />
+## Terminology used <a name="terminology" />
 
 Here are the definition of some of the terms we use with links to additional information
 
@@ -53,139 +57,366 @@ We use the [Scientific Filesystem](https://sci-f.github.io/) to organize our app
 In this document we use the term "shapefile" to refer to all the files ending in `.shp`, `.shx`, `.dbf`, and `.prj` that have the same name.
 It can be used to specify geographic information and shapes associated with plot geometries.
 
-## Running the workflow <a name="run_workflow" />
+## Running the apps <a name="run_apps" />
 
-This section contains different ways of executing an existing Docker workflow container.
+This section contains information on running the different apps in existing Docker workflow container.
+By tying these different applications together, flexible workflows can be created and distributed.
+
+To determine what apps are available, try the following command:
+```bash
+docker run --rm agdrone/canopycover-workflow:latest apps
+```
+The different components of the command line are:
+- `docker run --rm` tells Docker to run an image and remove the resulting container automatically after the run
+- `agdrone/canopycover-workflow:latest` is the Docker image to run
+- `apps` the command that lists the available apps
 
 ### Prerequisites <a name="prerequisites" />
 
-- Docker needs to be installed to run the workflows. How to [get Docker](https://docs.docker.com/get-docker/)
-- Create an `inputs` folder in the current working directory (or other folder of your choice)
+- Docker needs to be installed to run the apps. How to [get Docker](https://docs.docker.com/get-docker/)
+- Create an `inputs` folder in the current working directory (or other folder of your choice) to hold input files
 ```bash
 mkdir -p "${PWD}/inputs"
 ```
-- Create an `outputs` folder in the current working directory (or other folder of your choice)
+- Create an `outputs` folder in the current working directory (or other folder of your choice) to hold the results
 ```bash
 mkdir -p "${PWD}/outputs"
 ```
 - Create an `checkpoints` folder.
-The checkpoints folder will contain the generated workflow checkpoint data allowing easy error recovery and stops re-running an already completed workflow.
+The checkpoints folder will contain the generated workflow checkpoint data allowing easy error recovery and helps prevent re-running an already completed workflow.
 Removing the workflow checkpoint files will enable a complete re-run of the workflow
 ```bash
 mkdir -p "${PWD}/checkpoints"
 ``` 
 
-### Workflow <a name="workflows" />
+### Configuration JSON file <a name="config_json" />
 
-There are workflows [apps](#def_apps) available that will run a predefined series of apps to completion.
-This section describes how to run these workflows using sample data.
-It's expected that after running these examples these workflow commands can be customized and run in other situations.
+Most of the apps described in this document need additional information to perform; such as the source image name.
+This information is provided through a JSON file that is made available to a running container.
 
-#### Canopy Cover: Orthomosaic and plot boundaries <a name="om_can_shp" />
+Each of the apps described provide the keys they expect to find, along with a description of the associated value.
 
-The following steps are used to generate plot-level canopy cover values for a georeferenced orthomosaic image and plot boundaries using geographic information.
-We will first present the steps and then provide an example.
+We recommend naming the configuration JSON files something that is related to the intent; such as the workflow that they are a part of.
 
-1. Create a folder and copy the orthomosaic into it
-2. If using a [shapefile](#def_shapefile) or [GeoJSON](#def_geojson) file, copy those into the same folder as the orthomosaic image
-3. Create another folder for the output folders and files
-4. Run the docker container's `short_workflow` app specifying the name of the orthomosaic and either the name of the shapefile or geojson file, or the URL of they [BETYdb](#def_betydb) instance to query for plot boundaries
+### Generating GeoJSON plot geometries <a name="geojson_plots" />
 
-_NOTE_: the orthomosaic must be the file name without any extensions; in other words, leave off the `.tif` when specifying it on the Docker command line.
+Plot geometries are needed when clipping source files to where they intersect the plots.
+The plot geometries need to be in [GeoJSON](https://tools.ietf.org/html/rfc7946) format.
+Apps are provided to convert shapefiles and BETYdb URLs to the GeoJSON format.
 
-##### For example: <a name="can_shp_example" />
+#### BETYdb to GeoJson <a name="betydb_geojson" />
 
-You can download a sample dataset of files (archived) with names corresponding to those listed here from CyVerse using the following command.
-```bash
-curl -X GET https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz > scif_test_data.tar.gz
-tar xvzf scif_test_data.tar.gz -C "${PWD}/inputs"
+This app retrieves the plots from a BETYdb instance and saves them to a file in the GeoJSON format.
+
+**JSON configuration** \
+There are two JSON key/value pairs needed by this app.
+- BETYDB_URL: the URL of the BETYdb instance to query for plot geometries
+- PLOT_GEOMETRY_FILE: the path to write the plot geometry file to, including the file name
+
+For example:
+```json
+{
+  "BETYDB_URL": "https://terraref.ncsa.illinois.edu/bety",
+  "PLOT_GEOMETRY_FILE": "/output/plots.geojson"
+}
 ```
 
-In this example we're going to assume that the source image is named `orthomosaic.tif`, that we're using a shapefile named `plot_shapes.shp`, and we have an `experiment.yaml` file.
-
-Now we can run the container mounting our source folder, destination folder, checkpoint folder, as well as indicating the name of the orthomosaic file and the name of the shapefile.
-You will need to have Docker running at this point.
+**Sample command line** \
 ```bash
-docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/output" -v "${PWD}/checkpoints:/scif/data/short_workflow" agdrone/canopycover-workflow:latest run short_workflow orthomosaic plot_shapes.shp
+docker run --rm -v ${PWD}/outputs:/output -v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json agdrone/canopycover-workflow:latest run betydb2geojson
 ```
 
-Please refer to the [Docker](https://www.docker.com/) documentation for more information on running Docker containers.
+The different components of the command line are:
+- `docker run --rm` tells Docker to run an image and remove the resulting container automatically after the run (`--rm`)
+- `-v ${PWD}/outputs:/output` mounts the [previously created](#prerequisites) outputs folder to the `/output` location on the running image
+- `-v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json` mounts the JSON configuration file so that it's available to the app
+- `agdrone/canopycover-workflow:latest` is the Docker image to run
+- `run betydb2geojson` the command that runs the app
 
-_NOTE_: the above `docker` command line contains the oprthomosaic file without its extension (`orthomosaic`).
+Please notice that the `/output` folder on the command line corresponds with the `PLOT_GEOMETRY_FILE` starting path value in the configuration JSON
 
-**Results:**
-Upon a successful run the output will contain one sub-folder for each plot.
-In the sub-folders for plots that intersected with the orthomosaic, there will be the clipped `.tif` file and two `.csv` files.
-This will generate one directory per plot in the `outputs/` folder.
-Each plot will contain two key outputs of interest:
-1. `orthomosaic_mask.tif`
-2. `canopycover.csv` with the canopy cover calculated from the mask file
-   * [In the future](https://github.com/AgPipeline/issues-and-projects/issues/210), these CSV files will be aggregated into a single file for each run.
-The file with "geostreams" in its name can be uploaded to TERRAREF's Geostreams database.  
+#### Shapefile to GeoJson <a name="shapefile_geojson" />
 
-#### Canopy Cover: OpenDroneMap and plot boundaries <a name="opendm_can_shp" />
+This app loads plot geometries from a shapefile and saves them to a file in the GeoJSON format.
 
-The following steps are used when wanting to use OpenDroneMap (ODM) to create the Orthomosaic image that's then used to create the canopy cover values.
-As with the [previous example](#om_can_shp) we will be listing the steps and then providing an example.
+**JSON configuration** \
+There are two JSON key/value pairs needed by this app.
+- PLOT_SHAPEFILE: the path to the shapefile to load and save as GeoJSON
+- PLOT_GEOMETRY_FILE: the path to write the plot geometry file to, including the file name
 
-_NOTE_: the SciF Docker image uses Docker sibling containers to run the OpenDroneMap application.
-Please read our section on [Docker Sibling Containers](#docker_sibling_containers) below to learn more about this approach.
-
-1. Create two named Docker volumes to use for processing data; one for input files and one for output files - the same volume can be used for both if desired
-2. Copy the source drone images into a folder
-3. If using a [shapefile](#def_shapefile) or [GeoJSON](#def_geojson) file, copy those into the same folder as the drone images
-4. Copy the experiment metadata file into the same folder as the drone images
-5. Copy the folder contents of the drone images folder that was just prepared onto the input named volume
-6. Create another folder for the output folders and files
-7. Run the docker container's `odm_workflow` app specifying  either the name of the shapefile or geojson file, or the URL of they [BETYdb](#def_betydb) instance to query for plot boundaries, and the two named volumes
-8. Copy the resulting files off the output named volume to the local folder
-9. Clean up the named volumes
-
-##### For example: <a name="opendm_can_shp_example" />
-
-You can download a sample dataset of files (archived) with names corresponding to those listed here from CyVerse using the following command.
-```bash
-curl -X GET https://de.cyverse.org/dl/d/7D28E988-67A2-498A-B18C-E0D884FD0C83/scif_odm_test_data.tar.gz > scif_odm_test_data.tar.gz
-tar xvzf scif_test_data.tar.gz -C ${PWD}/inputs
+For example:
+```json
+{
+  "PLOT_SHAPEFILE": "/input/plot_shapes.shp",
+  "PLOT_GEOMETRY_FILE": "/output/plots.geojson"
+}
 ```
 
-In this example we're going to assume that we're using a shapefile named `plot_shapes.shp`, that we have our drone images in a folder named `${PWD}/inputs/IMG`, and additional data in the `experiment.yaml` file.
-
-Step 1 requires creating two named Docker volumes to use when processing.
-If you already have one or more empty named volumes you can skip this step.
-You will need to have Docker running at this point.
+**Sample command line** \
 ```bash
-docker volume create my_input
-docker volume create my_output
-``` 
-
-Step 2 involves moving the drone images to the top location in the folder and then removing the empty folder:
-```bash
-mv "${PWD}/inputs/IMG/*" "${PWD}/inputs/"
-rmdir "${PWD}/inputs/IMG"
+docker run --rm -v ${PWD}/inputs:/input -v ${PWD}/outputs:/output -v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json agdrone/canopycover-workflow:latest run shp2geojson
 ```
 
-In step 3 we copy the source files onto the input named volume:
-```bash
-docker run --rm -v "${PWD}/inputs:/sources" -v my_input:/input --entrypoint bash agdrone/canopycover-workflow:latest -c 'cp /sources/* /input/'
-``` 
+The different components of the command line are:
+- `docker run --rm` tells Docker to run an image and remove the resulting container automatically after the run (`--rm`)
+- `-v ${PWD}/inputs:/input` mounts the [previously created](#prerequisites) inputs folder to the `/input` location on the running image
+- `-v ${PWD}/outputs:/output` mounts the [previously created](#prerequisites) outputs folder to the `/output` location on the running image
+- `-v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json` mounts the JSON configuration file so that it's available to the app
+- `agdrone/canopycover-workflow:latest` is the Docker image to run
+- `run shp2geojson` the command that runs the app
 
-In step 4 we run the workflow to generate the orothomosaic image using ODM (OrthoDroneMap) and calculate plot-level canopy cover:
-```bash
-docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v my_output:/output -v "${PWD}/checkpoints:/scif/data/odm_workflow" -e INPUT_VOLUME=my_input -e OUTPUT_VOLUME=my_output -e "INPUT_IMAGE_FOLDER=/images" -e "OUTPUT_FOLDER=/output" agdrone/canopycover-workflow:latest run odm_workflow plot_shapes.shp
-```
-and we wait until it's finished.
+Please notice the following:
+- the `/input` folder on the command line corresponds with the `PLOT_SHAPEFILE` starting path value in the configuration JSON; this is where the app expects to find the shapefile to load and convert
+- the `/output` folder on the command line corresponds with the `PLOT_GEOMETRY_FILE` starting path value in the configuration JSON
 
-In step 5 we copy the results off the named output volume to our local folder:
-```bash
-docker run --rm -v "${PWD}/outputs:/results" -v my_output:/output --entrypoint bash agdrone/canopycover-workflow:latest -c 'cp -r /output/* /results/'
-```
-The results of the processing are now in the `${PWD}/outputs` folder.
+### Soilmask images <a name="soilmask" />
 
-Finally, in step 6 we clean up the named volumes by deleting everything on them:
-```bash
-docker run --rm -v my_input:/input -v my_output:/output --entrypoint bash agdrone/canopycover-workflow:latest -c 'rm -r /input/* && rm -r /output/*'
+This app masks out soil from an image.
+
+**JSON configuration** \
+There are JSON key/value pairs for this app
+- SOILMASK_SOURCE_FILE: the path to the image to mask the soil from
+- SOILMASK_MASK_FILE: the name of the mask file to write. Will be written to the path defined in SOILMASK_WORKING_FOLDER if a path is not specified
+- SOILMASK_WORKING_FOLDER: the path to where the results of processing should be placed 
+- SOILMASK_OPTIONS: any options to be passed to the script
+
+The following JSON example would have the soilmask app write the mask to a file named `orthomosaic_masked.tif` in the `/output/` folder of the running Docker image:
+```json
+{
+  "SOILMASK_SOURCE_FILE": "/input/orthomosaic.tif",
+  "SOILMASK_MASK_FILE": "orthomosaic_masked.tif",
+  "SOILMASK_WORKING_FOLDER": "/output",
+  "SOILMASK_OPTIONS": ""
+}
 ```
+
+The following options are available to be specified on the SOILMASK_OPTIONS JSON entry:
+- `--metadata METADATA` this option indicates a metadata YAML or JSON file to use when processing 
+- `--help` displays the soilmask help information without any file processing
+
+**Sample command line** \
+```bash
+docker run --rm -v ${PWD}/test/inputs:/input -v ${PWD}/test/output:/output -v ${PWD}/chris-jx-args.json:/scif/apps/src/jx-args.json agdrone/canopycover-workflow:latest run soilmask
+```
+
+The different components of the command line are:
+- `docker run --rm` tells Docker to run an image and remove the resulting container automatically after the run (`--rm`)
+- `-v ${PWD}/inputs:/input` mounts the [previously created](#prerequisites) inputs folder to the `/input` location on the running image
+- `-v ${PWD}/outputs:/output` mounts the [previously created](#prerequisites) outputs folder to the `/output` location on the running image
+- `-v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json` mounts the JSON configuration file so that it's available to the app
+- `agdrone/canopycover-workflow:latest` is the Docker image to run
+- `run soilmask` the command that runs the app
+
+Please notice the following:
+- the `/input` folder on the command line corresponds with the `SOILMASK_SOURCE_FILE` path value in the configuration JSON; this is where the app expects to find the source image
+- the `/output` folder on the command line corresponds with the `SOILMASK_WORKING_FOLDER` path value in the configuration JSON; this is where the masked image is stored
+
+### Plotclip images <a name="plotclip" />
+
+This app clips georeferenced images to plot boundaries.
+
+**JSON configuration** \
+There are JSON key/value pairs for this app
+- PLOTCLIP_SOURCE_FILE: the path to the image to clip
+- PLOTCLIP_PLOTGEOMETRY_FILE: the path to the GeoJSON file containing the plot boundaries; see also [BETYdb to GeoJson](#betydb_geojson)and [Shapefile to GeoJson](#shapefile_geojson)
+- PLOTCLIP_WORKING_FOLDER: the path to where the results of processing should be placed; each plot clip is placed in a folder corresponding to the plot name
+- PLOTCLIP_OPTIONS: any options to be passed to the script
+
+The following JSON example would have the plot clips written to the `/output/` folder of the running Docker image:
+```json
+{
+  "PLOTCLIP_SOURCE_FILE": "/input/orthomosaic_mask.tif",
+  "PLOTCLIP_PLOTGEOMETRY_FILE": "/input/plots.geojson",
+  "PLOTCLIP_WORKING_FOLDER": "/output",
+  "PLOTCLIP_OPTIONS": ""
+}
+```
+
+The following options are available to be specified on the PLOTCLIP_OPTIONS JSON entry:
+- `--metadata METADATA` this option indicates a metadata YAML or JSON file to use when processing 
+- `--keep_empty_folders` specifying this option will create a folder with the plot name even if the plot doesn't intersect the image
+- `--plot_column PLOT_COLUMN` specifies the column name ("properties" sub-key with GeoJSON) to use as the plot name 
+- `--help` displays the plotclip help information without any file processing
+
+**Sample command line** \
+```bash
+docker run --rm -v ${PWD}/test/inputs:/input -v ${PWD}/test/output:/output -v ${PWD}/chris-jx-args.json:/scif/apps/src/jx-args.json agdrone/canopycover-workflow:latest run plotclip
+```
+
+The different components of the command line are:
+- `docker run --rm` tells Docker to run an image and remove the resulting container automatically after the run (`--rm`)
+- `-v ${PWD}/inputs:/input` mounts the [previously created](#prerequisites) inputs folder to the `/input` location on the running image
+- `-v ${PWD}/outputs:/output` mounts the [previously created](#prerequisites) outputs folder to the `/output` location on the running image
+- `-v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json` mounts the JSON configuration file so that it's available to the app
+- `agdrone/canopycover-workflow:latest` is the Docker image to run
+- `run plotclip` the command that runs the app
+
+Please notice the following:
+- the `/input` folder on the command line corresponds with the `PLOTCLIP_SOURCE_FILE` path value in the configuration JSON; this is where the app expects to find the source image
+- the `/output` folder on the command line corresponds with the `PLOTCLIP_WORKING_FOLDER` path value in the configuration JSON; this is where the plot image clips are saved
+
+### Find files and write JSON <a name="files2json" />
+
+This app locates files with a specific name and writes a JSON file that can then be used to process those files.
+Makeflow is a deterministic scheduler, meaning that when it's run it needs to "know" everything about a job; such as which files are input.
+Apps like [Plotclip](#plotclip) are non-deterministic in that there isn't a way ahead of time of knowing which plots intersect an image (unless complete plot coverage is guaranteed, which doesn't always happen).
+Even in cases where the output of a step is deterministic, it may still be handy to use this app to build up a JSON file.
+
+The source top-level folder is shallowly searched, only immediate sub-folders are searched, and the top folder is ignored.
+
+**JSON configuration** \
+There are JSON key/value pairs for this app
+- FILES2JSON_SEARCH_NAME: the complete name of the file to find
+- FILES2JSON_SEARCH_FOLDER: the starting path to begin searching in
+- FILES2JSON_JSON_FILE: the path to the found file's JSON is written to
+
+The following JSON example would have the JSON file written to the `/output/files.json` file of the running Docker image:
+```json
+{
+  "FILES2JSON_SEARCH_NAME": "orthomosaic_mask.tif",
+  "FILES2JSON_SEARCH_FOLDER": "/input",
+  "FILES2JSON_JSON_FILE": "/output/files.json"
+}
+```
+
+**Sample command line** \
+```bash
+docker run --rm -v ${PWD}/inputs:/input -v ${PWD}/output:/output -v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json agdrone/canopycover-workflow:latest run find_files2json
+```
+
+The different components of the command line are:
+- `docker run --rm` tells Docker to run an image and remove the resulting container automatically after the run (`--rm`)
+- `-v ${PWD}/inputs:/input` mounts the [previously created](#prerequisites) inputs folder to the `/input` location on the running image
+- `-v ${PWD}/outputs:/output` mounts the [previously created](#prerequisites) outputs folder to the `/output` location on the running image
+- `-v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json` mounts the JSON configuration file so that it's available to the app
+- `agdrone/canopycover-workflow:latest` is the Docker image to run
+- `run find_files2json` the command that runs the app
+
+Please notice the following:
+- the `/input` folder on the command line corresponds with the `FILES2JSON_SEARCH_FOLDER` path value in the configuration JSON; this is where the app will start its search
+- the `/output` folder on the command line is included as part of the `FILES2JSON_JSON_FILE` path value in the configuration JSON; this is the folder where the found file's JSON are saved
+
+### Canopy Cover calculation <a name="canopycover" />
+
+This app calculates the canopy cover of [soilmasked](#soilmask) images and writes the CSV files next to the source image (in the same folder).
+
+**JSON configuration** \
+There are JSON key/value pairs for this app
+- CANOPYCOVER_OPTIONS: any options to be passed to the script
+
+The following JSON example shows how to define runtime options when running this app:
+```json
+{
+  "CANOPYCOVER_OPTIONS": ""
+}
+```
+
+The following options are available to be specified on the CANOPYCOVER_OPTIONS JSON entry:
+- `--metadata METADATA` this option indicates a metadata YAML or JSON file to use when processing 
+- `--help` displays the canopy cover help information without any file processing. This is useful for finding options which affect the output
+
+**Sample command line** \
+```bash
+docker run --rm -v ${PWD}/test/inputs:/input -v ${PWD}/test/output:/output -v ${PWD}/chris-jx-args.json:/scif/apps/src/jx-args.json -v ${PWD}/canopy_cover_files.json:/scif/apps/src/canopy_cover_files.json agdrone/canopycover-workflow:latest run canopycover
+```
+
+The different components of the command line are:
+- `docker run --rm` tells Docker to run an image and remove the resulting container automatically after the run (`--rm`)
+- `-v ${PWD}/inputs:/input` mounts the [previously created](#prerequisites) inputs folder to the `/input` location on the running image
+- `-v ${PWD}/outputs:/output` mounts the [previously created](#prerequisites) outputs folder to the `/output` location on the running image
+- `-v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json` mounts the JSON configuration file so that it's available to the app
+- `-v ${PWD}/canopy_cover_files.json:/scif/apps/src/canopy_cover_files.json` mounts the JSON file containing information on the files to process so that it's available to the app; also see [Find files and write JSON](#files2json)
+- `agdrone/canopycover-workflow:latest` is the Docker image to run
+- `run canopycover` the command that runs the app
+
+Please notice the following:
+- the `/input` folder on the command line corresponds to where the files to be processed are expected to be found and where the CSV files are written to
+
+### Greenness Indices calculation <a name="greenness_indices" />
+
+This app calculates several greenness indices of [soilmasked](#soilmask) images and writes the CSV files next to the source image (in the same folder).
+
+**JSON configuration** \
+There are JSON key/value pairs for this app
+- CANOPYCOVER_OPTIONS: any options to be passed to the script
+
+The following JSON example shows how to define runtime options when running this app:
+```json
+{
+  "GREENNESS_INDICES_OPTIONS": ""
+}
+```
+
+The following options are available to be specified on the GREENNESS_INDICES_OPTIONS JSON entry:
+- `--metadata METADATA` this option indicates a metadata YAML or JSON file to use when processing 
+- `--help` displays the greenness indices help information without any file processing. This is useful for finding options which affect the output
+
+**Sample command line** \
+```bash
+docker run --rm -v ${PWD}/test/inputs:/input -v ${PWD}/test/output:/output -v ${PWD}/chris-jx-args.json:/scif/apps/src/jx-args.json -v ${PWD}/greenness_indices_files.json:/scif/apps/src/greenness-indices_files.json agdrone/canopycover-workflow:latest run greenness-indices
+```
+
+The different components of the command line are:
+- `docker run --rm` tells Docker to run an image and remove the resulting container automatically after the run (`--rm`)
+- `-v ${PWD}/inputs:/input` mounts the [previously created](#prerequisites) inputs folder to the `/input` location on the running image
+- `-v ${PWD}/outputs:/output` mounts the [previously created](#prerequisites) outputs folder to the `/output` location on the running image
+- `-v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json` mounts the JSON configuration file so that it's available to the app
+- `-v ${PWD}/greenness_indices_files.json:/scif/apps/src/greenness-indices_files.json` mounts the JSON file containing information on the files to process so that it's available to the app; also see [Find files and write JSON](#files2json)
+- `agdrone/canopycover-workflow:latest` is the Docker image to run
+- `run greenness-indices` the command that runs the app
+
+Please notice the following:
+- the `/input` folder on the command line corresponds to where the files to be processed are expected to be found and where the CSV files are written to
+
+### Merge CSV files <a name="merge_csv" />
+
+This app recursively merges same-named CSV files to a destination folder.
+If the folder contains multiple, differently named, CSV files, there will be one resulting merged CSV file for each unique CSV file name.
+All the source CSV files are left intact.
+
+**JSON configuration** \
+There are JSON key/value pairs for this app
+- MERGECSV_SOURCE: the path to the top-level folder containing CSV files to merge
+- MERGECSV_TARGET: the path where the merged CSV file is written
+- MERGECSV_OPTIONS: any options to be passed to the script
+
+For example:
+```json
+{
+  "MERGECSV_SOURCE": "/input",
+  "MERGECSV_TARGET": "/output",
+  "MERGECSV_OPTIONS": ""
+}
+```
+
+The following options are available to be specified on the MERGECSV_OPTIONS JSON entry:
+- `--no_header` this option indicates that the source CSV files do not have header lines
+- `--header_count <value>` indicates the number of header lines to expect in the CSV files; defaults to 1 header line
+- `--filter <file name filter>` one or more comma-separated filters of files to process; files not matching a filter aren't processed
+- `--ignore <file name filter>` one or more comma-separated filters of files to skip; files matching a filter are ignored
+- `--help` displays the help information without any file processing
+
+By combining filtering options and header options, it's possible to precisely target the CSV files to process.
+
+The filters work by matching up the file name found on disk with the names specified with the filter to determine if a file should be processed.
+Only the body and extension of a file name is compared, the path to the file is ignored when filtering.
+
+**Sample command line** \
+```bash
+docker run --rm -v ${PWD}/inputs:/input -v ${PWD}/outputs:/output -v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json agdrone/canopycover-workflow:latest run merge_csv
+```
+
+The different components of the command line are:
+- `docker run --rm` tells Docker to run an image and remove the resulting container automatically after the run (`--rm`)
+- `-v ${PWD}/inputs:/input` mounts the [previously created](#prerequisites) inputs folder to the `/input` location on the running image
+- `-v ${PWD}/outputs:/output` mounts the [previously created](#prerequisites) outputs folder to the `/output` location on the running image
+- `-v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json` mounts the JSON configuration file so that it's available to the app
+- `agdrone/canopycover-workflow:latest` is the Docker image to run
+- `run merge_csv` the command that runs the app
+
+Please notice the following:
+- the `/input` folder on the command line corresponds with the `MERGECSV_SOURCE` path value in the configuration JSON; this is where the app expects to find the CSV files to merge
+- the `/output` folder on the command line corresponds with the `MERGECSV_TARGET` path value in the configuration JSON; this is where the merged CSV files are stored
 
 ### Clean runs <a name="workflow_clean" />
 
@@ -200,13 +431,9 @@ It's recommended, but not necessary, to run the clean app between processing run
 
 The following docker command line will clean up the files generated using the [Canopy Cover: Orthomosaic and Shapefile](#om_can_shp) example above.
 ```bash
-docker run --rm -v "${PWD}/inputs:/scif/data/odm_workflow/images" -v "${PWD}/outputs:/scif/data/soilmask" -v "${PWD}/checkpoints:/scif/data/short_workflow" agdrone/canopycover-workflow:latest run short_workflow orthomosaic plot_shapes.shp --clean
+docker run --rm -v ${PWD}/outputs:/output -v ${PWD}/my-jx-args.json:/scif/apps/src/jx-args.json agdrone/canopycover-workflow:latest run betydb2geojson --clean
 ```
 Notice the additional parameter at the end of the command line (--clean).
-
-## Running Other Apps <a name="apps" />
-
-TBD
 
 ## Build The Container <a name="build" />
 

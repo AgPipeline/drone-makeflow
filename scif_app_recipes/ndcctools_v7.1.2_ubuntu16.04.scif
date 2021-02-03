@@ -1,111 +1,116 @@
-%appinstall odm_workflow
-    # Install Makeflow
-    conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
-
-%apprun odm_workflow
-    echo "{\"INPUT_IMAGE_FOLDER\": \"${INPUT_IMAGE_FOLDER}\", \"OUTPUT_FOLDER\": \"/output\", \"INPUT_VOLUME\": \"${INPUT_VOLUME}\", \"OUTPUT_VOLUME\": \"${OUTPUT_VOLUME}\" }" > ${SCIF_APPDATA}/jx-params.json
-    if [ ! -f "/output/plots.json" ]; then ${SCIF_APPROOT_odm_workflow}/src/generate_geojson.sh "${1}" "${SCIF_APPDATA_odm_workflow}/plots.json"; fi
-    conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
-        --jx \
-        --jx-args="/scif/apps/odm_workflow/src/jx-args.json" \
-        --jx-args="${SCIF_APPDATA}/jx-params.json" \
-        --log-verbose \
-        --retry-count=1 \
-        --change-directory="${SCIF_APPDATA}" \
-        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
-        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
-        ${2} \
-        "/scif/apps/odm_workflow/src/workflow.jx"
-    if [ ! -f "/output/canopycover_fileslist.json" ]; then "/scif/apps/odm_workflow/src/prep-canopy-cover.sh" "orthomosaic"; fi
-    conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
-        --jx \
-        --jx-args="${SCIF_APPROOT}/src/jx-args.json" \
-        --jx-args="/output/canopycover_fileslist.json" \
-        --log-verbose \
-        --retry-count=1 \
-        --change-directory="${SCIF_APPDATA}" \
-        --makeflow-log="${SCIF_APPDATA}/canopy-cover.jx.makeflowlog" \
-        --batch-log="${SCIF_APPDATA}/canopy-cover.jx.batchlog" \
-        ${2} \
-        "${SCIF_APPROOT}/src/canopy-cover.jx"
-    if [ -f "/output/plots.json" ] && [[ "${2}" =~ "--clean" ]]; then echo "Removing plots.json" && rm "/output/plots.json"; fi
-    if [ -f "/output/canopycover_fileslist.json" ] && [[ "${2}" =~ "--clean" ]]; then echo "Removing fileslist.json" && rm "/output/canopycover_fileslist.json"; fi
-
-%apphelp odm_workflow
-    This app provides an entrypoint to the ODM (OpenDroneMap) makeflow app.
-
-    Refer to the documentation on how to run this app: https://github.com/AgPipeline/drone-makeflow#canopy-cover-opendronemap-and-plot-boundaries-
-
-%appinstall short_workflow
-    # Install Makeflow
-    conda create --prefix "${PWD}/conda" --yes -c conda-forge ndcctools
-
-%apprun short_workflow
-    echo "{\"ORTHOMOSAIC_NAME\": \"${1}\", \"OUTPUT_FOLDER\": \"/output\"  }" > ${SCIF_APPDATA}/jx-params.json
-    if [ ! -f "/output/plots.json" ]; then ${SCIF_APPROOT_odm_workflow}/src/generate_geojson.sh "${2}" "/output/plots.json"; fi
-    conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
-        --jx \
-        --jx-args="/scif/apps/odm_workflow/src/jx-args.json" \
-        --jx-args="${SCIF_APPDATA}/jx-params.json" \
-        --log-verbose \
-        --retry-count=1 \
-        --change-directory="${SCIF_APPDATA}" \
-        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
-        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
-        ${3} \
-        "/scif/apps/odm_workflow/src/short_workflow.jx"
-    if [ ! -f "/output/canopycover_fileslist.json" ]; then "/scif/apps/odm_workflow/src/prep-canopy-cover.sh" "${1}"; fi
-    conda run --prefix "${SCIF_APPROOT}/conda" makeflow \
-        --jx \
-        --jx-args="/scif/apps/odm_workflow/src/jx-args.json" \
-        --jx-args="/output/canopycover_fileslist.json" \
-        --log-verbose \
-        --retry-count=1 \
-        --change-directory="${SCIF_APPDATA}" \
-        --makeflow-log="${SCIF_APPDATA}/canopy-cover.jx.makeflowlog" \
-        --batch-log="${SCIF_APPDATA}/canopy-cover.jx.batchlog" \
-        ${3} \
-        "/scif/apps/odm_workflow/src/canopy-cover.jx"
-    if [ -f "/output/plots.json" ] && [[ "${3}" =~ "--clean" ]]; then echo "Removing plots.json" && rm "/output/plots.json"; fi
-    if [ -f "/output/canopycover_fileslist.json" ] && [[ "${3}" =~ "--clean" ]]; then echo "Removing fileslist.json" && rm "/output/canopycover_fileslist.json"; fi
-
-%apphelp short_workflow
-    Refer to the documentation on how to run this app: https://github.com/AgPipeline/drone-makeflow#canopy-cover-orthomosaic-and-plot-boundaries-
 
 %appinstall betydb2geojson
-    # We install a virtual environment so we can get the versions we need
-    python3 -m venv --system-site-packages .venv
+    # Install dependencies
+    python3.7 -m venv --system-site-packages .venv
     .venv/bin/python3 -m pip install --upgrade --no-cache-dir pip
-    .venv/bin/python3 -m pip install  --upgrade --no-cache-dir pygdal==2.2.3.3
+    .venv/bin/python3 -m pip install  --upgrade --no-cache-dir requests pygdal==2.2.3.*
 
 %apprun betydb2geojson
-    .venv/bin/python3 ${SCIF_APPROOT_odm_workflow}/src/betydb2geojson.py --betydb_url "${1}" --outfile "${2}"
+    /cctools/bin/makeflow \
+        --jx \
+        --jx-args="/scif/apps/src/jx-args.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
+        ${1} \
+        "/scif/apps/src/betydb2geojson_workflow.jx"
 
 %apphelp betydb2geojson
     This app provides a conversion from BETYdb site data to GeoJSON plot geometries.
 
-    Sample command - replace <BETYdb URL> with the actual URL and <out filename> with the target file name:
-        scif run betydb2geojson <BETYdb URL> <out filename>
+    Expected keys in the "jx-args.json" file:
+        BETYDB_URL - the value is the URL of the BETYdb instance to get plot geometries from
+        PLOT_SHAPEFILE - the path to save the GeoJSON to
+
+    Sample command:
+        scif run betydb2geojson
+
+    See also:
+        https://github.com/AgPipeline/drone-makeflow/blob/master/README.md
 
 %appinstall shp2geojson
-    # Use the main environment
+    # Install dependencies
 
 %apprun shp2geojson
-    ogr2ogr -f GeoJSON "${2}" "${SCIF_APPDATA_odm_workflow}/images/${1}"
+    /cctools/bin/makeflow  \
+        --jx \
+        --jx-args="/scif/apps/src/jx-args.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
+        ${1} \
+        "/scif/apps/src/shp2geojson_workflow.jx"
 
 %apphelp shp2geojson
     This app provides a conversion from a shapefile to GeoJSON plot geometries.
 
-    Sample command - repalce <shapefile> with the name of the shapefile and <out filename> with the target file name:
-        scif run shp2geojson <shapefile> <out filename>
+    Expected keys in the "jx-args.json" file:
+        PLOT_GEOMETRY_FILE - the path to the shapefile to convert to GeoJSON
+        PLOT_SHAPEFILE - the path to save the GeoJSON to
+
+    Sample command:
+        scif run shp2geojson
+
+    See also:
+        https://github.com/AgPipeline/drone-makeflow/blob/master/README.md
 
 %appinstall merge_csv
+    # Install dependencies
 
 %apprun merge_csv
-    /scif/apps/odm_workflow/src/merge_csv.py "${1}" "${2}"
+    /cctools/bin/makeflow  \
+        --jx \
+        --jx-args="/scif/apps/src/jx-args.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
+        ${1} \
+        "/scif/apps/src/merge_csv_workflow.jx"
 
 %apphelp merge_csv
-    This app searches folders for CSV files and merges them into the output folder
+    This app searches folders for CSV files and merges them by file name into the output folder
 
-    Sample command - replace <top source folder> and <destination folder> with the actual folder paths:
-        scif run merge_csv <top source folder> <destination folder>
+    Expected keys in the "jx-args.json" file:
+        MERGECSV_SOURCE - the folder path to look for CSV file
+        MERGECSV_TARGET - the folder path to save the merged CSV files to
+        MERGECSV_OPTIONS - options for processing CSV files; set to "--help" to display all available options without processing files
+
+    Sample command:
+        scif run merge_csv
+
+    See also:
+        https://github.com/AgPipeline/drone-makeflow/blob/master/README.md
+
+%appinstall find_files2json
+    # Install dependencies
+
+%apprun find_files2json
+    /cctools/bin/makeflow  \
+        --jx \
+        --jx-args="/scif/apps/src/jx-args.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
+        ${1} \
+        "/scif/apps/src/find_files2json_workflow.jx"
+
+%apphelp find_files2json
+    This app searches folders for files and writes out a JSON file intended to be used as input to a workflow.
+    The search assumes the wanted files are located in subfolders off the FILES2JSON_SEARCH_FOLDER.
+    If no files matching the search name are found then no JSON file is saved.
+
+    Expected keys in the "jx-args.json" file:
+        FILES2JSON_SEARCH_NAME - the name of the files to locate
+        FILES2JSON_SEARCH_FOLDER - the path to the folder to search within
+        FILES2JSON_JSON_FILE - the path to the JSON file to write found files to
+
+    Sample command:
+        scif run find_files2json

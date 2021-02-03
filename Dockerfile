@@ -1,7 +1,18 @@
 FROM ubuntu:18.04 as base
-ENV DOCKER_IMAGE agpipeline/scif-drone-pipeline:1.3
+ENV DOCKER_IMAGE agdrone/workflow:1.3
 ENV DEBIAN_FRONTEND noninteractive
 WORKDIR /
+
+# Install Python
+RUN apt-get update -y \
+    && apt-get install --no-install-recommends -y \
+    python3.7 \
+    python3-pip \
+    && ln -s /usr/bin/python3 /usr/bin/python \
+    && python3.7 -m pip install -U pip \
+    && apt-get autoremove -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 #Install dependencies
 RUN apt-get update -y \
@@ -10,9 +21,6 @@ RUN apt-get update -y \
     wget \
     python3-gdal \
     gdal-bin   \
-    libgdal-dev \
-    gcc \
-    g++ \
     libsm6 \
     libxext6 \
     libxrender1 \
@@ -20,8 +28,51 @@ RUN apt-get update -y \
     liblas-bin \
     docker.io \
     libgl1-mesa-dev \
+    pdal \
+    python3-pip \
+    python-pdal \
+    python3-venv \
+    python3.7-venv \
+    && apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Install global environment to be used by multiple virtual environments
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libgdal-dev \
+        gcc \
+        g++ \
+        python-dev \
+        python3-dev \
+        python3.7-dev \
+        curl && \
+    python3.7 -m pip install --upgrade --no-cache-dir \
+        setuptools && \
+    python3.7 -m pip install --upgrade --no-cache-dir \
+        wheel && \
+    python3.7 -m pip install --upgrade --no-cache-dir \
+        influxdb matplotlib Pillow pip piexif python-dateutil pyyaml scipy utm numpy opencv-python && \
+    python3.7 -m pip install --upgrade --no-cache-dir \
+        pygdal==2.2.3.* && \
+    python3.7 -m pip install --upgrade --no-cache-dir \
+        agpypeline && \
+    curl http://ccl.cse.nd.edu/software/files/cctools-7.1.12-source.tar.gz > cctools-source.tar.gz && \
+    tar -xzf cctools-source.tar.gz &&\
+    cd cctools-*-source && \
+    ./configure --prefix /cctools && make install && \
+    cd / && rm -r cctools-*-source cctools-source.tar.gz && \
+    apt-get remove -y \
+        libgdal-dev \
+        gcc \
+        g++ \
+        python-dev \
+        python3-dev \
+        python3.7-dev \
+        curl && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install Docker
 RUN apt-get update -y && \
@@ -48,33 +99,12 @@ RUN apt-get update -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-
-# Install base for running workflows
-FROM base as download_miniconda
-RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /root/miniconda.sh
-
-FROM base as install_miniconda
-WORKDIR /root
-COPY --from=download_miniconda /root/miniconda.sh .
-RUN /bin/bash ~/miniconda.sh -b -p /opt/conda \
-    && rm ~/miniconda.sh \
-    && /opt/conda/bin/conda clean -tipsy \
-    && ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
-    && echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc \
-    && echo "conda activate base" >> ~/.bashrc \
-    && find /opt/conda/ -follow -type f -name '*.a' -delete \
-    && find /opt/conda/ -follow -type f -name '*.js.map' -delete \
-    && /opt/conda/bin/conda clean -afy \
-    && echo "Finished installing miniconda!"
-ENV PATH /opt/conda/bin:$PATH
 WORKDIR /
 
-
-FROM install_miniconda as base_scif
-RUN pip install --upgrade --no-cache-dir scif \
-    && echo "Finished install of scif" \
-    && pip install --upgrade --no-cache-dir pygdal==2.2.3.5 \
-    && echo "Finished install of pygdal"
+FROM base as base_scif
+RUN python3.7 -m pip install --upgrade --no-cache-dir setuptools \
+    && python3.7 -m pip install --upgrade --no-cache-dir scif \
+    && echo "Finished install of scif"
 ENTRYPOINT ["scif"]
 
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
@@ -91,15 +121,18 @@ COPY ./scif_app_recipes/soilmask_v0.0.1_ubuntu16.04.scif /opt/
 RUN scif install /opt/soilmask_v0.0.1_ubuntu16.04.scif
 RUN scif install /opt/ndcctools_v7.1.2_ubuntu16.04.scif
 
-FROM combined_scif as plotclip_scif
+COPY ./scif_app_recipes/soilmask_ratio_v0.0.1_ubuntu18.04.scif /opt/
+RUN scif install /opt/soilmask_ratio_v0.0.1_ubuntu18.04.scif
+
 COPY ./scif_app_recipes/plotclip_v0.0.1_ubuntu16.04.scif /opt/
 RUN scif install /opt/plotclip_v0.0.1_ubuntu16.04.scif
 
-FROM plotclip_scif as canopycover_scif
 COPY ./scif_app_recipes/canopycover_v0.0.1_ubuntu16.04.scif /opt/
 RUN scif install /opt/canopycover_v0.0.1_ubuntu16.04.scif
 
-FROM canopycover_scif as workflow
-COPY workflow.jx short_workflow.jx canopy-cover.jx betydb2geojson.py merge_csv.py cyverse_short_workflow.sh generate_geojson.sh prep-canopy-cover.sh jx-args.json /scif/apps/odm_workflow/src/
-RUN chmod a+x /scif/apps/odm_workflow/src/*.sh
-RUN chmod a+x /scif/apps/odm_workflow/src/*.py
+COPY ./scif_app_recipes/greenness_v0.0.1_ubuntu16.04.scif /opt/
+RUN scif install /opt/greenness_v0.0.1_ubuntu16.04.scif
+
+COPY *.jx *.py *.sh jx-args.json /scif/apps/src/
+RUN chmod a+x /scif/apps/src/*.sh
+RUN chmod a+x /scif/apps/src/*.py

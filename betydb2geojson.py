@@ -12,10 +12,10 @@ from osgeo import ogr
 ENV_BETYDB_URL_NAME = 'BETYDB_URL'
 
 
-def add_arguments() -> argparse.Namespace:
+def get_arguments() -> argparse.Namespace:
     """Adds arguments to the command line parser
     Return:
-        No return is defined
+        Returns the parsed arguments
     """
     parser = argparse.ArgumentParser(description="BETYdb plots to GeoJSON",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -151,8 +151,7 @@ def convert() -> None:
         No return is defined
     """
     # Get the command line parameters
-
-    args = add_arguments()
+    args = get_arguments()
 
     if not args.outfile:
         raise RuntimeError("An output file must be specified to receive the GeoJSON plot information")
