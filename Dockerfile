@@ -55,9 +55,12 @@ RUN apt-get update && \
         influxdb matplotlib Pillow pip piexif python-dateutil pyyaml scipy utm numpy cryptography PDAL==2.3.6 && \
     python3 -m pip install --upgrade --no-cache-dir \
         pygdal==3.0.4.* && \
+#    python3 -m pip install --upgrade --no-cache-dir \
+#        agpypeline && \
     python3 -m pip install --upgrade --no-cache-dir \
-        agpypeline && \
-#    python3 -m pip install --upgrade --no-cache-dir --index-url https://test.pypi.org/simple/ agpypeline==0.0.105 && \ # this is the newer version of agpypeline for testing
+        --index-url https://test.pypi.org/simple/ agpypeline==0.0.110 && \
+    python3 -m pip install --upgrade --no-cache-dir \
+        pytest && \
     curl http://ccl.cse.nd.edu/software/files/cctools-7.1.12-source.tar.gz > cctools-source.tar.gz && \
     tar -xzf cctools-source.tar.gz &&\
     cd cctools-*-source && \
@@ -162,3 +165,6 @@ RUN scif install /opt/greenness_v0.0.1_ubuntu16.04.scif
 COPY *.jx *.py *.sh jx-args.json /scif/apps/src/
 RUN chmod a+x /scif/apps/src/*.sh
 RUN chmod a+x /scif/apps/src/*.py
+
+COPY . /home/extractor/drone-makeflow
+RUN chmod a+x /home/extractor/drone-makeflow
