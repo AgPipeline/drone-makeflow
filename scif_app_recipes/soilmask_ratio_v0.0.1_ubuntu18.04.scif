@@ -7,10 +7,7 @@
     rm -rf --verbose src/test_data src/tests src/.github src/figures
 
     # Install Makeflow and other dependencies
-#    conda create --prefix "${SCIF_APPROOT}/conda" --clone condabase --no-default-packages
-#    conda run --prefix "${SCIF_APPROOT}/conda" pip install --upgrade-strategy only-if-needed opencv-python scikit-image certifi
-#    conda run --prefix "${SCIF_APPROOT}/conda" pip install --upgrade-strategy only-if-needed -r "${PWD}/src/requirements.txt"
-    python3 -m venv --system-site-packages .venv
+    python3.7 -m venv --system-site-packages .venv
     .venv/bin/python3 -m pip install --upgrade --no-cache-dir pip
     .venv/bin/python3 -m pip install --upgrade --no-cache-dir -r "${PWD}/src/requirements.txt"
     .venv/bin/python3 -m pip install --upgrade --no-cache-dir scikit-image
@@ -22,7 +19,7 @@
     fi
 
     # Generate remainder of SCIF app help section by running main script
-    .venv/bin/python3 src/transformer.py --help >> "${PWD}/scif/runscript.help"
+    .venv/bin/python3.7 src/transformer.py --help >> "${PWD}/scif/runscript.help"
 
 %apprun soilmask_ratio
     /cctools/bin/makeflow  \

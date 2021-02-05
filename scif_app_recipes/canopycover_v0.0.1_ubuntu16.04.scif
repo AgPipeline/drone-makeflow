@@ -1,17 +1,13 @@
 %appinstall canopycover
     # Download canopycover code. In the future use pip/conda install.
-    wget -O canopycover.tar.gz https://github.com/AgPipeline/transformer-canopycover/archive/v1.5.tar.gz
+    wget -O canopycover.tar.gz https://github.com/AgPipeline/transformer-canopycover/archive/v1.6.tar.gz
     tar xvf canopycover.tar.gz
-    mv transformer-canopycover-1.5 src
+    mv transformer-canopycover-1.6 src
     echo "Removing unneeded files"
     rm -rf --verbose src/test_data src/tests src/.github
 
     # Install Makeflow and other dependencies
-##    conda create --no-default-packages --prefix "${SCIF_APPROOT}/conda" --yes -c conda-forge ndcctools pyyaml piexif python-dateutil scipy
-##    conda run --prefix "${SCIF_APPROOT}/conda" pip install --upgrade-strategy only-if-needed pygdal==2.2.3.*
-#    conda create --prefix "${SCIF_APPROOT}/conda" --clone condabase --no-default-packages
-#    conda run --prefix "${SCIF_APPROOT}/conda" pip install --upgrade-strategy only-if-needed -r "${PWD}/src/requirements.txt"
-    python3 -m venv --system-site-packages .venv
+    python3.7 -m venv --system-site-packages .venv
     .venv/bin/python3 -m pip install --upgrade --no-cache-dir pip
     .venv/bin/python3 -m pip install --upgrade --no-cache-dir -r "${PWD}/src/requirements.txt"
 

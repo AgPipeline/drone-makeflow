@@ -37,4 +37,6 @@ echo "{" >"/scif/apps/src/jx-args.json"
   echo "}"
 } >>"/scif/apps/src/jx-args.json"
 
+echo "JSON Args file:"
+cat "/scif/apps/src/jx-args.json"
 scif run soilmask_ratio

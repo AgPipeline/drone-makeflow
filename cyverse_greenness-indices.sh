@@ -1,6 +1,8 @@
 #!/bin/bash
 
 WORKING_FOLDER=$(pwd)
+# List of folders to exclude from the results
+EXCLUDED_FOLDERS=("/logs/")
 
 # Get the file JSON list
 if [[ "${1}" == "" ]]; then
@@ -9,19 +11,36 @@ if [[ "${1}" == "" ]]; then
 fi
 FILE_LIST_JSON="${1}"
 
-# No options supported at this time
+# No command line options are supported at this time
 OPTIONS=""
+
+# Look for YAML files to use as metadata
+while IFS= read -r -d '' ONE_FILE; do
+  case "${ONE_FILE: -4}" in
+    ".yml")
+      OPTIONS="${OPTIONS} --metadata ${ONE_FILE}"
+      ;;
+  esac
+  case "${ONE_FILE: -5}" in
+    ".yaml")
+      OPTIONS="${OPTIONS} --metadata ${ONE_FILE}"
+      ;;
+  esac
+done < <(find "${WORKING_FOLDER}" -maxdepth 1 -type f -print0)
 
 # Copy the json file to the correct place
 cp "${FILE_LIST_JSON}" "/scif/apps/src/greenness-indices_files.json"
 
 echo "Calculating greenness indices using files listed in '${FILE_LIST_JSON}'"
+echo "  using options: ${OPTIONS}"
 echo "{" >"/scif/apps/src/jx-args.json"
 {
   echo "\"GREENNESS_INDICES_OPTIONS\": \"${OPTIONS}\""
   echo "}"
 } >>"/scif/apps/src/jx-args.json"
 
+echo "JSON Args file:"
+cat "/scif/apps/src/jx-args.json"
 scif run greenness-indices
 
 # Copy the CSV files to the working folder as output
@@ -29,7 +48,17 @@ FOUND_FILES=()
 while IFS= read -r -d '' ONE_FILE; do
   case "${ONE_FILE: -4}" in
     ".csv")
-      FOUND_FILES+=("${ONE_FILE}")
+      # Look for the excluded folders
+      EXCLUDE_THIS_FILE="false"
+      for i in "${EXCLUDED_FOLDERS[@]}"; do
+        if [[ "${ONE_FILE}" == *"${i}"* ]]; then
+          EXCLUDE_THIS_FILE="true"
+          break
+        fi
+      done
+      if [ "${EXCLUDE_THIS_FILE}" == "false" ]; then
+        FOUND_FILES+=("${ONE_FILE}")
+      fi
       ;;
   esac
 done < <(find "${WORKING_FOLDER}" -type f -print0)
