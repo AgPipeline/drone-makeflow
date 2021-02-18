@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [betydb2geojson, shp2geojson, soilmask, soilmask_ratio, plotclip, find_files2json, canopycover, merge_csv, greenness-indices]
+        app: [betydb2geojson]
         include:
           - app: betydb2geojson
             parameter_json: .github/workflows/app_testing.json
