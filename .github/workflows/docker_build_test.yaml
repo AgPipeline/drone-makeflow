@@ -110,13 +110,13 @@ jobs:
         run: docker build -t scif_test:latest ./
       - name: Save docker image
         if: ${{ matrix.app }} == "betydb2geojson"
-        run: docker save soilmask_test:latest | gzip -7 -c - > makeflow_test_image.tar.gz
+        run: docker save scif_test:latest | gzip -7 -c - > scif_test_image.tar.gz
       - name: Upload docker image
         if: ${{ matrix.app }} == "betydb2geojson"
         uses: actions/upload-artifact@v2
         with:
-          name: makeflow_test_image
-          path: makeflow_test_image.tar.gz
+          name: scif_test_image
+          path: scif_test_image.tar.gz
       - name: Create folders
         run: |
              mkdir outputs
