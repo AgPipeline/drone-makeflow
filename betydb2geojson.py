@@ -159,7 +159,7 @@ def convert() -> None:
 
     # Get the list of sites (plots) from the JSON returned
     site_filter = args.filter
-    if len(site_filter):
+    if site_filter:
         site_filter = ' '.join(site_filter)
     experiments_json = query_betydb_experiments(args.betydb_url)
     sites = get_experiment_site_geometries(experiments_json, site_filter)
