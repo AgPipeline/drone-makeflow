@@ -23,13 +23,78 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [betydb2geojson]
+        app: [betydb2geojson, shp2geojson, soilmask, soilmask_ratio, plotclip, find_files2json, canopycover, merge_csv, greenness-indices]
         include:
           - app: betydb2geojson
             parameter_json: .github/workflows/app_testing.json
-            test_data_tar_gz: https://de.cyverse.org/dl/d/2FB75B8C-E361-489A-8331-B1B6C7697730/ci_docker_test_data_2.tar.gz
+            test_data_tar_gz: https://de.cyverse.org/dl/d/2FB75B8C-E361-489A-8331-B1B6C7697730/ci_docker_test_data_4.tar.gz
             test_results: if [[ -f "outputs/plots.geojson" ]]; then echo "Test betydb2geojson success"; exit 0; else echo "App failed - betydb2geojson"; exit 1; fi;
-            test_results_quality: if [[ "$(diff --ignore-all-space './test_data/plots_betydb.geojson' './outputs/plots.geojson')" == "" ]]; then echo "Test betydb2json content matches expected"; exit 0; else echo "App failed - betydb2json contents mismatch from test_data/plots_betydb.geojson"; exit 1; fi;
+            test_results_quality: ./tests/compare_geojson.py './test_data/plots_betydb.geojson' './outputs/plots.geojson')
+          - app: shp2geojson
+            tar_gz_file: https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz
+            parameter_json: .github/workflows/app_testing.json
+            test_data_tar_gz: https://de.cyverse.org/dl/d/3E5DAA36-3966-4511-A183-8813FAF76C88/ci_docker_test_data_4.tar.gz
+            test_results: if [[ -f "outputs/plots.geojson" ]]; then echo "Test shp2geojson success"; exit 0; else echo "App failed - shp2geojson"; exit 1; fi;
+            test_results_quality: ./tests/compare_geojson.py './test_data/plots_shapefile.geojson' './outputs/plots.geojson')
+          - app: soilmask
+            tar_gz_file: https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz
+            parameter_json: .github/workflows/app_testing.json
+            test_data_tar_gz: https://de.cyverse.org/dl/d/3E5DAA36-3966-4511-A183-8813FAF76C88/ci_docker_test_data_4.tar.gz
+            test_results: if [[ -f "outputs/orthomosaicmask.tif" ]]; then echo "Test soilmask success"; exit 0; else echo "App failed - soilmask"; exit 1; fi;
+            test_results_quality: python3 tests/compare_image_pixels.py './test_data/orthomosaicmask.tif' './outputs/orthomosaicmask.tif'
+          - app: soilmask_ratio
+            tar_gz_file: https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz
+            parameter_json: .github/workflows/app_testing.json
+            test_data_tar_gz: https://de.cyverse.org/dl/d/3E5DAA36-3966-4511-A183-8813FAF76C88/ci_docker_test_data_3.tar.gz
+            test_results: if [[ -f "outputs/orthomosaicmask.tif" ]]; then echo "Test soilmask ratio success"; exit 0; else echo "App failed - soilmask_ratio"; exit 1; fi;
+            test_results_quality: python3 tests/compare_image_pixels.py './test_data/orthomosaicmask_ratio.tif' './outputs/orthomosaicmask.tif'
+          - app: plotclip
+            tar_gz_file: https://de.cyverse.org/dl/d/BC328D44-621B-41B6-A662-0CD7F2D4C0EE/ci_plotclip_test_data.tar.gz
+            parameter_json: .github/workflows/app_testing.json
+            test_data_tar_gz: https://de.cyverse.org/dl/d/2FB75B8C-E361-489A-8331-B1B6C7697730/ci_docker_test_data_2.tar.gz
+            test_results: chmod +x .github/workflows/check_plotclip_app.sh && ./.github/workflows/check_plotclip_app.sh ${PWD}/outputs
+            test_results_quality: python3 './.github/workflows/check_plotclip_details.py' ./test_data ./outputs
+          - app: find_files2json
+            tar_gz_file: https://de.cyverse.org/dl/d/ADBEEBDE-E000-4FCB-AE74-62047ED4DD8E/ci_find_files2json_test_data.tar.gz
+            parameter_json: .github/workflows/app_testing.json
+            test_data_tar_gz: https://de.cyverse.org/dl/d/2FB75B8C-E361-489A-8331-B1B6C7697730/ci_docker_test_data_2.tar.gz
+            test_results: if [[ -f "outputs/canopy_cover_files.json" ]]; then echo "Test find_files2json success"; exit 0; else echo "App failed - find_files2json"; exit 1; fi;
+            test_results_quality: |
+              echo "JSON file contents"
+              cat './outputs/canopy_cover_files.json'
+              if [[ "$(diff --ignore-all-space './test_data/canopy_cover_files.json' './outputs/canopy_cover_files.json')" == "" ]]; then echo "Test find_files2json content matches expected"; exit 0; else echo "App failed - find_files2json contents mismatch from test_data/canopy_cover_files.json"; exit 1; fi;
+          - app: canopycover
+            tar_gz_file: https://de.cyverse.org/dl/d/A3C6E964-B01A-49B1-B018-08E1DD248EB2/ci_canopycover_test_data.tar.gz
+            parameter_json: .github/workflows/app_testing.json
+            extra_docker_options: -v `pwd`/canopy_cover_files.json:/scif/apps/src/canopy_cover_files.json
+            test_data_tar_gz: https://de.cyverse.org/dl/d/2FB75B8C-E361-489A-8331-B1B6C7697730/ci_docker_test_data_2.tar.gz
+            test_results: |
+              chmod +x .github/workflows/check_canopycover_app.sh
+              ./.github/workflows/check_canopycover_app.sh ${PWD}
+            test_results_quality: |
+              curl -sfL https://raw.githubusercontent.com/aswinkarthik/csvdiff/master/install.sh | sh -s -- -b ./csvdiff
+              chmod +x './.github/workflows/check_csv_details.sh'
+              ./.github/workflows/check_csv_details.sh 'canopycover.csv' test_data '.'
+          - app: greenness-indices
+            tar_gz_file: https://de.cyverse.org/dl/d/6EB55DDF-DC57-4BC9-BCF5-F668EF9D0B10/ci_greenness_indices_test_data.tar.gz
+            parameter_json: .github/workflows/app_testing.json
+            extra_docker_options: -v `pwd`/greenness_indices_files.json:/scif/apps/src/greenness-indices_files.json
+            test_data_tar_gz: https://de.cyverse.org/dl/d/3E5DAA36-3966-4511-A183-8813FAF76C88/ci_docker_test_data_3.tar.gz
+            test_results: chmod +x .github/workflows/check_greenness_indices_app.sh && ./.github/workflows/check_greenness_indices_app.sh ${PWD}
+            test_results_quality: |
+              curl -sfL https://raw.githubusercontent.com/aswinkarthik/csvdiff/master/install.sh | sh -s -- -b ./csvdiff
+              chmod +x './.github/workflows/check_csv_details.sh'
+              ./.github/workflows/check_csv_details.sh 'rgb_plot.csv' test_data '.' '1' '9,10,11,12,13,14,15,16,17,18'
+          - app: merge_csv
+            tar_gz_file: https://de.cyverse.org/dl/d/7EB4E7EF-9635-483C-8C61-3CE9806B8906/ci_merge_csv_test_data_2.tar.gz
+            parameter_json: .github/workflows/app_testing.json
+            test_data_tar_gz: https://de.cyverse.org/dl/d/2FB75B8C-E361-489A-8331-B1B6C7697730/ci_docker_test_data_2.tar.gz
+            test_results: if [[ "$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')" == "58" ]]; then echo "Test merge_csv success"; exit 0; else echo "App failed - merge_csv (actual \"$(cat outputs/canopycover.csv|wc -l| tr -d '[:space:]')\")"; exit 1; fi;
+            test_results_quality: |
+              echo "CSV file contents"
+              cat './outputs/canopycover.csv'
+              curl -sfL https://raw.githubusercontent.com/aswinkarthik/csvdiff/master/install.sh | sh -s -- -b ./csvdiff
+              if [[ "$(./csvdiff/csvdiff './test_data/canopycover.csv' './outputs/canopycover.csv' --columns 1 --primary-key 3 --format rowmark 2>&1 | grep -A 5 'Rows:' | wc -l  | tr -d '[:space:]')" == "1" ]]; then echo "Test merge_csv content matches expected"; exit 0; else echo "App failed - merge_csv contents mismatch from test_data/canopycover.csv"; exit 1; fi;
     steps:
       - name: Install Python 3.8
         uses: actions/setup-python@v2
@@ -43,15 +108,6 @@ jobs:
         uses: actions/checkout@v2
       - name: Build docker image
         run: docker build -t scif_test:latest ./
-      - name: Save docker image
-        if: ${{ matrix.app }} == "betydb2geojson"
-        run: docker save scif_test:latest | gzip -7 -c - > scif_test_image.tar.gz
-      - name: Upload docker image
-        if: ${{ matrix.app }} == "betydb2geojson"
-        uses: actions/upload-artifact@v2
-        with:
-          name: scif_test_image
-          path: scif_test_image.tar.gz
       - name: Create folders
         run: |
              mkdir outputs
