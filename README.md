@@ -1,4 +1,4 @@
-[![license](https://img.shields.io/badge/license-BSD%203-green?logo=Open-Source-Initiative)](https://github.com/AgPipeline/drone-makeflow/blob/master/LICENSE)
+[![license](https://img.shields.io/badge/license-BSD%203-green?logo=Open-Source-Initiative)](https://github.com/AgPipeline/drone-makeflow/blob/main/LICENSE)
 
 [![testing](https://github.com/AgPipeline/drone-makeflow/workflows/Enforcing%20shell%20script%20tests/badge.svg)](https://github.com/AgPipeline/drone-makeflow/actions?query=workflow%3A%22Enforcing+shell+script+tests%22)
 [![testing](https://github.com/AgPipeline/drone-makeflow/workflows/Enforcing%20tests/badge.svg)](https://github.com/AgPipeline/drone-makeflow/actions?query=workflow%3A%22Enforcing+tests%22)
@@ -465,7 +465,7 @@ However, with sibling containers the second container requires administrator ("r
 There are automated test suites that are run via [GitHub Actions](https://docs.github.com/en/actions).
 In this section we provide details on these tests so that they can be run locally as well.
 
-These tests are run when a [Pull Request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests) or [push](https://docs.github.com/en/github/using-git/pushing-commits-to-a-remote-repository) occurs on the `develop` or `master` branches.
+These tests are run when a [Pull Request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests) or [push](https://docs.github.com/en/github/using-git/pushing-commits-to-a-remote-repository) occurs on the `develop` or `main` branches.
 There may be other instances when these tests are automatically run, but these are considered the mandatory events and branches.
 
 ### PyLint and PyTest <a name="pylint_pytest" />
@@ -478,7 +478,7 @@ Please also refer to our [Coding Standards](https://github.com/AgPipeline/Organi
 
 The following command can be used to fetch the `pylint.rc` file:
 ```bash
-wget https://raw.githubusercontent.com/AgPipeline/Organization-info/master/pylint.rc
+wget https://raw.githubusercontent.com/AgPipeline/Organization-info/main/pylint.rc
 ```
 
 Assuming the `pylint.rc` file is in the current folder, the following command can be used against the `betydb2geojson.py` file:
