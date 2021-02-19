@@ -4,9 +4,10 @@
   },
   "rules": [
      {
-       "command": "${SCIF_APPROOT}/.venv/bin/python3 ${BETYDB2JSON_SCRIPT} --betydb_url \"${BETYDB_URL}\" --outfile \"${OUTPUT_FILE}\" ",
+       "command": "${SCIF_APPROOT}/.venv/bin/python3 ${BETYDB2JSON_SCRIPT} ${BETYDB_OPTIONS} --betydb_url \"${BETYDB_URL}\" --outfile \"${OUTPUT_FILE}\" ",
        "environment": {
          "BETYDB2JSON_SCRIPT": SCRIPT_PATH,
+         "BETYDB_OPTIONS": BETYDB_OPTIONS,
          "BETYDB_URL": BETYDB_URL,
          "OUTPUT_FILE": PLOT_GEOMETRY_FILE,
        },
