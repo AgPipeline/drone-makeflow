@@ -45,11 +45,11 @@ jobs:
           - app: soilmask_ratio
             tar_gz_file: https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz
             parameter_json: .github/workflows/app_testing.json
-            test_data_tar_gz: https://de.cyverse.org/dl/d/3E5DAA36-3966-4511-A183-8813FAF76C88/ci_docker_test_data_3.tar.gz
+            test_data_tar_gz: https://de.cyverse.org/dl/d/7AE4F4C8-5F40-4B56-91F3-127678EC58C0/ci_docker_test_data_4.tar.gz
             test_results: if [[ -f "outputs/orthomosaicmask.tif" ]]; then echo "Test soilmask ratio success"; exit 0; else echo "App failed - soilmask_ratio"; exit 1; fi;
             test_results_quality: python3 tests/compare_image_pixels.py './test_data/orthomosaicmask_ratio.tif' './outputs/orthomosaicmask.tif'
           - app: plotclip
-            tar_gz_file: https://de.cyverse.org/dl/d/BC328D44-621B-41B6-A662-0CD7F2D4C0EE/ci_plotclip_test_data.tar.gz
+            tar_gz_file: https://de.cyverse.org/dl/d/BC328D44-621B-41B6-A662-0CD7F2D4C0EE/ci_plotclip_test_data_1.tar.gz
             parameter_json: .github/workflows/app_testing.json
             test_data_tar_gz: https://de.cyverse.org/dl/d/7AE4F4C8-5F40-4B56-91F3-127678EC58C0/ci_docker_test_data_4.tar.gz
             test_results: chmod +x .github/workflows/check_plotclip_app.sh && ./.github/workflows/check_plotclip_app.sh ${PWD}/outputs
