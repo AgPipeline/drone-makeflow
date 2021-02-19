@@ -22,8 +22,9 @@ def get_arguments() -> argparse.Namespace:
     parser.add_argument('-u', '--betydb_url',
                         help='the URL of BETYdb instance to query (defaults to ' + ENV_BETYDB_URL_NAME +
                         ' environment variable)', metavar='str', type=str, default=os.getenv('BETYDB_URL'))
-    parser.add_argument('-f', '--filter', help='partial or full string filter for sitename values returned',
-                        metavar='str', type=str, default='')
+    parser.add_argument('-f', '--filter', nargs='*',
+                        help='partial or full string filter for sitename values returned', metavar='str',
+                        type=str, default='')
     parser.add_argument('-o', '--outfile', help='the output file to write GeoJSON to', metavar='FILE',
                         type=argparse.FileType('wt'),
                         default='out.txt')
@@ -157,8 +158,11 @@ def convert() -> None:
         raise RuntimeError("An output file must be specified to receive the GeoJSON plot information")
 
     # Get the list of sites (plots) from the JSON returned
+    site_filter = args.filter
+    if site_filter:
+        site_filter = ' '.join(site_filter)
     experiments_json = query_betydb_experiments(args.betydb_url)
-    sites = get_experiment_site_geometries(experiments_json, args.filter)
+    sites = get_experiment_site_geometries(experiments_json, site_filter)
     if not sites:
         raise RuntimeError("No plots were found in the data returned from BETYdb")
 

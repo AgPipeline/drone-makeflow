@@ -1,0 +1,43 @@
+%appinstall greenness-indices
+    # Install Makeflow and other dependencies
+    python3.8 -m venv --system-site-packages .venv
+    .venv/bin/python3 -m pip install --upgrade --no-cache-dir pip
+
+    # Download plot-base-rgb code
+    wget -O plot_base_rgb.tar.gz https://github.com/AgPipeline/plot-base-rgb/archive/v1.8.tar.gz
+    tar xvf plot_base_rgb.tar.gz
+    mv plot-base-rgb-1.8 src
+    .venv/bin/python3 -m pip install --upgrade --no-cache-dir -r "${PWD}/src/requirements.txt"
+
+    # Download greenness-indices code. In the future use pip/conda install.
+    wget -O greenness_indices.tar.gz https://github.com/AgPipeline/transformer-rgb-indices/archive/v1.3.tar.gz
+    tar xvf greenness_indices.tar.gz
+    cp -r transformer-rgb-indices-1.3/* src/
+    rm -r transformer-rgb-indices-1.3
+    .venv/bin/python3 -m pip install --upgrade --no-cache-dir -r "${PWD}/src/requirements.txt"
+    echo "Removing unneeded files"
+    rm -rf --verbose src/test_data src/tests src/.github
+
+    # Add example Docker command to SCIF app help section
+    if [ -n $DOCKER_IMAGE ]; then
+        echo "\n\nExample Docker command: docker run $DOCKER_IMAGE run greenness-indices\n" >> "${PWD}/scif/runscript.help"
+    fi
+
+    # Generate remainder of SCIF app help section by running main script
+    .venv/bin/python3 src/transformer.py --help >> "${PWD}/scif/runscript.help"
+
+%apprun greenness-indices
+    /cctools/bin/makeflow \
+        --jx \
+        --jx-args="/scif/apps/src/jx-args.json" \
+        --jx-args="/scif/apps/src/greenness-indices_files.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
+        ${1} \
+        "/scif/apps/src/greenness-indices_workflow.jx"
+
+%apphelp greenness-indices
+    This app provides an entrypoint to the greenness-indices tool

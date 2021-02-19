@@ -1,0 +1,37 @@
+%appinstall soilmask_ratio
+    # Download soilmask ratio code. In the future use pip/conda install.
+    wget -O soilmask_ratio.tar.gz https://github.com/AgPipeline/transformer-soilmask-by-ratio/archive/v1.1.tar.gz
+    tar xvzf soilmask_ratio.tar.gz
+    mv transformer-soilmask-by-ratio-1.1 src
+    echo "Removing unneeded files"
+    rm -rf --verbose src/test_data src/tests src/.github src/figures
+
+    # Install Makeflow and other dependencies
+    python3.8 -m venv --system-site-packages .venv
+    .venv/bin/python3 -m pip install --upgrade --no-cache-dir pip
+    .venv/bin/python3 -m pip install --upgrade --no-cache-dir -r "${PWD}/src/requirements.txt"
+    .venv/bin/python3 -m pip install --upgrade --no-cache-dir scikit-image
+    .venv/bin/python3 -m pip install --upgrade --no-cache-dir opencv-python certifi
+
+    # Add example Docker command to SCIF app help section
+    if [ -n $DOCKER_IMAGE ]; then
+        echo "\n\nExample Docker command: docker run $DOCKER_IMAGE run soilmask_ratio\n" >> "${PWD}/scif/runscript.help"
+    fi
+
+    # Generate remainder of SCIF app help section by running main script
+    .venv/bin/python3 src/transformer.py --help >> "${PWD}/scif/runscript.help"
+
+%apprun soilmask_ratio
+    /cctools/bin/makeflow  \
+        --jx \
+        --jx-args="/scif/apps/src/jx-args.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
+        ${1} \
+        "/scif/apps/src/soilmask_ratio_workflow.jx"
+
+%apphelp soilmask_ratio
+    This app provides an entrypoint to the soilmask_ratio tool

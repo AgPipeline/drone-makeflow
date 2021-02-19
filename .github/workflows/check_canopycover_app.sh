@@ -17,7 +17,7 @@ if [[ "${#EXPECTED_CSV[@]}" == "${EXPECTED_NUM_CANOPYCOVER_CSV}" ]]; then
   echo "Found expected number of canopycover.csv files: ${EXPECTED_NUM_CANOPYCOVER_CSV}"
 else
   echo "Expected ${EXPECTED_NUM_CANOPYCOVER_CSV} canopycover.csv files but found ${#EXPECTED_CSV[@]}"
-  for i in $(seq 0 $((${#EXPECTED_CSV[@]} - 1))); do
+  for i in ${#EXPECTED_CSV[@]}; do
     echo "$((i + 1)): ${EXPECTED_CSV[$i]}"
   done
   exit 20

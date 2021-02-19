@@ -1,0 +1,23 @@
+%appinstall odm
+
+%apprun odm
+    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v ${INPUT_VOLUME}:${INPUT_IMAGE_FOLDER} -v ${OUTPUT_VOLUME}:${OUTPUT_FOLDER} --user root agdrone/transformer-opendronemap:2.2 "${@}"
+
+%apphelp odm
+    This apps runs OpenDroneMap.
+
+    With Docker:
+
+    DATA_DIR=$(pwd)/test/data
+    rm -rf $DATA_DIR
+    mkdir -p "${DATA_DIR}"
+    mkdir -p "$DATA_DIR/odm/images"
+    cp $(pwd)/test/images/*.JPG "$DATA_DIR/odm/images/"
+    rm -r "${OUTPUT_DIR}/odm_*" "${OUTPUT_DIR}/opensfm"
+    docker run -it --rm \
+        -v "${DATA_DIR}:/scif/data" \
+        agpipeline/scif-drone-pipeline:1.0 run odm
+
+    Or directly with scif:
+
+    scif run odm
