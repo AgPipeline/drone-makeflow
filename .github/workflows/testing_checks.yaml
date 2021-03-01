@@ -25,7 +25,7 @@ jobs:
           include:
             - app: pylint
               pip_installs: pylint pytest Pillow
-              test_command: (cat action_pylint_files.txt | xargs python3 -m pylint --rcfile ./pylint.rc) && (find ./tests | grep '\.py' | PYTHONPATH=${PWD} xargs python3 -m pylint -d duplicate-code --rcfile ./pylint.rc)
+              test_command: (cat action_pylint_files.txt | xargs python3 -m pylint --rcfile ./pylint.rc) && (PP=${PWD} && pushd ./tests && find . | grep '\.py' | PYTHONPATH=${PP} xargs python3 -m pylint -d duplicate-code --rcfile ../pylint.rc && popd )
             - app: pytest
               pip_installs: pytest pytest-cov requests
               test_command: python3 -m pytest --cov=. -rpP --cov-report=xml
@@ -61,7 +61,7 @@ jobs:
         run: 'python3 -m pip install --upgrade --no-cache-dir numpy wheel requests'
       - name: Install Python pygdal
         shell: bash
-        run: 'python3 -m pip install --no-cache-dir pygdal==2.2.3.5'
+        run: 'python3 -m pip install --no-cache-dir pygdal==3.0.4.*'
       - name: Install system requirements from source
         shell: bash
         run: 'if [ -s "packages.txt" ]; then (cat packages.txt | sudo xargs apt-get install -y --no-install-recommends) || (echo "Failed to install additional packages" && exit 1); fi'
