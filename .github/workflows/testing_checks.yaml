@@ -26,7 +26,7 @@ jobs:
           include:
             - app: pylint
               pip_installs: pylint pytest Pillow
-              test_command: (cat action_pylint_files.txt | xargs python3 -m pylint --rcfile ./pylint.rc) && (PP=${PWD} && pushd ./tests && find . | grep '\.py' | PYTHONPATH=${PP} xargs python3 -m pylint -d duplicate-code --rcfile ./pylint.rc && popd )
+              test_command: (cat action_pylint_files.txt | xargs python3 -m pylint --rcfile ./pylint.rc) && (PP=${PWD} && pushd ./tests && find . | grep '\.py' | PYTHONPATH=${PP} xargs python3 -m pylint -d duplicate-code --rcfile ../pylint.rc && popd )
             - app: pytest
               pip_installs: pytest pytest-cov requests
               test_command: python3 -m pytest --cov=. -rpP --cov-report=xml
