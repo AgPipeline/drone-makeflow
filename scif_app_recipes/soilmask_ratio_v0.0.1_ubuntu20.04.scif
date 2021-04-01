@@ -4,7 +4,7 @@
     tar xvzf soilmask_ratio.tar.gz
     mv transformer-soilmask-by-ratio-1.1 src
     echo "Removing unneeded files"
-    rm -rf --verbose src/test_data src/tests src/.github src/figures
+    rm -rf --verbose src/test_data src/tests src/.github src/figures soilmask_ratio.tar.gz
 
     # Install Makeflow and other dependencies
     python3.8 -m venv --system-site-packages .venv
