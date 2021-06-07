@@ -4,7 +4,7 @@
     tar xvf canopycover.tar.gz
     mv transformer-canopycover-1.7 src
     echo "Removing unneeded files"
-    rm -rf --verbose src/test_data src/tests src/.github
+    rm -rf --verbose src/test_data src/tests src/.github canopycover.tar.gz
 
     # Install Makeflow and other dependencies
     python3.8 -m venv --system-site-packages .venv
