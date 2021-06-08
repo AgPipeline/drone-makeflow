@@ -4,8 +4,7 @@
     tar xvf plotclip.tar.gz
     mv transformer-plotclip-2.7 src
     echo "Removing unneeded files"
-    rm -rf --verbose src/test_data src/tests src/.github
-    rm plotclip.tar.gz
+    rm -rf --verbose src/test_data src/tests src/.github plotclip.tar.gz
 
     # Install Makeflow and other dependencies
     python3.8 -m venv --system-site-packages .venv
