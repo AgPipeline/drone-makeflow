@@ -51,6 +51,7 @@ def test_parameters():
     # Check specifying files as the parameters
     filename = 'empty.txt'
     try:
+        # pylint: disable=consider-using-with
         open(filename, 'w').close()
     except OSError as exc:
         if exc.errno != errno.EEXIST:
