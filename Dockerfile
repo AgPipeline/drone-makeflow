@@ -6,6 +6,7 @@ WORKDIR /
 # Install Python
 RUN apt-get update -y \
     && apt-get install --no-install-recommends -y \
+    git \
     python3.8 \
     python3-pip \
     && ln -s /usr/bin/python3 /usr/bin/python \
@@ -138,6 +139,11 @@ RUN scif install /opt/greenness_v0.0.1_ubuntu20.04.scif
 COPY *.jx *.py *.sh jx-args.json /scif/apps/src/
 RUN chmod a+x /scif/apps/src/*.sh
 RUN chmod a+x /scif/apps/src/*.py
+
+COPY ./scif_app_recipes/git_v0.0.1_ubuntu20.04.scif /opt/
+RUN scif install /opt/git_v0.0.1_ubuntu20.04.scif
+# Silence a git warning
+RUN git config --global advice.detachedHead false
 
 COPY . /home/extractor/drone-makeflow
 RUN chmod a+x /home/extractor/drone-makeflow

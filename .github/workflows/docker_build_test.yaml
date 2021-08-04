@@ -78,12 +78,12 @@ jobs:
             tar_gz_file: https://de.cyverse.org/dl/d/6EB55DDF-DC57-4BC9-BCF5-F668EF9D0B10/ci_greenness_indices_test_data.tar.gz
             parameter_json: .github/workflows/app_testing.json
             extra_docker_options: -v `pwd`/greenness_indices_files.json:/scif/apps/src/greenness-indices_files.json
-            test_data_tar_gz: https://de.cyverse.org/dl/d/3E5DAA36-3966-4511-A183-8813FAF76C88/ci_docker_test_data_3.tar.gz
+            test_data_tar_gz: https://data.cyverse.org/dav-anon/iplant/projects/aes/cct/diag/ci/ci_docker_test_data_5.tar.gz
             test_results: chmod +x .github/workflows/check_greenness_indices_app.sh && ./.github/workflows/check_greenness_indices_app.sh ${PWD}
             test_results_quality: |
               curl -sfL https://raw.githubusercontent.com/aswinkarthik/csvdiff/master/install.sh | sh -s -- -b ./csvdiff
               chmod +x './.github/workflows/check_csv_details.sh'
-              ./.github/workflows/check_csv_details.sh 'rgb_plot.csv' test_data '.' '1' '9,10,11,12,13,14,15,16,17,18'
+              ./.github/workflows/check_csv_details.sh 'rgb_plot.csv' test_data '.' '1' '7,8,9,10,11,12,13,14,15,16'
           - app: merge_csv
             tar_gz_file: https://de.cyverse.org/dl/d/7EB4E7EF-9635-483C-8C61-3CE9806B8906/ci_merge_csv_test_data_2.tar.gz
             parameter_json: .github/workflows/app_testing.json

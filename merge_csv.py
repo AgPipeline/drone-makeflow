@@ -102,12 +102,13 @@ def get_arg_parser() -> argparse.ArgumentParser:
 
     parser = argparse.ArgumentParser('CSV File discovery and merging')
 
-    parser.add_argument('--no_header', '-n', action='store_const', default=False, const=True,
+    parser.add_argument('--no-header', '-n', action='store_const', default=False, const=True,
                         help='source CSV files do not have a header')
-    parser.add_argument('--header_count', '-c', type=int, default=1, help='number of header lines in files')
+    parser.add_argument('--header-count', '-c', type=int, default=1, help='number of header lines in files')
     parser.add_argument('--filter', '-f', help='comma separated list of files to filter in')
     parser.add_argument('--ignore', '-i', help='comma separated list of files to ignore')
     parser.add_argument('--ignore-dirs', help='comma separated list of directory names to ignore (eg: bad_folder, path/ignore)')
+    parser.add_argument('--output-file', help='merge all CSV files into this one file')
     parser.add_argument('source_folder', type=dir_type, help='the folder to search in')
     parser.add_argument('target_folder', type=dir_type, help='folder for combined CSV files')
 
@@ -144,7 +145,8 @@ def merge():
                 continue
 
             # Get the target path and see if the source and destination are the same
-            dest_path = os.path.join(args.target_folder, os.path.basename(one_file))
+            dest_file = os.path.basename(one_file) if not args.output_file else args.output_file
+            dest_path = os.path.join(args.target_folder, dest_file)
             if dest_path.lower() == source_path.lower():
                 continue
 

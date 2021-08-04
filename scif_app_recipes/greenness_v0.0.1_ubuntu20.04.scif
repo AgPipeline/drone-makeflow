@@ -4,16 +4,16 @@
     .venv/bin/python3 -m pip install --upgrade --no-cache-dir pip
 
     # Download plot-base-rgb code
-    wget -O plot_base_rgb.tar.gz https://github.com/AgPipeline/plot-base-rgb/archive/v1.8.tar.gz
+    wget -O plot_base_rgb.tar.gz https://github.com/AgPipeline/plot-base-rgb/archive/v1.10.tar.gz
     tar xvf plot_base_rgb.tar.gz
-    mv plot-base-rgb-1.8 src
+    mv plot-base-rgb-1.10 src
     .venv/bin/python3 -m pip install --upgrade --no-cache-dir -r "${PWD}/src/requirements.txt"
 
     # Download greenness-indices code. In the future use pip/conda install.
-    wget -O greenness_indices.tar.gz https://github.com/AgPipeline/transformer-rgb-indices/archive/v1.3.tar.gz
+    wget -O greenness_indices.tar.gz https://github.com/AgPipeline/transformer-rgb-indices/archive/v1.4.tar.gz
     tar xvf greenness_indices.tar.gz
-    cp -r transformer-rgb-indices-1.3/* src/
-    rm -r transformer-rgb-indices-1.3
+    cp -r transformer-rgb-indices-1.4/* src/
+    rm -r transformer-rgb-indices-1.4
     .venv/bin/python3 -m pip install --upgrade --no-cache-dir -r "${PWD}/src/requirements.txt"
     echo "Removing unneeded files"
     rm -rf --verbose src/test_data src/tests src/.github plot_base_rgb.tar.gz greenness_indices.tar.gz

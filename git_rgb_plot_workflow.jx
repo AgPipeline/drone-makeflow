@@ -1,0 +1,25 @@
+{
+  "define": {
+     "GIT_SCRIPT": "/src/git_algo_rgb_plot.py",
+   },
+  "rules": [
+    {
+      "command": "${SCIF_APPROOT}/.venv/bin/python3 ${SCIF_APPS}/${SCRIPT_PATH} \"${GIT_REPO}\" \"${GIT_BRANCH}\" \"${INPUT_GEOTIFF}\" ${DOCKER_OPTIONS} --working_space \"${WORKING_FOLDER}\" ",
+      "environment": {
+        "SCRIPT_PATH": GIT_SCRIPT,
+        "GIT_REPO": GIT_RGB_PLOT_REPO,
+        "GIT_BRANCH": GIT_RGB_PLOT_BRANCH,
+        "INPUT_GEOTIFF": PLOT_INFO["FILE"],
+        "WORKING_FOLDER": PLOT_INFO["DIR"],
+        "DOCKER_OPTIONS": GIT_RGB_PLOT_OPTIONS,
+      },
+      "inputs": [
+        PLOT_INFO["FILE"]
+      ],
+      "outputs": [
+        PLOT_INFO["DIR"] + "/rgb_plot.csv",
+        PLOT_INFO["DIR"] + "/result.json"
+      ]
+    } for PLOT_INFO in FILE_LIST
+  ]
+}
