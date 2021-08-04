@@ -1,8 +1,8 @@
 %appinstall soilmask
     # Download soilmask code. In the future use pip/conda install.
-    wget -O soilmask.tar.gz https://github.com/AgPipeline/transformer-soilmask/archive/v2.3.tar.gz
+    wget -O soilmask.tar.gz https://github.com/AgPipeline/transformer-soilmask/archive/v2.4.tar.gz
     tar xvzf soilmask.tar.gz
-    mv transformer-soilmask-2.3 src
+    mv transformer-soilmask-2.4 src
     echo "Removing unneeded files"
     rm -rf --verbose src/test_data src/tests src/.github src/figures soilmask.tar.gz
 

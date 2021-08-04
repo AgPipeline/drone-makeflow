@@ -142,6 +142,8 @@ RUN chmod a+x /scif/apps/src/*.py
 
 COPY ./scif_app_recipes/git_v0.0.1_ubuntu20.04.scif /opt/
 RUN scif install /opt/git_v0.0.1_ubuntu20.04.scif
+# Silence a git warning
+RUN git config --global advice.detachedHead false
 
 COPY . /home/extractor/drone-makeflow
 RUN chmod a+x /home/extractor/drone-makeflow

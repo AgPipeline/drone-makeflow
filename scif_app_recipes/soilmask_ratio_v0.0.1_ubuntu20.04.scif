@@ -1,8 +1,8 @@
 %appinstall soilmask_ratio
     # Download soilmask ratio code. In the future use pip/conda install.
-    wget -O soilmask_ratio.tar.gz https://github.com/AgPipeline/transformer-soilmask-by-ratio/archive/v1.1.tar.gz
+    wget -O soilmask_ratio.tar.gz https://github.com/AgPipeline/transformer-soilmask-by-ratio/archive/v1.2.tar.gz
     tar xvzf soilmask_ratio.tar.gz
-    mv transformer-soilmask-by-ratio-1.1 src
+    mv transformer-soilmask-by-ratio-1.2 src
     echo "Removing unneeded files"
     rm -rf --verbose src/test_data src/tests src/.github src/figures soilmask_ratio.tar.gz
 
