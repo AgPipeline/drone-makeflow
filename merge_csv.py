@@ -19,9 +19,9 @@ def _merge_csv(source_path: str, target_path: str, has_headers: bool = True, hea
     skip_lines = header_count if has_headers and have_dest_file else 0
 
     # Read in the lines and append to the output file
-    with open(target_path, 'a') as out_file:
+    with open(target_path, 'a', encoding='utf-8') as out_file:
         print("Merging: ", source_path)
-        with open(source_path, 'r') as infile:
+        with open(source_path, 'r', encoding='utf-8') as infile:
             # Read in a line, return if everything was read and skip over headers
             one_line = infile.readline()
             while one_line:
