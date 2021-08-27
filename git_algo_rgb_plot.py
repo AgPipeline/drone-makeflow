@@ -42,14 +42,14 @@ def _check_install_packages(source_file: str, working_dir: str, requirements_fil
     # Check for a requirements file and try to install those packages
     _check_install_requirements(requirements_file)
 
-    with open(source_file, 'r') as in_file:
+    with open(source_file, 'r', encoding='utf-8') as in_file:
         all_lines = in_file.read()
 
     # Perform a simple check on imports
     check_file = os.path.join(working_dir, '__check_import.py')
     module_lines = []
     module_names = []
-    with open(check_file, 'w') as out_file:
+    with open(check_file, 'w', encoding='utf-8') as out_file:
         for one_line in all_lines:
             if one_line.startswith('import ') or one_line.startswith('from '):
                 out_file.write(one_line + '\n')
