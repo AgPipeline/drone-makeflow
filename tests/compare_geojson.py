@@ -150,9 +150,9 @@ def check_json(first_path: str, second_path: str) -> None:
         first_path: the path to the first file to compare
         second_path: the path to the second file to compare
     """
-    with open(first_path, 'r') as in_file:
+    with open(first_path, 'r', encoding='utf-8') as in_file:
         first = json.load(in_file)
-    with open(second_path, 'r') as in_file:
+    with open(second_path, 'r', encoding='utf-8') as in_file:
         second = json.load(in_file)
 
     # Loop through and compare the contents

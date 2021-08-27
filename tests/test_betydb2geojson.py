@@ -61,7 +61,7 @@ def test_command_line():
 
     assert os.path.isfile(OUTPUT_FILE)
 
-    with open(OUTPUT_FILE) as out_file:
+    with open(OUTPUT_FILE, encoding='utf-8') as out_file:
         file_data = json.load(out_file)
         for key in ['type', 'name', 'features']:
             assert key in file_data
