@@ -52,7 +52,7 @@ def test_parameters():
     filename = 'empty.txt'
     try:
         # pylint: disable=consider-using-with
-        open(filename, 'w').close()
+        open(filename, 'w', encoding='utf-8').close()
     except OSError as exc:
         if exc.errno != errno.EEXIST:
             raise
@@ -91,7 +91,7 @@ def test_simple():
         if not os.path.exists(one_subdir):
             os.makedirs(one_subdir)
         for one_file in test_filenames:
-            with open(os.path.join(one_subdir, one_file), 'w') as out_file:
+            with open(os.path.join(one_subdir, one_file), 'w', encoding='utf-8') as out_file:
                 csv_data = 'data %d, string %d' % (file_index, file_index)
                 out_file.write(csv_data)
                 saved_csv.append(csv_data)
@@ -105,7 +105,7 @@ def test_simple():
     total_found = 0
     for one_file in test_filenames:
         merge_file = os.path.join(work_dir, one_file)
-        with open(merge_file, 'r') as in_file:
+        with open(merge_file, 'r', encoding='utf-8') as in_file:
             one_line = in_file.readline().rstrip('\n')
             while one_line:
                 try:
