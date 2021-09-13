@@ -49,8 +49,6 @@ RUN apt-get update && \
         python3.8-dev \
         curl && \
     python3.8 -m pip install --upgrade --no-cache-dir \
-        setuptools && \
-    python3.8 -m pip install --upgrade --no-cache-dir \
         wheel && \
     python3.8 -m pip install --upgrade --no-cache-dir \
         influxdb matplotlib Pillow pip piexif python-dateutil pyyaml scipy utm numpy cryptography PDAL==2.3.6 && \
@@ -105,8 +103,7 @@ RUN apt-get update -y && \
 WORKDIR /
 
 FROM base as base_scif
-RUN python3.8 -m pip install --upgrade --no-cache-dir setuptools \
-    && python3.8 -m pip install --upgrade --no-cache-dir scif \
+RUN python3.8 -m pip install --upgrade --no-cache-dir scif \
     && echo "Finished install of scif"
 ENTRYPOINT ["scif"]
 
