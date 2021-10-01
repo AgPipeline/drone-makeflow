@@ -8,6 +8,7 @@ jobqueue:
   mem: "16GB"
   processes: 1
   cores: 8
+commands: /scif/apps/src/plantit-workflow.sh
 params:
   - name: Workflow to run # The options strings must be matched exactly in plantit-workflow.sh
     type: select
@@ -15,7 +16,12 @@ params:
       - Canopy Cover with normal soil masking
       - Canopy Cover with ratio soil masking
     default: Canopy Cover with normal soil masking
-commands: /home/extractor/plantit-workflow.sh
 input:
   path: /iplant/home/shared/aes/cct/diag/sample-data/canopycover_test_data
   kind: directory
+output:
+  exclude:
+    patterns:
+      - json
+    names:
+      - result.json
