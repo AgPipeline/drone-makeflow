@@ -1,0 +1,27 @@
+name: Drone Processing Pipeline Workflow
+author: Chris Schnaufer
+public: True                  # should this workflow be visible to other users of PlantIT?
+clone: False                  # should this workflow's repository be cloned to the deployment target before running?
+image: docker://agdrone/drone-workflow:1.2 # the Docker image your workflow's container(s) will be built from
+jobqueue:
+  time: "06:00:00"
+  mem: "16GB"
+  processes: 1
+  cores: 8
+commands: /scif/apps/src/plantit-workflow.sh
+params:
+  - name: Workflow to run # The options strings must be matched exactly in plantit-workflow.sh
+    type: select
+    options:
+      - Canopy Cover with normal soil masking
+      - Canopy Cover with ratio soil masking
+    default: Canopy Cover with normal soil masking
+input:
+  path: /iplant/home/shared/aes/cct/diag/sample-data/canopycover_test_data
+  kind: directory
+output:
+  exclude:
+    patterns:
+      - json
+    names:
+      - result.json
