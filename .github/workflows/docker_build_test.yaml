@@ -26,7 +26,7 @@ jobs:
         include:
           - app: betydb2geojson
             parameter_json: .github/workflows/app_testing.json
-            test_data_tar_gz: https://data.cyverse.org/dav-anon/iplant/projects/aes/cct/diag/ci/ci_docker_test_data_7.tar.gz
+            test_data_tar_gz: https://data.cyverse.org/dav-anon/iplant/projects/aes/cct/diag/ci/ci_docker_test_data_9.tar.gz
             test_results: if [[ -f "outputs/plots.geojson" ]]; then echo "Test betydb2geojson success"; exit 0; else echo "App failed - betydb2geojson"; exit 1; fi;
             test_results_quality: ./tests/compare_geojson.py './test_data/plots_betydb.geojson' './outputs/plots.geojson'
           - app: shp2geojson
