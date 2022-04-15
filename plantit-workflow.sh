@@ -12,7 +12,7 @@ echo "INPUT FOLDER ${INPUT}"
 echo "WORKING FOLDER ${WORKDIR}"
 
 # clone the repo
-cd /scif/apps/src
+cd /scif/apps/src || exit
 git init
 git remote add origin https://github.com/Chris-Schnaufer/drone-makeflow.git
 git pull origin main --allow-unrelated-histories
