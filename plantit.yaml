@@ -1,7 +1,7 @@
 name: Drone Processing Pipeline Workflow
 author: Chris Schnaufer
 public: False                 # should this workflow be visible to other users of PlantIT?
-image: docker://chrisatua/development:drone_makeflow # the Docker image your workflow's container(s) will be built from
+image: docker://agdrone/drone-workflow:1.3 # the Docker image your workflow's container(s) will be built from
 jobqueue:
   time: "06:00:00"
   mem: "16GB"
