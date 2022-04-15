@@ -11,6 +11,16 @@ ALGO_OPTIONS=""
 echo "INPUT FOLDER ${INPUT}"
 echo "WORKING FOLDER ${WORKDIR}"
 
+# clone the repo
+cd /scif/apps/src || exit
+git init
+git remote add origin https://github.com/Chris-Schnaufer/drone-makeflow.git
+git pull origin main --allow-unrelated-histories
+
+# update permissions for shell and python scripts
+chmod a+x /scif/apps/src/*.sh
+chmod a+x /scif/apps/src/*.py
+
 # Find the files we need or are optional
 IS_GEOJSON=false
 while IFS= read -r -d '' ONE_FILE; do
