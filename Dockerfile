@@ -104,6 +104,7 @@ WORKDIR /
 
 FROM base as base_scif
 RUN python3.8 -m pip install --upgrade --no-cache-dir scif \
+    && python3.8 -m pip install --upgrade --no-cache-dir setuptools \
     && echo "Finished install of scif"
 ENTRYPOINT ["scif"]
 
@@ -134,8 +135,10 @@ COPY ./scif_app_recipes/greenness_v0.0.1_ubuntu20.04.scif /opt/
 RUN scif install /opt/greenness_v0.0.1_ubuntu20.04.scif
 
 COPY *.jx *.py *.sh jx-args.json /scif/apps/src/
-RUN chmod a+x /scif/apps/src/*.sh
-RUN chmod a+x /scif/apps/src/*.py
+COPY plantit-workflow.sh /opt/dev/plantit-workflow.sh
+RUN chmod a+x /scif/apps/src/*.sh && \
+    chmod a+x /scif/apps/src/*.py && \
+    chmod a+x /opt/dev/plantit-workflow.sh
 
 COPY ./scif_app_recipes/git_v0.0.1_ubuntu20.04.scif /opt/
 RUN scif install /opt/git_v0.0.1_ubuntu20.04.scif
