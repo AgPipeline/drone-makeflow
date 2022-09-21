@@ -42,7 +42,7 @@ def other_contents_match(val1, val2, key: str) -> bool:
     if isinstance(val1, str):
         logging.debug("HACK: other HERE WE HAVE A STRING!")
         if val1 != val2:
-            logging.error('Strings don''t match for key "%s"', key)
+            logging.error('Strings don\'t match for key "%s"', key)
             logging.error('  1. %s', str(val1))
             logging.error('  2. %s', str(val2))
             return False
@@ -82,7 +82,7 @@ def other_contents_match(val1, val2, key: str) -> bool:
                 logging.debug("    hash2: %s", str(cur_hash))
             else:
                 if not other_contents_match(sub_val1, sub_val2, key):
-                    logging.error('Iterable contents index %d don''t match for key "%s"', idx, key)
+                    logging.error('Iterable contents index %d don\'t match for key "%s"', idx, key)
                     logging.error('  1. %s', (str(sub_val1)))
                     logging.error('  2. %s', (str(sub_val2)))
                     return False
@@ -90,7 +90,7 @@ def other_contents_match(val1, val2, key: str) -> bool:
         # Check any hashes we may have
         for idx, _ in enumerate(hash1):
             if not hash1[idx] in hash2:
-                logging.error('Hashed iterable at index %d isn''t matched for key "%s"', hash1_src[idx][0], key)
+                logging.error('Hashed iterable at index %d isn\'t matched for key "%s"', hash1_src[idx][0], key)
                 logging.error('  %s', hash1_src[idx][1])
                 return False
         hash2_diff = list(set(hash2) - set(hash1))
