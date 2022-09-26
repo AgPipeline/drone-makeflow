@@ -60,7 +60,7 @@ def query_betydb_experiments(betydb_url: str = None) -> dict:
     url = betydb_url.rstrip('/') + '/api/v1/experiments'
     params = {'associations_mode': 'full_info', 'limit': 'none'}
 
-    req = requests.get(url, params=params)
+    req = requests.get(url, params=params, timeout=300)
     req.raise_for_status()
     return req.json()
 
