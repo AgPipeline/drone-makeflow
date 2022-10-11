@@ -6,7 +6,7 @@ jobqueue:
   time: "06:00:00"
   mem: "16GB"
   processes: 1
-  cores: 8
+  cores: 2
 mount:
   - /scif/apps/src
   - /scif/data/soilmask
