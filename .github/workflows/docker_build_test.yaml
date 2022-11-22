@@ -26,13 +26,13 @@ jobs:
         include:
           - app: betydb2geojson
             parameter_json: .github/workflows/app_testing.json
-            test_data_tar_gz: https://data.cyverse.org/dav-anon/iplant/projects/aes/cct/diag/ci/ci_docker_test_data_9.tar.gz
+            test_data_tar_gz: https://data.cyverse.org/dav-anon/iplant/projects/aes/cct/diag/ci/ci_docker_test_data_10.tar.gz
             test_results: if [[ -f "outputs/plots.geojson" ]]; then echo "Test betydb2geojson success"; exit 0; else echo "App failed - betydb2geojson"; exit 1; fi;
             test_results_quality: ./tests/compare_geojson.py './test_data/plots_betydb.geojson' './outputs/plots.geojson'
           - app: shp2geojson
             tar_gz_file: https://de.cyverse.org/dl/d/3C8A23C0-F77A-4598-ADC4-874EB265F9B0/scif_test_data.tar.gz
             parameter_json: .github/workflows/app_testing.json
-            test_data_tar_gz: https://de.cyverse.org/dl/d/7AE4F4C8-5F40-4B56-91F3-127678EC58C0/ci_docker_test_data_4.tar.gz
+            test_data_tar_gz: https://data.cyverse.org/dav-anon/iplant/projects/aes/cct/diag/ci/ci_docker_test_data_10.tar.gz
             test_results: if [[ -f "outputs/plots.geojson" ]]; then echo "Test shp2geojson success"; exit 0; else echo "App failed - shp2geojson"; exit 1; fi;
             test_results_quality: ./tests/compare_geojson.py './test_data/plots_shapefile.geojson' './outputs/plots.geojson'
           - app: soilmask
