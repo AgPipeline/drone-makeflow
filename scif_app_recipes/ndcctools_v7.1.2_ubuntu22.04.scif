@@ -1,0 +1,116 @@
+
+%appinstall betydb2geojson
+    # Install dependencies
+    python3.8 -m venv --system-site-packages .venv
+    .venv/bin/python3 -m pip install --upgrade --no-cache-dir pip
+    .venv/bin/python3 -m pip install  --upgrade --no-cache-dir requests pygdal==3.4.1.*
+
+%apprun betydb2geojson
+    /cctools/bin/makeflow \
+        --jx \
+        --jx-args="/scif/apps/src/jx-args.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
+        ${1} \
+        "/scif/apps/src/betydb2geojson_workflow.jx"
+
+%apphelp betydb2geojson
+    This app provides a conversion from BETYdb site data to GeoJSON plot geometries.
+
+    Expected keys in the "jx-args.json" file:
+        BETYDB_URL - the value is the URL of the BETYdb instance to get plot geometries from
+        PLOT_SHAPEFILE - the path to save the GeoJSON to
+
+    Sample command:
+        scif run betydb2geojson
+
+    See also:
+        https://github.com/AgPipeline/drone-makeflow/blob/master/README.md
+
+%appinstall shp2geojson
+    # Install dependencies
+
+%apprun shp2geojson
+    /cctools/bin/makeflow  \
+        --jx \
+        --jx-args="/scif/apps/src/jx-args.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
+        ${1} \
+        "/scif/apps/src/shp2geojson_workflow.jx"
+
+%apphelp shp2geojson
+    This app provides a conversion from a shapefile to GeoJSON plot geometries.
+
+    Expected keys in the "jx-args.json" file:
+        PLOT_GEOMETRY_FILE - the path to the shapefile to convert to GeoJSON
+        PLOT_SHAPEFILE - the path to save the GeoJSON to
+
+    Sample command:
+        scif run shp2geojson
+
+    See also:
+        https://github.com/AgPipeline/drone-makeflow/blob/master/README.md
+
+%appinstall merge_csv
+    # Install dependencies
+
+%apprun merge_csv
+    /cctools/bin/makeflow  \
+        --jx \
+        --jx-args="/scif/apps/src/jx-args.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
+        ${1} \
+        "/scif/apps/src/merge_csv_workflow.jx"
+
+%apphelp merge_csv
+    This app searches folders for CSV files and merges them by file name into the output folder
+
+    Expected keys in the "jx-args.json" file:
+        MERGECSV_SOURCE - the folder path to look for CSV file
+        MERGECSV_TARGET - the folder path to save the merged CSV files to
+        MERGECSV_OPTIONS - options for processing CSV files; set to "--help" to display all available options without processing files
+
+    Sample command:
+        scif run merge_csv
+
+    See also:
+        https://github.com/AgPipeline/drone-makeflow/blob/master/README.md
+
+%appinstall find_files2json
+    # Install dependencies
+
+%apprun find_files2json
+    /cctools/bin/makeflow  \
+        --jx \
+        --jx-args="/scif/apps/src/jx-args.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
+        ${1} \
+        "/scif/apps/src/find_files2json_workflow.jx"
+
+%apphelp find_files2json
+    This app searches folders for files and writes out a JSON file intended to be used as input to a workflow.
+    The search assumes the wanted files are located in subfolders off the FILES2JSON_SEARCH_FOLDER.
+    If no files matching the search name are found then no JSON file is saved.
+
+    Expected keys in the "jx-args.json" file:
+        FILES2JSON_SEARCH_NAME - the name of the files to locate
+        FILES2JSON_SEARCH_FOLDER - the path to the folder to search within
+        FILES2JSON_JSON_FILE - the path to the JSON file to write found files to
+
+    Sample command:
+        scif run find_files2json
