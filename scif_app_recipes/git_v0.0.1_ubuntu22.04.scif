@@ -1,0 +1,29 @@
+%appinstall git_rgb_plot
+    # Install Makeflow and other dependencies
+    python3.8 -m venv --system-site-packages .venv
+    .venv/bin/python3 -m pip install --upgrade --no-cache-dir pip
+    .venv/bin/python3 -m pip install --upgrade --no-cache-dir opencv-contrib-python-headless agpypeline
+
+    # Add example Docker command to SCIF app help section
+    if [ -n $DOCKER_IMAGE ]; then
+        echo "\n\nExample Docker command: docker run $DOCKER_IMAGE run git\n" >> "${PWD}/scif/runscript.help"
+    fi
+
+    # Generate remainder of SCIF app help section by running main script
+    .venv/bin/python3 /scif/apps/src/git_algo_rgb_plot.py --help >> "${PWD}/scif/runscript.help"
+
+%apprun git_rgb_plot
+    /cctools/bin/makeflow \
+        --jx \
+        --jx-args="/scif/apps/src/jx-args.json" \
+        --jx-args="/scif/apps/src/git_rgb_plot_files.json" \
+        --log-verbose \
+        --retry-count=1 \
+        --change-directory="${SCIF_APPDATA}" \
+        --makeflow-log="${SCIF_APPDATA}/workflow.jx.makeflowlog" \
+        --batch-log="${SCIF_APPDATA}/workflow.jx.batchlog" \
+        ${1} \
+        "/scif/apps/src/git_rgb_plot_workflow.jx"
+
+%apphelp git_rgb_plot
+    This app provides an entrypoint to the git tool
