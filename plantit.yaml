@@ -1,6 +1,7 @@
 name: Drone Processing Pipeline Workflow
 author: Chris Schnaufer
-public: False                 # should this workflow be visible to other users of PlantIT?
+email: schnaufer@arizona.edu
+public: True                 # should this workflow be visible to other users of PlantIT?
 image: docker://agdrone/drone-workflow:1.3 # the Docker image your workflow's container(s) will be built from
 jobqueue:
   time: "06:00:00"
@@ -13,6 +14,7 @@ mount:
   - /scif/data/plotclip
   - /scif/data/find_files2json
   - /scif/data/merge_csv
+  - /scif/data/canopycover
 commands: /opt/dev/plantit-workflow.sh
 params:
   - name: Workflow to run # The options strings must be matched exactly in plantit-workflow.sh
@@ -25,8 +27,6 @@ input:
   path: /iplant/home/shared/aes/cct/diag/sample-data/canopycover_test_data
   kind: directory
 output:
-  exclude:
-    patterns:
-      - json
+  include:
     names:
-      - result.json
+      - results.tar.gz

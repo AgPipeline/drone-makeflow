@@ -12,7 +12,7 @@ echo "INPUT FOLDER ${INPUT}"
 echo "WORKING FOLDER ${WORKDIR}"
 
 # clone the repo
-cd /scif/apps/src
+cd /scif/apps/src || exit
 git init
 git remote add origin https://github.com/Chris-Schnaufer/drone-makeflow.git
 git pull origin main --allow-unrelated-histories
@@ -64,8 +64,22 @@ if [[ "${PLOTS_FILE}" == "" ]]; then
   exit 11
 fi
 
+# Logging what we've found
 echo "Processing with ${IMAGE_FILE} ${PLOTS_FILE}"
 echo "  Options: ${ALGO_OPTIONS}"
+
+# Make sure necessary folders exist
+echo "CHECKING FOR FOLDERS"
+while IFS= read -r -d '' ONE_FILE; do
+  CHECKDIR="/scif/data/${ONE_FILE##*/}"
+  echo "CHECK FOLDER ${ONE_FILE} at ${CHECKDIR}"
+  if [ ! -d "${CHECKDIR}" ]; then
+    echo "  NOT FOUND"
+    mkdir "${CHECKDIR}"
+  else
+    echo "  YES"
+  fi
+done < <(find "/scif/apps" -maxdepth 1 -type d -print0)
 
 # Write the argument JSON file for supported workflows (not all of them)
 cat >"/scif/apps/src/jx-args.json" <<EOF
@@ -108,5 +122,36 @@ for ((IDX = 0; IDX < ${#WORKFLOW[@]}; IDX++)); do
   echo "Running app $IDX '${WORKFLOW[$IDX]}'"
   scif run "${WORKFLOW[$IDX]}"
 done
+
+
+echo "Finding all data from ${WORKDIR} to save to: ${OUTPUT}"
+pushd "${WORKDIR}"
+
+TAR_FILE="results.tar"
+TAR_GZ_FILE="results.tar.gz"
+
+echo "Tar-ing and compressing result files in WORKDIR \"${WORKDIR}\""
+find "${WORKDIR}" -name '*.csv' -print0 |
+  while IFS= read -r -d '' ONE_FILE; do
+    if [[ "${NEW_FILE:0:1}" == "/" ]]; then
+        NEW_FILE="${NEW_FILE#*/}"
+    fi
+    tar -rf "${TAR_FILE}" "${NEW_FILE}"
+  done
+
+find "${WORKDIR}" -name '*.tif' -print0 |
+  while IFS= read -r -d '' ONE_FILE; do
+    if [[ "${NEW_FILE:0:1}" == "/" ]]; then
+        NEW_FILE="${NEW_FILE#*/}"
+    fi
+    tar -rf "${TAR_FILE}" "${NEW_FILE}"
+  done
+
+gzip -9 -c "${TAR_FILE}" > "${TAR_GZ_FILE}"
+
+echo "Moving ${TAR_GZ_FILE} to ${OUTPUT}/${TAR_GZ_FILE}"
+mv "${TAR_GZ_FILE}" "${OUTPUT}/${TAR_GZ_FILE}"
+
+popd
 
 echo "Workflow completed"
