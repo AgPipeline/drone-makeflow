@@ -1,4 +1,4 @@
-FROM ubuntu:20.04 as base
+FROM ubuntu:22.04 as base
 ENV DOCKER_IMAGE agdrone/drone-workflow:1.1
 ENV DEBIAN_FRONTEND noninteractive
 WORKDIR /
@@ -7,10 +7,10 @@ WORKDIR /
 RUN apt-get update -y \
     && apt-get install --no-install-recommends -y \
     git \
-    python3.8 \
+    python3 \
     python3-pip \
     && ln -s /usr/bin/python3 /usr/bin/python \
-    && python3.8 -m pip install -U pip \
+    && python3 -m pip install -U pip \
     && apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -32,7 +32,7 @@ RUN apt-get update -y \
     python3-pip \
     pdal \
     python3-venv \
-    python3.8-venv \
+    python3-venv \
     && apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -44,19 +44,18 @@ RUN apt-get update && \
         libgdal-dev \
         gcc \
         g++ \
-        python-dev \
         python3-dev \
-        python3.8-dev \
+        python3-dev \
         curl && \
-    python3.8 -m pip install --upgrade --no-cache-dir \
+    python3 -m pip install --upgrade --no-cache-dir \
         wheel && \
-    python3.8 -m pip install --upgrade --no-cache-dir \
+    python3 -m pip install --upgrade --no-cache-dir \
         influxdb matplotlib Pillow pip piexif python-dateutil pyyaml scipy utm numpy cryptography PDAL==2.3.6 && \
-    python3.8 -m pip install --upgrade --no-cache-dir \
-        pygdal==3.0.4.* && \
+    python3 -m pip install --upgrade --no-cache-dir \
+        pygdal==3.4.1.* && \
     python3 -m pip install --upgrade --no-cache-dir \
         agpypeline && \
-    python3.8 -m pip install --upgrade --no-cache-dir \
+    python3 -m pip install --upgrade --no-cache-dir \
         pytest && \
     curl http://ccl.cse.nd.edu/software/files/cctools-7.1.12-source.tar.gz > cctools-source.tar.gz && \
     tar -xzf cctools-source.tar.gz &&\
@@ -69,7 +68,7 @@ RUN apt-get update && \
         g++ \
         python-dev \
         python3-dev \
-        python3.8-dev \
+        python3-dev \
         curl && \
     apt-get autoremove -y && \
     apt-get clean && \
@@ -103,8 +102,8 @@ RUN apt-get update -y && \
 WORKDIR /
 
 FROM base as base_scif
-RUN python3.8 -m pip install --upgrade --no-cache-dir scif \
-    && python3.8 -m pip install --upgrade --no-cache-dir setuptools \
+RUN python3 -m pip install --upgrade --no-cache-dir scif \
+    && python3 -m pip install --upgrade --no-cache-dir setuptools \
     && echo "Finished install of scif"
 ENTRYPOINT ["scif"]
 
@@ -117,22 +116,22 @@ COPY ./scif_app_recipes/opendronemap_v2.2.scif  /opt/
 RUN scif install /opt/opendronemap_v2.2.scif
 
 FROM odm_scif as combined_scif
-COPY ./scif_app_recipes/ndcctools_v7.1.2_ubuntu20.04.scif  /opt/
-COPY ./scif_app_recipes/soilmask_v0.0.1_ubuntu20.04.scif /opt/
-RUN scif install /opt/soilmask_v0.0.1_ubuntu20.04.scif
-RUN scif install /opt/ndcctools_v7.1.2_ubuntu20.04.scif
+COPY ./scif_app_recipes/ndcctools_v7.1.2_ubuntu22.04.scif  /opt/
+COPY ./scif_app_recipes/soilmask_v0.0.1_ubuntu22.04.scif /opt/
+RUN scif install /opt/soilmask_v0.0.1_ubuntu22.04.scif
+RUN scif install /opt/ndcctools_v7.1.2_ubuntu22.04.scif
 
-COPY ./scif_app_recipes/soilmask_ratio_v0.0.1_ubuntu20.04.scif /opt/
-RUN scif install /opt/soilmask_ratio_v0.0.1_ubuntu20.04.scif
+COPY ./scif_app_recipes/soilmask_ratio_v0.0.1_ubuntu22.04.scif /opt/
+RUN scif install /opt/soilmask_ratio_v0.0.1_ubuntu22.04.scif
 
-COPY ./scif_app_recipes/plotclip_v0.0.1_ubuntu20.04.scif /opt/
-RUN scif install /opt/plotclip_v0.0.1_ubuntu20.04.scif
+COPY ./scif_app_recipes/plotclip_v0.0.1_ubuntu22.04.scif /opt/
+RUN scif install /opt/plotclip_v0.0.1_ubuntu22.04.scif
 
-COPY ./scif_app_recipes/canopycover_v0.0.1_ubuntu20.04.scif /opt/
-RUN scif install /opt/canopycover_v0.0.1_ubuntu20.04.scif
+COPY ./scif_app_recipes/canopycover_v0.0.1_ubuntu22.04.scif /opt/
+RUN scif install /opt/canopycover_v0.0.1_ubuntu22.04.scif
 
-COPY ./scif_app_recipes/greenness_v0.0.1_ubuntu20.04.scif /opt/
-RUN scif install /opt/greenness_v0.0.1_ubuntu20.04.scif
+COPY ./scif_app_recipes/greenness_v0.0.1_ubuntu22.04.scif /opt/
+RUN scif install /opt/greenness_v0.0.1_ubuntu22.04.scif
 
 COPY *.jx *.py *.sh jx-args.json /scif/apps/src/
 COPY plantit-workflow.sh /opt/dev/plantit-workflow.sh
@@ -140,8 +139,8 @@ RUN chmod a+x /scif/apps/src/*.sh && \
     chmod a+x /scif/apps/src/*.py && \
     chmod a+x /opt/dev/plantit-workflow.sh
 
-COPY ./scif_app_recipes/git_v0.0.1_ubuntu20.04.scif /opt/
-RUN scif install /opt/git_v0.0.1_ubuntu20.04.scif
+COPY ./scif_app_recipes/git_v0.0.1_ubuntu22.04.scif /opt/
+RUN scif install /opt/git_v0.0.1_ubuntu22.04.scif
 # Silence a git warning
 RUN git config --global advice.detachedHead false
 
