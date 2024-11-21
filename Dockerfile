@@ -62,7 +62,7 @@ RUN apt-get update && \
         agpypeline && \
     python3.8 -m pip install --upgrade --no-cache-dir \
         pytest && \
-    curl http://ccl.cse.nd.edu/software/files/cctools-7.1.12-source.tar.gz > cctools-source.tar.gz && \
+    curl https://ccl.cse.nd.edu/software/files/cctools-7.1.12-source.tar.gz > cctools-source.tar.gz && \
     tar -xzf cctools-source.tar.gz &&\
     cd cctools-*-source && \
     ./configure --prefix /cctools && make install && \
